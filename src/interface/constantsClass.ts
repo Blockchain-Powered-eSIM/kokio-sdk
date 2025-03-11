@@ -1,4 +1,4 @@
-import { PublicClient, WalletClient } from "viem";
+import { WalletClient } from "viem";
 import {
     _extractChainID,
     _getChainSpecificConstants,
@@ -21,7 +21,7 @@ export class ConstantsSubPackage {
             typeof arbitrumSepoliaFactoryAddresses;
     customErrors!: typeof customErrors;
 
-    constructor(client: WalletClient | PublicClient) {
+    constructor(client: WalletClient) {
         (async () => {
           const chainID = await _extractChainID(client);
           const values = _getChainSpecificConstants(chainID);

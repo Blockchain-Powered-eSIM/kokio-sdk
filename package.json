@@ -21,7 +21,10 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "@aa-sdk/core": "^4.14.0",
     "@account-kit/core": "^4.13.0",
+    "@account-kit/infra": "^4.15.3",
+    "@account-kit/signer": "^4.14.0",
     "viem": "^2.23.5"
   }
 }

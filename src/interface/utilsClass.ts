@@ -1,12 +1,11 @@
-import { PublicClient, WalletClient } from "viem";
-import { getContractInstance } from "../logic/contracts";
+import { WalletClient } from "viem";
 import { _add0x, _remove0x } from "../logic/utils";
 
 export class UtilsSubPackage {
 
     client; 
     
-    constructor(client: WalletClient | PublicClient) {
+    constructor(client: WalletClient) {
         this.client = client;
     }
 
