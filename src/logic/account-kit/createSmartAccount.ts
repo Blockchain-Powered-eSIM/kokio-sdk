@@ -8,7 +8,7 @@ import { PublicKey } from "../../types";
 import { DeviceWalletFactory } from "../../abis";
 import { createAlchemySmartAccountClient } from "@account-kit/core";
 import { alchemy } from '@account-kit/infra';
-import { _getContractInstance } from "../contracts";
+import { getContractInstance } from "../contracts";
 
 // Only for testing current contract, for DeviceWallet we can directly use 'encodeExecute'
 const _encodeBatchExecute = async (txs: AccountOp[]) => {

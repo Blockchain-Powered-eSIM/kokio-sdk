@@ -13,7 +13,7 @@ import {
 } from '../abis';
 import { _add0x } from "./utils";
 
-export const _getContractInstance = async (client: WalletClient) => {
+export const getContractInstance = async (client: WalletClient) => {
 
     const chainID = await _extractChainID(client);
     const values = _getChainSpecificConstants(chainID);
