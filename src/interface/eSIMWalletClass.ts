@@ -10,13 +10,14 @@ import {
     _transferOwnership
 } from "../logic/eSIMWallet"
 import { DataBundleDetails } from "../types";
+import { SmartAccountClient } from "@aa-sdk/core";
 
 export class eSIMWalletSubPackage {
 
     client;
     address;
 
-    constructor(client: WalletClient, address: Address) {
+    constructor(client: SmartAccountClient, address: Address) {
         this.client = client;
         this.address = address;
     }

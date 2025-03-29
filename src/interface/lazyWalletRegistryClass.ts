@@ -6,12 +6,13 @@ import {
     _switchESIMIdentifierToNewDeviceIdentifier
 } from "../logic/lazyWalletRegistry"
 import { DataBundleDetails } from "../types";
+import { SmartAccountClient } from "@aa-sdk/core";
 
 export class lazyWalletRegistrySubPackage {
 
     client;
 
-    constructor(client: WalletClient) {
+    constructor(client: SmartAccountClient) {
         this.client = client;
     }
 

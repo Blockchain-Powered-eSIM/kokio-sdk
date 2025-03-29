@@ -1,63 +1,149 @@
-import { Address, WalletClient } from "viem";
-import { getContractInstance } from "./contracts";
+import { Address, encodeFunctionData, WalletClient } from "viem";
+import { SmartAccountClient } from "@aa-sdk/core";
+import { DeviceWallet } from "../abis";
+import { customErrors } from "./constants";
 
-export const _deployESIMWallet = async (client: WalletClient, address: Address, hasAccessToETH: boolean, salt: bigint) => {
+export const _deployESIMWallet = async (client: SmartAccountClient, address: Address, hasAccessToETH: boolean, salt: bigint) => {
 
-    const contract = (await getContractInstance(client)).deviceWallet(address);
-
-    return contract.write.deployESIMWallet([hasAccessToETH, salt]);
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: DeviceWallet,
+            functionName: "deployESIMWallet",
+            args: [hasAccessToETH, salt]
+        })
+    }})
 }
 
 export const _setESIMUniqueIdentifierForAnESIMWallet = async (
-    client: WalletClient,
+    client: SmartAccountClient,
     address: Address,
     eSIMWalletAddress: Address,
     eSIMUniqueIdentifier: string
 ) => {
 
-    const contract = (await getContractInstance(client)).deviceWallet(address);
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: DeviceWallet,
+            functionName: "setESIMUniqueIdentifierForAnESIMWallet",
+            args: [eSIMWalletAddress, eSIMUniqueIdentifier]
+        })
+    }})
+    // const contract = (await getContractInstance(client)).deviceWallet(address);
 
-    return contract.write.setESIMUniqueIdentifierForAnESIMWallet([eSIMWalletAddress, eSIMUniqueIdentifier]);
+    // return contract.write.setESIMUniqueIdentifierForAnESIMWallet([eSIMWalletAddress, eSIMUniqueIdentifier]);
 }
 
-export const _payETHForDataBundles = async (client: WalletClient, address: Address, amount: bigint) => {
+export const _payETHForDataBundles = async (client: SmartAccountClient, address: Address, amount: bigint) => {
 
-    const contract = (await getContractInstance(client)).deviceWallet(address);
-
-    return contract.write.payETHForDataBundles([amount]);
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: DeviceWallet,
+            functionName: "payETHForDataBundles",
+            args: [amount]
+        })
+    }})
 }
 
-export const _pullETH = async (client: WalletClient, address: Address, amount: bigint) => {
-
-    const contract = (await getContractInstance(client)).deviceWallet(address);
-
-    return contract.write.pullETH([amount]);
+export const _pullETH = async (client: SmartAccountClient, address: Address, amount: bigint) => {
+    
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: DeviceWallet,
+            functionName: "pullETH",
+            args: [address, amount]
+        })
+    }})
 }
 
-export const _getVaultAddress = async (client: WalletClient, address: Address) => {
+export const _getVaultAddress = async (client: SmartAccountClient, address: Address) => {
 
-    const contract = (await getContractInstance(client)).deviceWallet(address);
-
-    return contract.read.getVaultAddress();
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: DeviceWallet,
+            functionName: "getVaultAddress",
+            args: [address]
+        })
+    }})
 }
 
-export const _toggleAccessToETH = async (client: WalletClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
+export const _toggleAccessToETH = async (client: SmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
 
-    const contract = (await getContractInstance(client)).deviceWallet(address);
-
-    return contract.write.toggleAccessToETH([eSIMWalletAddress, hasAccessToETH]);
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: DeviceWallet,
+            functionName: "toggleAccessToETH",
+            args: [address, eSIMWalletAddress, hasAccessToETH]
+        })
+    }})
 }
 
-export const _addESIMWallet = async (client: WalletClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
+export const _addESIMWallet = async (client: SmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
 
-    const contract = (await getContractInstance(client)).deviceWallet(address);
-
-    return contract.write.addESIMWallet([eSIMWalletAddress, hasAccessToETH]);
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: DeviceWallet,
+            functionName: "addESIMWallet",
+            args: [address, eSIMWalletAddress, hasAccessToETH]
+        })
+    }})
 }
 
-export const _removeESIMWallet = async (client: WalletClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
+export const _removeESIMWallet = async (client: SmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
 
-    const contract = (await getContractInstance(client)).deviceWallet(address);
 
-    return contract.write.removeESIMWallet([eSIMWalletAddress, hasAccessToETH]);
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: DeviceWallet,
+            functionName: "removeESIMWallet",
+            args: [address, eSIMWalletAddress, hasAccessToETH]
+        })
+    }})
 }

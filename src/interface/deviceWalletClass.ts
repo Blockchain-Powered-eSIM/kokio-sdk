@@ -9,13 +9,14 @@ import {
     _setESIMUniqueIdentifierForAnESIMWallet,
     _toggleAccessToETH
 } from "../logic/deviceWallet"
+import { SmartAccountClient } from "@aa-sdk/core";
 
 export class deviceWalletSubPackage {
 
     client;
     address;
 
-    constructor(client: WalletClient, address: Address) {
+    constructor(client: SmartAccountClient, address: Address) {
         this.client = client;
         this.address = address;
     }

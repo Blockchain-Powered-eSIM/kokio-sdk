@@ -1,60 +1,140 @@
-import { Address, WalletClient } from "viem"
-import { getContractInstance } from "./contracts"
+import { Address, encodeFunctionData, WalletClient } from "viem"
 import { DataBundleDetails } from "../types";
+import { SmartAccountClient } from "@aa-sdk/core";
+import { customErrors } from "./constants";
+import { ESIMWallet } from "../abis";
 
 
-export const _setESIMUniqueIdentifier = async (client: WalletClient, address: Address, eSIMUniqueIdentifier: string) => {
+export const _setESIMUniqueIdentifier = async (client: SmartAccountClient, address: Address, eSIMUniqueIdentifier: string) => {
 
-    const contract = (await getContractInstance(client)).ESIMWallet(address);
-
-    return contract.write.setESIMUniqueIdentifier([eSIMUniqueIdentifier]);
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: ESIMWallet,
+            functionName: "setESIMUniqueIdentifier",
+            args: [eSIMUniqueIdentifier]
+        })
+    }})
 }
 
-export const _buyDataBundle = async (client: WalletClient, address: Address, dataBundleDetails: DataBundleDetails) => {
-
-    const contract = (await getContractInstance(client)).ESIMWallet(address);
-
-    return contract.write.buyDataBundle([dataBundleDetails]);
+export const _buyDataBundle = async (client: SmartAccountClient, address: Address, dataBundleDetails: DataBundleDetails) => {
+    
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: ESIMWallet,
+            functionName: "payETHForDataBundles",
+            args: [dataBundleDetails]
+        })
+    }})
 }
 
-export const _populateHistory = async (client: WalletClient, address: Address, dataBundleDetails: Array<DataBundleDetails>) => {
+export const _populateHistory = async (client: SmartAccountClient, address: Address, dataBundleDetails: Array<DataBundleDetails>) => {
 
-    const contract = (await getContractInstance(client)).ESIMWallet(address);
-
-    return contract.write.populateHistory([dataBundleDetails]);
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: ESIMWallet,
+            functionName: "populateHistory",
+            args: [dataBundleDetails]
+        })
+    }})
 }
 
-export const _owner = async (client: WalletClient, address: Address) => {
+export const _owner = async (client: SmartAccountClient, address: Address) => {
 
-    const contract = (await getContractInstance(client)).ESIMWallet(address);
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: ESIMWallet,
+            functionName: "ow",
+            args: []
+        })
+    }})}
 
-    return contract.read.owner();
+export const _requestTransferOwnership = async (client: SmartAccountClient, address: Address, newOwner: Address) => {
+
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: ESIMWallet,
+            functionName: "requestTransferOwnership",
+            args: [newOwner]
+        })
+    }})
 }
 
-export const _requestTransferOwnership = async (client: WalletClient, address: Address, newOwner: Address) => {
-
-    const contract = (await getContractInstance(client)).ESIMWallet(address);
-
-    return contract.write.requestTransferOwnership([newOwner]);
+export const _acceptOwnershipTransfer = async (client: SmartAccountClient, address: Address) => {
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: ESIMWallet,
+            functionName: "acceptOwnershipTransfer",
+            args: []
+        })
+    }})
 }
 
-export const _acceptOwnershipTransfer = async (client: WalletClient, address: Address) => {
+export const _sendETHToDeviceWallet = async (client: SmartAccountClient, address: Address, amount: bigint) => {
 
-    const contract = (await getContractInstance(client)).ESIMWallet(address);
-
-    return contract.write.acceptOwnershipTransfer();
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: ESIMWallet,
+            functionName: "sendETHToDeviceWallet",
+            args: [amount]
+        })
+    }})
 }
 
-export const _sendETHToDeviceWallet = async (client: WalletClient, address: Address, amount: bigint) => {
+export const _transferOwnership = async (client: SmartAccountClient, address: Address, amount: bigint) => {
 
-    const contract = (await getContractInstance(client)).ESIMWallet(address);
-
-    return contract.write.sendETHToDeviceWallet([amount]);
-}
-
-export const _transferOwnership = async (client: WalletClient, address: Address, amount: bigint) => {
-
-    const contract = (await getContractInstance(client)).ESIMWallet(address);
-
-    return contract.write.transferOwnership([]);
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: address,
+        data: encodeFunctionData({
+            abi: ESIMWallet,
+            functionName: "transferOwnership",
+            args: [amount]
+        })
+    }})
 }

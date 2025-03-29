@@ -5,12 +5,24 @@ import { optimismSepolia, sepolia } from "viem/chains";
 import { _getChainSpecificConstants, ZERO } from "../constants";
 import { _add0x, _remove0x } from "../utils";
 import { PublicKey } from "../../types";
-import { DeviceWalletFactory } from "../../abis";
+import { DeviceWallet, DeviceWalletFactory } from "../../abis";
 import { createAlchemySmartAccountClient } from "@account-kit/core";
 import { alchemy } from '@account-kit/infra';
-import { getContractInstance } from "../contracts";
 
 // Only for testing current contract, for DeviceWallet we can directly use 'encodeExecute'
+const _encodeExecute = async (tx: AccountOp) => {
+
+  return encodeFunctionData({
+    abi: DeviceWallet,
+    functionName: "execute",
+    args: [{
+      dest: tx.target,
+      value: tx.value ?? ZERO,
+      data: tx.data
+    }]
+  })
+}
+
 const _encodeBatchExecute = async (txs: AccountOp[]) => {
   
   const new_txs:{dest:Address, value:bigint, data: Hex | '0x'}[] = [];
@@ -22,79 +34,28 @@ const _encodeBatchExecute = async (txs: AccountOp[]) => {
     })
   }
   return encodeFunctionData({
-    abi:
-    [
-      {
-        "type": "function",
-        "name": "executeBatch",
-        "inputs": [
-            {
-                "name": "calls",
-                "type": "tuple[]",
-                "internalType": "struct Call[]",
-                "components": [
-                    {
-                        "name": "dest",
-                        "type": "address",
-                        "internalType": "address"
-                    },
-                    {
-                        "name": "value",
-                        "type": "uint256",
-                        "internalType": "uint256"
-                    },
-                    {
-                        "name": "data",
-                        "type": "bytes",
-                        "internalType": "bytes"
-                    }
-                ]
-            }
-        ],
-        "outputs": [],
-        "stateMutability": "nonpayable"
-      }
-    ],
+    abi: DeviceWallet,
     functionName: "executeBatch",
     args: [new_txs]
   })
 }
 
-const _getAccountInitCode = async (client: WalletClient, publicKey: PublicKey): Promise<Hex> => {
+const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, depositAmount: bigint): Promise<Hex> => {
 
   const chainID = await client.getChainId();
   const values = _getChainSpecificConstants(chainID);
 
   const callData =  encodeFunctionData({
-    abi: 
-    [{
-        "type": "function",
-        "name": "createAccount",
-        "inputs": [
-            {
-                "name": "publicKey",
-                "type": "bytes32[2]",
-                "internalType": "bytes32[2]"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "address",
-                "internalType": "contract SimpleAccount"
-            }
-        ],
-        "stateMutability": "payable"
-    }], // change to DeviceWalletFactory abi once deployed
+    abi: DeviceWalletFactory, // change to DeviceWalletFactory abi once deployed
     functionName: "createAccount",
-    args: [publicKey],
+    args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount],
   })
 
-  // return _add0x(values.factoryAddresses.DEVICE_WALLET_FACTORY + _remove0x(callData)); // Use once deployed
-  return _add0x('0x98Bb4ceD7623CCc15223C2Fbc86D0B87a1Ff3Ad5' + _remove0x(callData)); // For testing
+  return _add0x(values.factoryAddresses.DEVICE_WALLET_FACTORY + _remove0x(callData)); // Use once deployed
+  // return _add0x('0x98Bb4ceD7623CCc15223C2Fbc86D0B87a1Ff3Ad5' + _remove0x(callData)); // For testing
 }
 
-export const _getSmartWallet = async (client: WalletClient , publicKey: PublicKey): Promise<SmartContractAccount> => {
+export const _getSmartWallet = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, depositAmount: bigint): Promise<SmartContractAccount> => {
 
   const chainID = await client.getChainId();
   const values = _getChainSpecificConstants(chainID);
@@ -109,18 +70,18 @@ export const _getSmartWallet = async (client: WalletClient , publicKey: PublicKe
         chain: optimismSepolia,
 
         // The EntryPointDef that your account is compatible with
-        // entryPoint: getEntryPoint(optimismSepolia, {addressOverride: values.factoryAddresses.ENTRY_POINT}), // NOTE: To be used once contracts deployed
-        entryPoint: getEntryPoint(optimismSepolia, {addressOverride: '0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789'}), // For testing only
+        entryPoint: getEntryPoint(optimismSepolia, {addressOverride: values.factoryAddresses.ENTRY_POINT}), // NOTE: To be used once contracts deployed
+        // entryPoint: getEntryPoint(optimismSepolia, {addressOverride: '0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789'}), // For testing only
 
         // This should return a concatenation of your `factoryAddress` and the `callData` for your factory's create account method
-        getAccountInitCode: async (): Promise<Hash> => await _getAccountInitCode(client, publicKey),
+        getAccountInitCode: async (): Promise<Hash> => await _getAccountInitCode(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount),
         
         // an invalid signature that doesn't cause your account to revert during validation
         getDummySignature: async (): Promise<Hash> => "0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c", //from Alchemy docs
         
         // given a UO in the form of {target, data, value} should output the calldata for calling your contract's execution method
         // encodeExecute: async (uo): Promise<Hash> => "0x....",
-        encodeExecute: async (uo): Promise<Hash> => _encodeBatchExecute([uo]),
+        encodeExecute: async (uo): Promise<Hash> => _encodeExecute(uo),
         
         signMessage: async ({ message }): Promise<Hash> => signer.signMessage(message),
 

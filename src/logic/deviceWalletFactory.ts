@@ -1,34 +1,58 @@
-import { WalletClient } from "viem";
-import { getContractInstance } from "./contracts";
+import { encodeFunctionData, WalletClient } from "viem";
+import { SmartAccountClient } from "@aa-sdk/core";
+import { _extractChainID, _getChainSpecificConstants, customErrors } from "./constants";
+import { DeviceWalletFactory } from "../abis";
 
-export const _createAccount = async (
-    client: WalletClient,
-    deviceUniqueIdentifier: string,
-    deviceWalletOwnerKey: string,
-    salt: bigint,
-    depositAmount: bigint
-) => {
+// export const _createAccount = async (
+//     client: WalletClient,
+//     deviceUniqueIdentifier: string,
+//     deviceWalletOwnerKey: string,
+//     salt: bigint,
+//     depositAmount: bigint
+// ) => {
 
-    const contract = (await getContractInstance(client)).deviceWalletFactory();
+//     const contract = (await getContractInstance(client)).deviceWalletFactory();
 
-    return contract.write.createAccount([deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount]);
-}
+//     return contract.write.createAccount([deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount]);
+// }
 
 export const _getAddress = async (
-    client: WalletClient,
+    client: SmartAccountClient,
     deviceUniqueIdentifier: string,
     deviceWalletOwnerKey: string,
     salt: bigint,
 ) => {
 
-    const contract = (await getContractInstance(client)).deviceWalletFactory();
-
-    return contract.read.getAddress([deviceWalletOwnerKey, deviceUniqueIdentifier, salt]);
+    const values = _getChainSpecificConstants(await client.getChainId());
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: values.factoryAddresses.DEVICE_WALLET_FACTORY,
+        data: encodeFunctionData({
+            abi: DeviceWalletFactory,
+            functionName: "getAddress",
+            args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt]
+        })
+    }});
 }
 
-export const _getCurrentDeviceWalletImplementation = async (client: WalletClient) => {
+export const _getCurrentDeviceWalletImplementation = async (client: SmartAccountClient) => {
 
-    const contract = (await getContractInstance(client)).deviceWalletFactory();
+    const values = _getChainSpecificConstants(await client.getChainId());
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
-    return contract.read.getCurrentDeviceWalletImplementation();
+    // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: values.factoryAddresses.DEVICE_WALLET_FACTORY,
+        data: encodeFunctionData({
+            abi: DeviceWalletFactory,
+            functionName: "getCurrentDeviceWalletImplementation",
+            args: []
+        })
+    }});
 }

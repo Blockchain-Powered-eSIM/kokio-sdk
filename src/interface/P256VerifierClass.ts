@@ -3,12 +3,13 @@ import {
     _verifySignature
 } from "../logic/P256Verifier"
 import { WebAuthnSignature } from "../types";
+import { SmartAccountClient } from "@aa-sdk/core";
 
 export class P256VerifierSubPackage {
 
     client;
 
-    constructor(client: WalletClient) {
+    constructor(client: SmartAccountClient) {
         this.client = client;
     }
 

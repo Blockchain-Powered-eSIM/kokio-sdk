@@ -1,9 +1,11 @@
-import { WalletClient } from "viem";
-import { getContractInstance } from "./contracts";
+import { encodeFunctionData, WalletClient } from "viem";
 import { WebAuthnSignature } from "../types";
+import { SmartAccountClient } from "@aa-sdk/core";
+import { _getChainSpecificConstants, customErrors } from "./constants";
+import { P256Verifier } from "../abis";
 
 export const _verifySignature = async (
-    client: WalletClient,
+    client: SmartAccountClient,
     message: string,
     requireMessageVerification: boolean,
     webAuthnSignature: WebAuthnSignature,
@@ -11,7 +13,18 @@ export const _verifySignature = async (
     y: bigint
 ) => {
 
-    const contract = (await getContractInstance(client)).P256Verifier();
+    const values = _getChainSpecificConstants(await client.getChainId());
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
-    return contract.write.verifySignature([message, requireMessageVerification, webAuthnSignature, x, y])
+        // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+        target: values.factoryAddresses.P256VERIFIER,
+        data: encodeFunctionData({
+            abi: P256Verifier,
+            functionName: "deployLazyWalletAndSetESIMIdentifier",
+            args: [message, requireMessageVerification, webAuthnSignature, x, y]
+        })
+    }});
 }

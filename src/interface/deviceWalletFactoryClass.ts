@@ -1,21 +1,18 @@
 import { Address, WalletClient } from "viem";
 import {
-    _createAccount,
     _getAddress,
     _getCurrentDeviceWalletImplementation
 } from "../logic/deviceWalletFactory"
+import { SmartAccountClient } from "@aa-sdk/core";
 
 export class deviceWalletFactorySubPackage {
 
     client;
 
-    constructor(client: WalletClient) {
+    constructor(client: SmartAccountClient) {
         this.client = client;
     }
 
-    createAccount (deviceUniqueIdentifier: string, deviceWalletOwnerKey: string, salt: bigint, depositAmount: bigint) {
-        return _createAccount(this.client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount);
-    }
     getAddress (deviceUniqueIdentifier: string, deviceWalletOwnerKey: string, salt: bigint) {
         return _getAddress(this.client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt);
     }
