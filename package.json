@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/Blockchain-Powered-eSIM/kokio-sdk#readme",
   "devDependencies": {
+    "dotenv": "^16.5.0",
     "typescript": "^5.7.3"
   },
   "dependencies": {
@@ -25,6 +26,8 @@
     "@account-kit/core": "^4.13.0",
     "@account-kit/infra": "^4.15.3",
     "@account-kit/signer": "^4.14.0",
+    "@peculiar/asn1-ecc": "^2.3.15",
+    "@peculiar/asn1-schema": "^2.3.15",
     "viem": "^2.23.5"
   }
 }

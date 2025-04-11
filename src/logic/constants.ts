@@ -1,4 +1,8 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import { WalletClient } from "viem";
+
 import {
     mainnet,
     sepolia,
@@ -10,6 +14,8 @@ import {
 
 export const ZERO = BigInt('0');
 
+export const API_KEY = process.env.API_KEY;
+
 export enum CHAIN_ID  {
     MAINNET = 1,
     SEPOLIA = 11155111,
@@ -20,12 +26,12 @@ export enum CHAIN_ID  {
 }
 
 export const rpcURLs: Record<string, string> = {
-    mainnet: "https://eth-mainnet.g.alchemy.com/v2/ubxhpI1U752vJUdXq9n3b12xnNFYjM5w",
-    sepolia: "https://eth-sepolia.g.alchemy.com/v2/ubxhpI1U752vJUdXq9n3b12xnNFYjM5w",
-    optimismMainnet : "https://opt-mainnet.g.alchemy.com/v2/ubxhpI1U752vJUdXq9n3b12xnNFYjM5w",
-    optimismSepolia: "https://opt-sepolia.g.alchemy.com/v2/ubxhpI1U752vJUdXq9n3b12xnNFYjM5w",
-    arbitrum: "https://arb-mainnet.g.alchemy.com/v2/ubxhpI1U752vJUdXq9n3b12xnNFYjM5w",
-    arbitrumSepolia: "https://arb-sepolia.g.alchemy.com/v2/ubxhpI1U752vJUdXq9n3b12xnNFYjM5w",
+    mainnet: `https://eth-mainnet.g.alchemy.com/v2/${API_KEY}`,
+    sepolia: `https://eth-sepolia.g.alchemy.com/v2/${API_KEY}`,
+    optimismMainnet : `https://opt-mainnet.g.alchemy.com/v2/${API_KEY}`,
+    optimismSepolia: `https://opt-sepolia.g.alchemy.com/v2/${API_KEY}`,
+    arbitrum: `https://arb-mainnet.g.alchemy.com/v2/${API_KEY}`,
+    arbitrumSepolia: `https://arb-sepolia.g.alchemy.com/v2/${API_KEY}`,
 }
 
 export interface chainSpecifcConstants {
@@ -111,8 +117,6 @@ export const customErrors: Record<string, string> = {
     NULL_OR_UNDEFINED_VALUE: "Error: Null or undefined value provided",
     MISSING_SMART_WALLET: "Error: Client does not have smart wallet account associated"
 }
-
-
 
 export const _extractChainID = async (client: WalletClient) => {
 

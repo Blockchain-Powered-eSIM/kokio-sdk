@@ -16,6 +16,6 @@ export class smartAccountSubPackage {
     }
 
     getSmartWalletClient (account: SmartContractAccount) {
-        return _getSmartWalletClient(account)
+        return _getSmartWalletClient(this.client, account)
     }
 }

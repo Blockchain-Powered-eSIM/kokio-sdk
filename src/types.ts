@@ -11,6 +11,18 @@ export type WebAuthnSignature = {
     s: bigint  
 }
 
+export type P256Credential = {
+    rawId: Hex;
+    clientData: {
+      type: string;
+      challenge: string;
+      origin: string;
+      crossOrigin: boolean;
+    };
+    authenticatorData: Hex;
+    signature: {r: Hex, s: Hex};
+};
+
 export type DataBundleDetails = {
     dataBundleId: string,
     dataBundlePrice: bigint;
