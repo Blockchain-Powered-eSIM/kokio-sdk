@@ -24,6 +24,15 @@ export type P256Credential = {
 };
 
 export type DataBundleDetails = {
-    dataBundleId: string,
+    dataBundleId: string;
     dataBundlePrice: bigint;
+}
+
+export type SignedRequest = {
+    body: string;
+    stamp : {
+        stampHeader: string;
+        stampHeaderValue: string;
+    }
+    url: string;
 }

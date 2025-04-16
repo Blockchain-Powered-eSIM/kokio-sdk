@@ -1,11 +1,12 @@
-import { AccountOp, createSmartAccountClient, getEntryPoint, SmartContractAccount, toSmartContractAccount, WalletClientSigner } from "@aa-sdk/core";
-import { http, type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData, Address, encodePacked, encodeAbiParameters, toHex, getContract } from "viem";
+import { AccountOp, createSmartAccountClient, EntryPointAbi_v6, getEntryPoint, SmartAccountClient, SmartContractAccount, toSmartContractAccount, WalletClientSigner,  } from "@aa-sdk/core";
+import { http, type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData, Address, encodePacked, encodeAbiParameters, toHex, getContract, createPublicClient, fromHex } from "viem";
 import { _getChainSpecificConstants, ZERO } from "../constants";
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils";
-import { P256Credential, PublicKey } from "../../types";
+import { P256Credential, PublicKey, SignedRequest, WebAuthnSignature } from "../../types";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis";
 import { AsnParser } from "@peculiar/asn1-schema";
 import { ECDSASigValue } from "@peculiar/asn1-ecc";
+import { entryPoint06Address } from "viem/_types/constants/address";
 
 const _encodeExecute = async (tx: AccountOp) => {
 
@@ -53,7 +54,7 @@ const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier:
 
 // Parse the signature from the authenticator and remove the leading zero if necessary
 const parseSignature = (signature: Uint8Array): {r: Hex, s: Hex} => {
-  
+
   const parsedSignature = AsnParser.parse(signature, ECDSASigValue);
   let rBytes = new Uint8Array(parsedSignature.r);
   let sBytes = new Uint8Array(parsedSignature.s);
@@ -70,57 +71,34 @@ const parseSignature = (signature: Uint8Array): {r: Hex, s: Hex} => {
   };
 }
 
-const _getP256Credentials = async (message: SignableMessage): Promise<P256Credential> => {
+const _getP256Credentials = async (signedRequest: SignedRequest): Promise<P256Credential> => {
 
-  const credentials = await window.navigator.credentials.get({
-    publicKey: {
-        timeout: 60000,
-        challenge: message
-          ? message 
-          : Uint8Array.from("random-challenge", (c) => c.charCodeAt(0)),
-        rpId: window.location.hostname,
-        userVerification: "preferred",
-      } as PublicKeyCredentialRequestOptions,
-  });
+  const stampHeaderValue = JSON.parse(signedRequest.stamp.stampHeaderValue);
+  const {authenticatorData, clientDataJson, credentialId, signature} = stampHeaderValue;
 
-  if (!credentials) {
-    throw new Error("Error: Invalid WebAuthn credentials");
-  }
+  const clientDataBinary = Uint8Array.from(Buffer.from(clientDataJson, 'base64url'));
+  const decoded = new TextDecoder().decode(clientDataBinary);
+  const clientDataObj = JSON.parse(decoded);
 
-  let cred = credentials as unknown as {
-    rawId: ArrayBuffer;
-    response: {
-      clientDataJSON: ArrayBuffer;
-      authenticatorData: ArrayBuffer;
-      signature: ArrayBuffer;
-      userHandle: ArrayBuffer;
-    };
-  };
-
-  const utf8Decoder = new TextDecoder("utf-8");
-
-  const decodedClientData = utf8Decoder.decode(cred.response.clientDataJSON);
-  const clientDataObj = JSON.parse(decodedClientData);
-
-  let authenticatorData = toHex(new Uint8Array(cred.response.authenticatorData));
-  let signature = parseSignature(new Uint8Array(cred?.response?.signature));
+  let authenticatorDataHex = toHex(Buffer.from(authenticatorData, 'base64url'));
+  let signatureDecoded = parseSignature(Uint8Array.from(Buffer.from(signature, 'base64url')));
 
   return {
-    rawId: toHex(new Uint8Array(cred.rawId)),
+    rawId: toHex(Buffer.from(credentialId, 'base64url')),
     clientData: {
       type: clientDataObj.type,
       challenge: clientDataObj.challenge,
       origin: clientDataObj.origin,
       crossOrigin: clientDataObj.crossOrigin,
     },
-    authenticatorData,
-    signature,
+    authenticatorData: authenticatorDataHex,
+    signature: signatureDecoded,
   };
 }
 
-export const _signMessage = async (message: SignableMessage): Promise<Hex> => {
+export const _signMessage = async (message: SignableMessage, signedRequest: SignedRequest): Promise<Hex> => {
 
-  const credentials = await _getP256Credentials(message);
+    const credentials = await _getP256Credentials(signedRequest); 
     const signature = encodePacked(
       ["uint8", "uint48", "bytes"],
       [
@@ -141,11 +119,11 @@ export const _signMessage = async (message: SignableMessage): Promise<Hex> => {
                   type: "string",
                 },
                 {
-                  name: "challengeLocation",
+                  name: "challengeIndex",
                   type: "uint256",
                 },
                 {
-                  name: "responseTypeLocation",
+                  name: "typeIndex",
                   type: "uint256",
                 },
                 {
@@ -163,8 +141,8 @@ export const _signMessage = async (message: SignableMessage): Promise<Hex> => {
             {
               authenticatorData: credentials.authenticatorData,
               clientDataJSON: JSON.stringify(credentials.clientData),
-              challengeLocation: BigInt(23),
-              responseTypeLocation: BigInt(1),
+              challengeIndex: BigInt(23),
+              typeIndex: BigInt(1),
               r: credentials.signature.r,
               s: credentials.signature.s,
             },
@@ -176,13 +154,13 @@ export const _signMessage = async (message: SignableMessage): Promise<Hex> => {
     return signature;
 }
 
-const _signUserOperationHash = async (hash: `0x${string}`): Promise<Hex> => {
+const _signUserOperationHash = async (hash: Hex, signedRequest: SignedRequest): Promise<Hex> => {
 
   const message = encodePacked(["uint8", "uint48", "bytes32"], [1, 0, hash]);
-  return _signMessage(message);
+  return _signMessage(message, signedRequest);
 }
 
-export const _getSmartWallet = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, depositAmount: bigint): Promise<SmartContractAccount> => {
+export const _getSmartWallet = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, depositAmount: bigint, signedRequest: SignedRequest): Promise<SmartContractAccount> => {
 
   const chainID = await client.getChainId();
   const values = _getChainSpecificConstants(chainID);
@@ -208,7 +186,7 @@ export const _getSmartWallet = async (client: WalletClient, deviceUniqueIdentifi
         // given a UO in the form of {target, data, value} should output the calldata for calling your contract's execution method
         encodeExecute: async (uo): Promise<Hash> => _encodeExecute(uo),
         
-        signMessage: async ({ message }): Promise<Hash> => _signMessage(message),
+        signMessage: async ({ message }): Promise<Hash> => _signMessage(message, signedRequest),
 
         signTypedData: async (typedData): Promise<Hash> => signer.signTypedData(typedData),
         
@@ -219,7 +197,7 @@ export const _getSmartWallet = async (client: WalletClient, deviceUniqueIdentifi
         // if your account supports batching, this should take an array of UOs and return the calldata for calling your contract's batchExecute method
         encodeBatchExecute: async (uos): Promise<Hash> => _encodeBatchExecute(uos),
         // if your contract expects a different signing scheme than the default signMessage scheme, you can override that here
-        signUserOperationHash: async (hash): Promise<Hash> => _signUserOperationHash(hash),
+        signUserOperationHash: async (hash): Promise<Hash> => _signUserOperationHash(hash, signedRequest),
         // allows you to define the calldata for upgrading your account
         // encodeUpgradeToAndCall: async (params): Promise<Hash> => "0x...",
     })

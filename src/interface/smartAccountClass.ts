@@ -1,6 +1,6 @@
 import { WalletClient } from "viem";
 import { _getSmartWallet, _getSmartWalletClient } from "../logic/account-kit/createSmartAccount";
-import { PublicKey } from "../types";
+import { PublicKey, SignedRequest } from "../types";
 import { SmartAccountClient, SmartContractAccount } from "@aa-sdk/core";
 
 export class smartAccountSubPackage {
@@ -11,8 +11,8 @@ export class smartAccountSubPackage {
         this.client = client;
     }
 
-    getSmartWallet (deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, depositAmount: bigint) {
-        return _getSmartWallet(this.client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount)
+    getSmartWallet (deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, depositAmount: bigint, signedRequest: SignedRequest) {
+        return _getSmartWallet(this.client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount, signedRequest)
     }
 
     getSmartWalletClient (account: SmartContractAccount) {

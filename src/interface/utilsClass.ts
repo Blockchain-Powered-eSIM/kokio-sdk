@@ -1,5 +1,6 @@
 import { WalletClient } from "viem";
-import { _add0x, _remove0x } from "../logic/utils";
+import { _add0x, _getUserOpHash, _remove0x } from "../logic/utils";
+import { AccountOp, SmartAccountClient } from "@aa-sdk/core";
 
 export class UtilsSubPackage {
 
@@ -16,4 +17,9 @@ export class UtilsSubPackage {
     remove0x(data: string) {
         _remove0x(data);
     }
+
+    getUserOpHash(uo: AccountOp, smartAccountClient: SmartAccountClient) {
+        _getUserOpHash(uo, smartAccountClient);
+    }
+    
 }
