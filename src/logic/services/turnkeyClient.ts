@@ -1,0 +1,80 @@
+import { assertActivityCompleted, assertNonNull, TurnkeyClient } from "@turnkey/http"
+import { Address, hashMessage, hashTypedData, SignableMessage, toHex, TypedData, TypedDataDefinition } from "viem";
+import { decodeAttestationObject, decodeClientDataJSON } from "@simplewebauthn/server/helpers";
+import { base64UrlToBuffer } from "../utils";
+import { WebAuthnSignature } from "../../types";
+
+export const _signMessageWithTurnkey = async (client: TurnkeyClient, organizationId: string, signWith: Address, message: SignableMessage): Promise<WebAuthnSignature> => {
+    
+    const payload = hashMessage(message);
+    
+    const { activity } = await client.signRawPayload({
+        type: "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
+        organizationId: organizationId,
+        parameters: {
+            signWith: signWith,
+            payload: payload,
+            encoding: "PAYLOAD_ENCODING_HEXADECIMAL",
+            hashFunction: "HASH_FUNCTION_NO_OP",
+        },
+        timestampMs: String(Date.now()), // millisecond timestamp
+    });
+
+    assertActivityCompleted(activity);
+
+    const attestationObject = assertNonNull(activity.intent.createOrganizationIntent?.rootAuthenticator.attestation.response.attestationObject);
+    const decodedAttestationObj = decodeAttestationObject(base64UrlToBuffer(attestationObject))
+
+    const clientDataJson = assertNonNull(activity.intent.createOrganizationIntent?.rootAuthenticator.attestation.response.clientDataJson);
+    const decodedClientDataJson = decodeClientDataJSON(clientDataJson);
+
+    const signature = assertNonNull(activity.result.signRawPayloadResult);
+
+    return {
+        authenticatorData: toHex(decodedAttestationObj.get("authData")),
+        clientDataJSON: JSON.stringify(decodedClientDataJson),
+        challengeIndex: BigInt(23),
+        typeIndex: BigInt(1),
+        r: BigInt(signature.r),
+        s: BigInt(signature.s) 
+    }
+} 
+
+export const _signTypedDataWithTurnkey = async <
+    const typedData extends TypedData | Record<string, unknown>,
+    primaryType extends keyof typedData | "EIP712Domain" = keyof typedData
+> (client: TurnkeyClient, organizationId: string, signWith: Address, typedData: TypedDataDefinition<typedData, primaryType>): Promise<WebAuthnSignature> => {
+    
+    const payload = hashTypedData(typedData);
+    
+    const { activity } = await client.signRawPayload({
+        type: "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2",
+        organizationId: organizationId,
+        parameters: {
+            signWith: signWith,
+            payload: payload,
+            encoding: "PAYLOAD_ENCODING_HEXADECIMAL",
+            hashFunction: "HASH_FUNCTION_NO_OP",
+        },
+        timestampMs: String(Date.now()), // millisecond timestamp
+    });
+
+    assertActivityCompleted(activity);
+
+    const attestationObject = assertNonNull(activity.intent.createOrganizationIntent?.rootAuthenticator.attestation.response.attestationObject);
+    const decodedAttestationObj = decodeAttestationObject(base64UrlToBuffer(attestationObject))
+
+    const clientDataJson = assertNonNull(activity.intent.createOrganizationIntent?.rootAuthenticator.attestation.response.clientDataJson);
+    const decodedClientDataJson = decodeClientDataJSON(clientDataJson);
+
+    const signature = assertNonNull(activity.result.signRawPayloadResult);
+
+    return {
+        authenticatorData: toHex(decodedAttestationObj.get("authData")),
+        clientDataJSON: JSON.stringify(decodedClientDataJson),
+        challengeIndex: BigInt(23),
+        typeIndex: BigInt(1),
+        r: BigInt(signature.r),
+        s: BigInt(signature.s) 
+    }
+}

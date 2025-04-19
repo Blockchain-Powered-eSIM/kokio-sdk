@@ -8,9 +8,12 @@ import { deviceWalletSubPackage } from "./interface/deviceWalletClass";
 import { eSIMWalletSubPackage } from "./interface/eSIMWalletClass";
 import { eSIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass";
 import { SmartAccountClient } from "@aa-sdk/core";
+import { TurnkeyClient } from "@turnkey/http";
 
 export class kokio {
     client: WalletClient;
+    turnkeyClient: TurnkeyClient;
+    organizationId: string;
     constants: ConstantsSubPackage;
     smartAccount: smartAccountSubPackage;
     deviceWalletFactory?: deviceWalletFactorySubPackage;
@@ -22,13 +25,17 @@ export class kokio {
 
     constructor(
         client: WalletClient,
+        turnkeyClient: TurnkeyClient,
+        organizationId: string,
         smartAccountClient?: SmartAccountClient,
         deviceWalletAddress?: Address,
         eSIMWalletAddress?: Address
     ) {
         this.client = client;
+        this.turnkeyClient = turnkeyClient;
+        this.organizationId = organizationId;
         this.constants = new ConstantsSubPackage(this.client);
-        this.smartAccount = new smartAccountSubPackage(this.client);
+        this.smartAccount = new smartAccountSubPackage(this.client, this.turnkeyClient, this.organizationId);
         this.deviceWalletFactory = smartAccountClient? new deviceWalletFactorySubPackage(smartAccountClient): undefined;
         this.eSIMWalletFactory = smartAccountClient? new eSIMWalletFactorySubPackage(smartAccountClient): undefined;
         this.lazyWalletRegistry = smartAccountClient? new lazyWalletRegistrySubPackage(smartAccountClient): undefined;

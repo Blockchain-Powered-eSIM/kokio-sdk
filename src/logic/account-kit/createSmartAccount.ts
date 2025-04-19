@@ -1,5 +1,5 @@
-import { AccountOp, createSmartAccountClient, EntryPointAbi_v6, getEntryPoint, SmartAccountClient, SmartContractAccount, toSmartContractAccount, WalletClientSigner,  } from "@aa-sdk/core";
-import { http, type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData, Address, encodePacked, encodeAbiParameters, toHex, getContract, createPublicClient, fromHex } from "viem";
+import { AccountOp, createSmartAccountClient, EntryPointAbi_v6, GetAccountParameter, getEntryPoint, SmartAccountClient, SmartContractAccount, toSmartContractAccount, WalletClientSigner} from "@aa-sdk/core";
+import { http, type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData, Address, encodePacked, encodeAbiParameters, toHex, getContract, createPublicClient, fromHex, TypedDataDefinition, TypedData } from "viem";
 import { _getChainSpecificConstants, ZERO } from "../constants";
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils";
 import { P256Credential, PublicKey, SignedRequest, WebAuthnSignature } from "../../types";
@@ -7,6 +7,8 @@ import { DeviceWallet, DeviceWalletFactory } from "../../abis";
 import { AsnParser } from "@peculiar/asn1-schema";
 import { ECDSASigValue } from "@peculiar/asn1-ecc";
 import { entryPoint06Address } from "viem/_types/constants/address";
+import { TurnkeyClient } from "@turnkey/http";
+import { _signMessageWithTurnkey, _signTypedDataWithTurnkey } from "../services/turnkeyClient";
 
 const _encodeExecute = async (tx: AccountOp) => {
 
@@ -52,120 +54,93 @@ const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier:
   return _add0x(values.factoryAddresses.DEVICE_WALLET_FACTORY + _remove0x(callData)); // Use once deployed
 }
 
-// Parse the signature from the authenticator and remove the leading zero if necessary
-const parseSignature = (signature: Uint8Array): {r: Hex, s: Hex} => {
+const _encodeSignature = async (webAuthnSignature: WebAuthnSignature): Promise<Hex> => {
 
-  const parsedSignature = AsnParser.parse(signature, ECDSASigValue);
-  let rBytes = new Uint8Array(parsedSignature.r);
-  let sBytes = new Uint8Array(parsedSignature.s);
-  if (_shouldRemoveLeadingZero(rBytes)) {
-    rBytes = rBytes.slice(1);
-  }
-  if (_shouldRemoveLeadingZero(sBytes)) {
-    sBytes = sBytes.slice(1);
-  }
-  const finalSignature = _concatUint8Arrays([rBytes, sBytes]);
-  return {
-    r: toHex(finalSignature.slice(0, 32)),
-    s: toHex(finalSignature.slice(32)),
-  };
+  const signature = encodePacked(
+    ["uint8", "uint48", "bytes"],
+    [
+      1,
+      0,
+      encodeAbiParameters(
+        [
+          {
+            type: "tuple",
+            name: "credentials",
+            components: [
+              {
+                name: "authenticatorData",
+                type: "bytes",
+              },
+              {
+                name: "clientDataJSON",
+                type: "string",
+              },
+              {
+                name: "challengeIndex",
+                type: "uint256",
+              },
+              {
+                name: "typeIndex",
+                type: "uint256",
+              },
+              {
+                name: "r",
+                type: "uint256",
+              },
+              {
+                name: "s",
+                type: "uint256",
+              },
+            ],
+          },
+        ],
+        [
+          {
+            authenticatorData: _add0x(webAuthnSignature.authenticatorData),
+            clientDataJSON: JSON.stringify(webAuthnSignature.clientDataJSON),
+            challengeIndex: BigInt(23),
+            typeIndex: BigInt(1),
+            r: webAuthnSignature.r,
+            s: webAuthnSignature.s,
+          },
+        ],
+      ),
+    ],
+  );
+
+  return signature;
 }
 
-const _getP256Credentials = async (signedRequest: SignedRequest): Promise<P256Credential> => {
+const _signMessage = async (message: SignableMessage, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
-  const stampHeaderValue = JSON.parse(signedRequest.stamp.stampHeaderValue);
-  const {authenticatorData, clientDataJson, credentialId, signature} = stampHeaderValue;
+  const webAuthnSignature = await _signMessageWithTurnkey(turnkeyClient, organiationId, signWith, message);
 
-  const clientDataBinary = Uint8Array.from(Buffer.from(clientDataJson, 'base64url'));
-  const decoded = new TextDecoder().decode(clientDataBinary);
-  const clientDataObj = JSON.parse(decoded);
-
-  let authenticatorDataHex = toHex(Buffer.from(authenticatorData, 'base64url'));
-  let signatureDecoded = parseSignature(Uint8Array.from(Buffer.from(signature, 'base64url')));
-
-  return {
-    rawId: toHex(Buffer.from(credentialId, 'base64url')),
-    clientData: {
-      type: clientDataObj.type,
-      challenge: clientDataObj.challenge,
-      origin: clientDataObj.origin,
-      crossOrigin: clientDataObj.crossOrigin,
-    },
-    authenticatorData: authenticatorDataHex,
-    signature: signatureDecoded,
-  };
+  return _encodeSignature(webAuthnSignature);
 }
 
-export const _signMessage = async (message: SignableMessage, signedRequest: SignedRequest): Promise<Hex> => {
+const _signTypedData = async <
+    const typedData extends TypedData | Record<string, unknown>,
+    primaryType extends keyof typedData | "EIP712Domain" = keyof typedData
+> (typedData: TypedDataDefinition<typedData, primaryType>, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
-    const credentials = await _getP256Credentials(signedRequest); 
-    const signature = encodePacked(
-      ["uint8", "uint48", "bytes"],
-      [
-        1,
-        0,
-        encodeAbiParameters(
-          [
-            {
-              type: "tuple",
-              name: "credentials",
-              components: [
-                {
-                  name: "authenticatorData",
-                  type: "bytes",
-                },
-                {
-                  name: "clientDataJSON",
-                  type: "string",
-                },
-                {
-                  name: "challengeIndex",
-                  type: "uint256",
-                },
-                {
-                  name: "typeIndex",
-                  type: "uint256",
-                },
-                {
-                  name: "r",
-                  type: "bytes32",
-                },
-                {
-                  name: "s",
-                  type: "bytes32",
-                },
-              ],
-            },
-          ],
-          [
-            {
-              authenticatorData: credentials.authenticatorData,
-              clientDataJSON: JSON.stringify(credentials.clientData),
-              challengeIndex: BigInt(23),
-              typeIndex: BigInt(1),
-              r: credentials.signature.r,
-              s: credentials.signature.s,
-            },
-          ],
-        ),
-      ],
-    );
+  const webAuthnSignature = await _signTypedDataWithTurnkey(turnkeyClient, organiationId, signWith, typedData);
 
-    return signature;
+  return _encodeSignature(webAuthnSignature);
 }
 
-const _signUserOperationHash = async (hash: Hex, signedRequest: SignedRequest): Promise<Hex> => {
+const _signUserOperationHash = async (hash: Hex, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
   const message = encodePacked(["uint8", "uint48", "bytes32"], [1, 0, hash]);
-  return _signMessage(message, signedRequest);
+  return _signMessage(message, turnkeyClient, organiationId, signWith);
 }
 
-export const _getSmartWallet = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, depositAmount: bigint, signedRequest: SignedRequest): Promise<SmartContractAccount> => {
+export const _getSmartWallet = async (client: WalletClient, turnkeyClient: TurnkeyClient, organiationId: string, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, depositAmount: bigint): Promise<SmartContractAccount> => {
 
   const chainID = await client.getChainId();
   const values = _getChainSpecificConstants(chainID);
 
-  const signer = new WalletClientSigner(client, "wallet")
+  if (!client.account) throw new Error ('Error: No signer account found with WalletClient')
+  const signWith = client.account.address
 
     return toSmartContractAccount({
         /// REQUIRED PARAMS ///
@@ -186,9 +161,9 @@ export const _getSmartWallet = async (client: WalletClient, deviceUniqueIdentifi
         // given a UO in the form of {target, data, value} should output the calldata for calling your contract's execution method
         encodeExecute: async (uo): Promise<Hash> => _encodeExecute(uo),
         
-        signMessage: async ({ message }): Promise<Hash> => _signMessage(message, signedRequest),
+        signMessage: async ({ message }): Promise<Hash> => _signMessage(message, turnkeyClient, organiationId, signWith),
 
-        signTypedData: async (typedData): Promise<Hash> => signer.signTypedData(typedData),
+        signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, turnkeyClient, organiationId, signWith),
         
         /// OPTIONAL PARAMS ///
         // if you already know your account's address, pass that in here to avoid generating a new counterfactual
@@ -197,7 +172,7 @@ export const _getSmartWallet = async (client: WalletClient, deviceUniqueIdentifi
         // if your account supports batching, this should take an array of UOs and return the calldata for calling your contract's batchExecute method
         encodeBatchExecute: async (uos): Promise<Hash> => _encodeBatchExecute(uos),
         // if your contract expects a different signing scheme than the default signMessage scheme, you can override that here
-        signUserOperationHash: async (hash): Promise<Hash> => _signUserOperationHash(hash, signedRequest),
+        signUserOperationHash: async (hash): Promise<Hash> => _signUserOperationHash(hash, turnkeyClient, organiationId, signWith),
         // allows you to define the calldata for upgrading your account
         // encodeUpgradeToAndCall: async (params): Promise<Hash> => "0x...",
     })
