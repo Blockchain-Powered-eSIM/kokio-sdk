@@ -2,7 +2,8 @@
   "name": "kokio-sdk",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/config.js",
+  "exports": "./dist/config.mjs",
   "scripts": {
     "postinstall": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"

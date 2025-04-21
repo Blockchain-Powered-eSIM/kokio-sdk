@@ -4,9 +4,6 @@ import { _getChainSpecificConstants, ZERO } from "../constants";
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils";
 import { P256Credential, PublicKey, SignedRequest, WebAuthnSignature } from "../../types";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis";
-import { AsnParser } from "@peculiar/asn1-schema";
-import { ECDSASigValue } from "@peculiar/asn1-ecc";
-import { entryPoint06Address } from "viem/_types/constants/address";
 import { TurnkeyClient } from "@turnkey/http";
 import { _signMessageWithTurnkey, _signTypedDataWithTurnkey } from "../services/turnkeyClient";
 
