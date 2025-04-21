@@ -1,7 +1,7 @@
 import { Address, WalletClient } from "viem";
 import {
     _verifySignature
-} from "../logic/P256Verifier"
+} from "../logic/P256Verifier.js"
 import { WebAuthnSignature } from "../types";
 import { SmartAccountClient } from "@aa-sdk/core";
 

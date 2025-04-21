@@ -1,5 +1,5 @@
 import { WalletClient } from "viem";
-import { _getSmartWallet, _getSmartWalletClient } from "../logic/account-kit/createSmartAccount";
+import { _getSmartWallet, _getSmartWalletClient } from "../logic/account-kit/createSmartAccount.js";
 import { PublicKey, SignedRequest } from "../types";
 import { SmartAccountClient, SmartContractAccount } from "@aa-sdk/core";
 import { TurnkeyClient } from "@turnkey/http";

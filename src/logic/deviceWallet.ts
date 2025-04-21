@@ -1,7 +1,7 @@
 import { Address, encodeFunctionData, WalletClient } from "viem";
 import { SmartAccountClient } from "@aa-sdk/core";
-import { DeviceWallet } from "../abis";
-import { customErrors } from "./constants";
+import { DeviceWallet } from "../abis/index.js";
+import { customErrors } from "./constants.js";
 
 export const _deployESIMWallet = async (client: SmartAccountClient, address: Address, hasAccessToETH: boolean, salt: bigint) => {
 

@@ -1,11 +1,11 @@
 import { AccountOp, createSmartAccountClient, EntryPointAbi_v6, GetAccountParameter, getEntryPoint, SmartAccountClient, SmartContractAccount, toSmartContractAccount, WalletClientSigner} from "@aa-sdk/core";
 import { http, type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData, Address, encodePacked, encodeAbiParameters, toHex, getContract, createPublicClient, fromHex, TypedDataDefinition, TypedData } from "viem";
-import { _getChainSpecificConstants, ZERO } from "../constants";
-import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils";
-import { P256Credential, PublicKey, SignedRequest, WebAuthnSignature } from "../../types";
-import { DeviceWallet, DeviceWalletFactory } from "../../abis";
+import { _getChainSpecificConstants, ZERO } from "../constants.js";
+import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils.js";
+import { P256Credential, PublicKey, SignedRequest, WebAuthnSignature } from "../../types.js";
+import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
 import { TurnkeyClient } from "@turnkey/http";
-import { _signMessageWithTurnkey, _signTypedDataWithTurnkey } from "../services/turnkeyClient";
+import { _signMessageWithTurnkey, _signTypedDataWithTurnkey } from "../services/turnkeyClient.js";
 
 const _encodeExecute = async (tx: AccountOp) => {
 

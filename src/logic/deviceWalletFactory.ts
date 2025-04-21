@@ -1,7 +1,7 @@
 import { encodeFunctionData, WalletClient } from "viem";
 import { SmartAccountClient } from "@aa-sdk/core";
-import { _extractChainID, _getChainSpecificConstants, customErrors } from "./constants";
-import { DeviceWalletFactory } from "../abis";
+import { _extractChainID, _getChainSpecificConstants, customErrors } from "./constants.js";
+import { DeviceWalletFactory } from "../abis/index.js";
 
 // export const _createAccount = async (
 //     client: WalletClient,

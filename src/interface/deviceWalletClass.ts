@@ -8,7 +8,7 @@ import {
     _removeESIMWallet,
     _setESIMUniqueIdentifierForAnESIMWallet,
     _toggleAccessToETH
-} from "../logic/deviceWallet"
+} from "../logic/deviceWallet.js"
 import { SmartAccountClient } from "@aa-sdk/core";
 
 export class deviceWalletSubPackage {

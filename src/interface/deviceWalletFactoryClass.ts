@@ -2,7 +2,7 @@ import { Address, WalletClient } from "viem";
 import {
     _getAddress,
     _getCurrentDeviceWalletImplementation
-} from "../logic/deviceWalletFactory"
+} from "../logic/deviceWalletFactory.js"
 import { SmartAccountClient } from "@aa-sdk/core";
 
 export class deviceWalletFactorySubPackage {

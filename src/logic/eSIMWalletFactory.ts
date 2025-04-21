@@ -1,7 +1,7 @@
 import { Address, encodeFunctionData, WalletClient } from "viem"
-import { _getChainSpecificConstants, customErrors } from "./constants";
+import { _getChainSpecificConstants, customErrors } from "./constants.js";
 import { SmartAccountClient } from "@aa-sdk/core";
-import { ESIMWalletFactory } from "../abis";
+import { ESIMWalletFactory } from "../abis/index.js";
 
 export const _addRegistryAddress = async (client: SmartAccountClient, registryContractAddress: Address) => {
 

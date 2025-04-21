@@ -1,8 +1,8 @@
 import { Address, encodeFunctionData, WalletClient } from "viem"
-import { DataBundleDetails } from "../types";
+import { DataBundleDetails } from "../types.js";
 import { SmartAccountClient } from "@aa-sdk/core";
-import { customErrors } from "./constants";
-import { ESIMWallet } from "../abis";
+import { customErrors } from "./constants.js";
+import { ESIMWallet } from "../abis/index.js";
 
 
 export const _setESIMUniqueIdentifier = async (client: SmartAccountClient, address: Address, eSIMUniqueIdentifier: string) => {

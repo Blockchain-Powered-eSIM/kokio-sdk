@@ -2,7 +2,7 @@ import { Address, WalletClient } from "viem";
 import {
     _addRegistryAddress,
     _getCurrentESIMWalletImplementation
-} from "../logic/eSIMWalletFactory"
+} from "../logic/eSIMWalletFactory.js"
 import { SmartAccountClient } from "@aa-sdk/core";
 
 export class eSIMWalletFactorySubPackage {

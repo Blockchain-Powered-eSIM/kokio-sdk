@@ -1,8 +1,8 @@
 import { encodeFunctionData, Hex, WalletClient } from "viem";
-import { DataBundleDetails } from "../types";
-import { _getChainSpecificConstants, customErrors } from "./constants";
+import { DataBundleDetails } from "../types.js";
+import { _getChainSpecificConstants, customErrors } from "./constants.js";
 import { SmartAccountClient } from "@aa-sdk/core";
-import { LazyWalletRegistry } from "../abis";
+import { LazyWalletRegistry } from "../abis/index.js";
 
 
 export const _isLazyWalletDeployed = async (client: SmartAccountClient, deviceUniqueIdentifier: string) => {

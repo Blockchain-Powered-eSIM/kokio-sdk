@@ -2,10 +2,18 @@
   "name": "kokio-sdk",
   "version": "1.0.0",
   "description": "",
-  "main": "./dist/config.js",
-  "exports": "./dist/config.mjs",
+  "type": "module",
+  "main": "./dist/esm/config.js",
+  "exports": {
+    ".": {
+      "types": "./dist/types/config.d.ts",
+      "import": "./dist/esm/config.js",
+      "default": "./dist/esm/config.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
-    "postinstall": "tsc",
+    "postinstall": "tsc && cp ./src/abis/*.json ./dist/esm/abis/",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

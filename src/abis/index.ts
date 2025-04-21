@@ -1,11 +1,11 @@
-import DeviceWallet from './DeviceWallet.json'
-import DeviceWalletFactory from './DeviceWalletFactory.json'
-import ESIMWallet from './ESIMWallet.json'
-import ESIMWalletFactory from './ESIMWalletFactory.json'
-import LazyWalletRegistry from './LazyWalletRegistry.json'
-import P256Verifier from './P256Verifier.json'
-import Registry from './Registry.json'
-import RegistryHelper from './RegistryHelper.json'
+import DeviceWallet from './DeviceWallet.json' assert { type: 'json' };
+import DeviceWalletFactory from './DeviceWalletFactory.json' assert { type: 'json' };
+import ESIMWallet from './ESIMWallet.json' assert { type: 'json' };
+import ESIMWalletFactory from './ESIMWalletFactory.json' assert { type: 'json' };
+import LazyWalletRegistry from './LazyWalletRegistry.json' assert { type: 'json' };
+import P256Verifier from './P256Verifier.json' assert { type: 'json' };
+import Registry from './Registry.json' assert { type: 'json' };
+import RegistryHelper from './RegistryHelper.json' assert { type: 'json' };
 
 export {
     DeviceWallet,

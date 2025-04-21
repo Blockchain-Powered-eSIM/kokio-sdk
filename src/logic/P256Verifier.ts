@@ -1,8 +1,8 @@
 import { encodeFunctionData, WalletClient } from "viem";
-import { WebAuthnSignature } from "../types";
+import { WebAuthnSignature } from "../types.js";
 import { SmartAccountClient } from "@aa-sdk/core";
-import { _getChainSpecificConstants, customErrors } from "./constants";
-import { P256Verifier } from "../abis";
+import { _getChainSpecificConstants, customErrors } from "./constants.js";
+import { P256Verifier } from "../abis/index.js";
 
 export const _verifySignature = async (
     client: SmartAccountClient,

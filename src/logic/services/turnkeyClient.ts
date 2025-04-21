@@ -1,8 +1,8 @@
 import { assertActivityCompleted, assertNonNull, TurnkeyClient } from "@turnkey/http"
 import { Address, hashMessage, hashTypedData, SignableMessage, toHex, TypedData, TypedDataDefinition } from "viem";
 import { decodeAttestationObject, decodeClientDataJSON } from "@simplewebauthn/server/helpers";
-import { base64UrlToBuffer } from "../utils";
-import { WebAuthnSignature } from "../../types";
+import { base64UrlToBuffer } from "../utils.js";
+import { WebAuthnSignature } from "../../types.js";
 
 export const _signMessageWithTurnkey = async (client: TurnkeyClient, organizationId: string, signWith: Address, message: SignableMessage): Promise<WebAuthnSignature> => {
     

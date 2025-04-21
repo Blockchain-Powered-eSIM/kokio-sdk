@@ -1,12 +1,12 @@
 import { Address, WalletClient } from "viem";
-import { ConstantsSubPackage } from "./interface/constantsClass";
-import { smartAccountSubPackage } from "./interface/smartAccountClass";
-import { deviceWalletFactorySubPackage } from "./interface/deviceWalletFactoryClass";
-import { P256VerifierSubPackage } from "./interface/P256VerifierClass";
-import { lazyWalletRegistrySubPackage } from "./interface/lazyWalletRegistryClass";
-import { deviceWalletSubPackage } from "./interface/deviceWalletClass";
-import { eSIMWalletSubPackage } from "./interface/eSIMWalletClass";
-import { eSIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass";
+import { ConstantsSubPackage } from "./interface/constantsClass.js";
+import { smartAccountSubPackage } from "./interface/smartAccountClass.js";
+import { deviceWalletFactorySubPackage } from "./interface/deviceWalletFactoryClass.js";
+import { P256VerifierSubPackage } from "./interface/P256VerifierClass.js";
+import { lazyWalletRegistrySubPackage } from "./interface/lazyWalletRegistryClass.js";
+import { deviceWalletSubPackage } from "./interface/deviceWalletClass.js";
+import { eSIMWalletSubPackage } from "./interface/eSIMWalletClass.js";
+import { eSIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass.js";
 import { SmartAccountClient } from "@aa-sdk/core";
 import { TurnkeyClient } from "@turnkey/http";
 
