@@ -51,6 +51,22 @@ const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier:
   return _add0x(values.factoryAddresses.DEVICE_WALLET_FACTORY + _remove0x(callData)); // Use once deployed
 }
 
+const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint):Promise<Address> => {
+
+  const chainID = await client.getChainId();
+  const values = _getChainSpecificConstants(chainID);
+
+    const contract = getContract({
+      abi: DeviceWalletFactory,
+      address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
+      client
+    })
+
+    const address = await contract.read.getAddress([deviceWalletOwnerKey, deviceUniqueIdentifier, salt]) as Address;
+
+    return address;
+}
+
 const _encodeSignature = async (webAuthnSignature: WebAuthnSignature): Promise<Hex> => {
 
   const signature = encodePacked(
@@ -164,8 +180,7 @@ export const _getSmartWallet = async (client: WalletClient, turnkeyClient: Turnk
         
         /// OPTIONAL PARAMS ///
         // if you already know your account's address, pass that in here to avoid generating a new counterfactual
-        // TO-DO: Once contract functions are exposed use getAddress() on DeviceWalletFactory to compute addess
-        // accountAddress: "0x...",
+        accountAddress: await getCounterFactualAddress(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt),
         // if your account supports batching, this should take an array of UOs and return the calldata for calling your contract's batchExecute method
         encodeBatchExecute: async (uos): Promise<Hash> => _encodeBatchExecute(uos),
         // if your contract expects a different signing scheme than the default signMessage scheme, you can override that here
