@@ -32,6 +32,13 @@
     },
     {
         "type": "function",
+        "name": "acceptOwnership",
+        "inputs": [],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
         "name": "addRegistryAddress",
         "inputs": [
             {
@@ -92,52 +99,6 @@
                 "name": "deviceWallet",
                 "type": "address",
                 "internalType": "contract DeviceWallet"
-            }
-        ],
-        "stateMutability": "payable"
-    },
-    {
-        "type": "function",
-        "name": "deployDeviceWalletAsAdmin",
-        "inputs": [
-            {
-                "name": "_deviceUniqueIdentifier",
-                "type": "string",
-                "internalType": "string"
-            },
-            {
-                "name": "_deviceWalletOwnerKey",
-                "type": "bytes32[2]",
-                "internalType": "bytes32[2]"
-            },
-            {
-                "name": "_salt",
-                "type": "uint256",
-                "internalType": "uint256"
-            },
-            {
-                "name": "_depositAmount",
-                "type": "uint256",
-                "internalType": "uint256"
-            }
-        ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "tuple",
-                "internalType": "struct Wallets",
-                "components": [
-                    {
-                        "name": "deviceWallet",
-                        "type": "address",
-                        "internalType": "address"
-                    },
-                    {
-                        "name": "eSIMWallet",
-                        "type": "address",
-                        "internalType": "address"
-                    }
-                ]
             }
         ],
         "stateMutability": "payable"
@@ -310,6 +271,19 @@
     {
         "type": "function",
         "name": "owner",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "pendingOwner",
         "inputs": [],
         "outputs": [
             {
@@ -609,6 +583,25 @@
                 "type": "uint64",
                 "indexed": false,
                 "internalType": "uint64"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "OwnershipTransferStarted",
+        "inputs": [
+            {
+                "name": "previousOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "newOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
             }
         ],
         "anonymous": false

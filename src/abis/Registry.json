@@ -19,6 +19,13 @@
     },
     {
         "type": "function",
+        "name": "acceptOwnership",
+        "inputs": [],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
         "name": "addOrUpdateLazyWalletRegistryAddress",
         "inputs": [
             {
@@ -115,7 +122,7 @@
         "name": "deviceWalletToOwner",
         "inputs": [
             {
-                "name": "",
+                "name": "deviceWalletAddress",
                 "type": "address",
                 "internalType": "address"
             },
@@ -127,7 +134,7 @@
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "ownerP256Keys",
                 "type": "bytes32",
                 "internalType": "bytes32"
             }
@@ -221,14 +228,14 @@
         "name": "isDeviceWalletValid",
         "inputs": [
             {
-                "name": "",
+                "name": "deviceWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "valid",
                 "type": "bool",
                 "internalType": "bool"
             }
@@ -240,14 +247,14 @@
         "name": "isESIMWalletOnStandby",
         "inputs": [
             {
-                "name": "",
+                "name": "eSIMWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "isOnStandby",
                 "type": "bool",
                 "internalType": "bool"
             }
@@ -259,14 +266,14 @@
         "name": "isESIMWalletValid",
         "inputs": [
             {
-                "name": "",
+                "name": "eSIMWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "deviceWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
@@ -301,6 +308,19 @@
     },
     {
         "type": "function",
+        "name": "pendingOwner",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "proxiableUUID",
         "inputs": [],
         "outputs": [
@@ -317,14 +337,14 @@
         "name": "registeredP256Keys",
         "inputs": [
             {
-                "name": "",
+                "name": "hashOfOwnerP256Keys",
                 "type": "bytes32",
                 "internalType": "bytes32"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "deviceWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
@@ -374,14 +394,14 @@
         "name": "uniqueIdentifierToDeviceWallet",
         "inputs": [
             {
-                "name": "",
+                "name": "deviceIdentifier",
                 "type": "string",
                 "internalType": "string"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "deviceWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
@@ -563,6 +583,25 @@
                 "type": "string",
                 "indexed": false,
                 "internalType": "string"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "OwnershipTransferStarted",
+        "inputs": [
+            {
+                "name": "previousOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "newOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
             }
         ],
         "anonymous": false

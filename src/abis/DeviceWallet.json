@@ -53,14 +53,14 @@
         "name": "canPullETH",
         "inputs": [
             {
-                "name": "",
+                "name": "eSIMWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "isAllowedToPullETH",
                 "type": "bool",
                 "internalType": "bool"
             }
@@ -257,14 +257,14 @@
         "name": "isValidESIMWallet",
         "inputs": [
             {
-                "name": "",
+                "name": "eSIMWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "isValid",
                 "type": "bool",
                 "internalType": "bool"
             }
@@ -881,11 +881,6 @@
     },
     {
         "type": "error",
-        "name": "OnlyDeviceWalletFactoryOrOwner",
-        "inputs": []
-    },
-    {
-        "type": "error",
         "name": "OnlyESIMWalletAdmin",
         "inputs": []
     },
@@ -897,6 +892,11 @@
     {
         "type": "error",
         "name": "OnlyRegistryOrDeviceWalletFactoryOrOwner",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "OnlySelfOrAssociatedESIMWallet",
         "inputs": []
     },
     {
