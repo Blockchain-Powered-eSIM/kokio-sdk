@@ -10,8 +10,8 @@ import { eSIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass.
 import { SmartAccountClient } from "@aa-sdk/core";
 import { TurnkeyClient } from "@turnkey/http";
 
-export class kokio {
-    client: WalletClient;
+export class Kokio {
+    viemWalletClient: WalletClient;
     turnkeyClient: TurnkeyClient;
     organizationId: string;
     constants: ConstantsSubPackage;
@@ -24,18 +24,18 @@ export class kokio {
     P256Verifier?: P256VerifierSubPackage;
 
     constructor(
-        client: WalletClient,
+        viemWalletClient: WalletClient,
         turnkeyClient: TurnkeyClient,
         organizationId: string,
         smartAccountClient?: SmartAccountClient,
         deviceWalletAddress?: Address,
         eSIMWalletAddress?: Address
     ) {
-        this.client = client;
+        this.viemWalletClient = viemWalletClient;
         this.turnkeyClient = turnkeyClient;
         this.organizationId = organizationId;
-        this.constants = new ConstantsSubPackage(this.client);
-        this.smartAccount = new smartAccountSubPackage(this.client, this.turnkeyClient, this.organizationId);
+        this.constants = new ConstantsSubPackage(this.viemWalletClient);
+        this.smartAccount = new smartAccountSubPackage(this.viemWalletClient, this.turnkeyClient, this.organizationId);
         this.deviceWalletFactory = smartAccountClient? new deviceWalletFactorySubPackage(smartAccountClient): undefined;
         this.eSIMWalletFactory = smartAccountClient? new eSIMWalletFactorySubPackage(smartAccountClient): undefined;
         this.lazyWalletRegistry = smartAccountClient? new lazyWalletRegistrySubPackage(smartAccountClient): undefined;

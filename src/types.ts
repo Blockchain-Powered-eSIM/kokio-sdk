@@ -1,6 +1,6 @@
 import { Hex } from "viem";
 
-export type PublicKey = [Hex, Hex];
+export type P256Key = [Hex, Hex];
 
 export type WebAuthnSignature = {
     authenticatorData: string,

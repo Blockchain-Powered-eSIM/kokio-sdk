@@ -12,13 +12,14 @@ export const _addRegistryAddress = async (client: SmartAccountClient, registryCo
     return client.sendUserOperation({
         account: client.account,
         uo:{
-        target: values.factoryAddresses.ESIM_WALLET_FACTORY,
-        data: encodeFunctionData({
-            abi: ESIMWalletFactory,
-            functionName: "addRegistryAddress",
-            args: [registryContractAddress]
-        })
-    }});
+            target: values.factoryAddresses.ESIM_WALLET_FACTORY,
+            data: encodeFunctionData({
+                abi: ESIMWalletFactory,
+                functionName: "addRegistryAddress",
+                args: [registryContractAddress]
+            })
+        }
+    });
 }
 
 // export const _deployESIMWallet = async (client: WalletClient, deviceWalletAddress: Address, salt: bigint) => {
@@ -37,11 +38,12 @@ export const _getCurrentESIMWalletImplementation = async (client: SmartAccountCl
     return client.sendUserOperation({
         account: client.account,
         uo:{
-        target: values.factoryAddresses.ESIM_WALLET_FACTORY,
-        data: encodeFunctionData({
-            abi: ESIMWalletFactory,
-            functionName: "getCurrentESIMWalletImplementation",
-            args: []
-        })
-    }});
+            target: values.factoryAddresses.ESIM_WALLET_FACTORY,
+            data: encodeFunctionData({
+                abi: ESIMWalletFactory,
+                functionName: "getCurrentESIMWalletImplementation",
+                args: []
+            })
+        }
+    });
 }

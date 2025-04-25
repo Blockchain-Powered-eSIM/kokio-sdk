@@ -10,17 +10,18 @@ export const _isLazyWalletDeployed = async (client: SmartAccountClient, deviceUn
     const values = _getChainSpecificConstants(await client.getChainId());
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
-        // UserOp
+    // UserOp
     return client.sendUserOperation({
         account: client.account,
         uo:{
-        target: values.factoryAddresses.LAZY_WALLET_REGISTRY,
-        data: encodeFunctionData({
-            abi: LazyWalletRegistry,
-            functionName: "isLazyWalletDeployed",
-            args: [deviceUniqueIdentifier]
-        })
-    }});
+            target: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+            data: encodeFunctionData({
+                abi: LazyWalletRegistry,
+                functionName: "isLazyWalletDeployed",
+                args: [deviceUniqueIdentifier]
+            })
+        }
+    });
 }
 
 export const _batchPopulateHistory = async (
@@ -33,17 +34,18 @@ export const _batchPopulateHistory = async (
     const values = _getChainSpecificConstants(await client.getChainId());
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
-        // UserOp
+    // UserOp
     return client.sendUserOperation({
         account: client.account,
         uo:{
-        target: values.factoryAddresses.LAZY_WALLET_REGISTRY,
-        data: encodeFunctionData({
-            abi: LazyWalletRegistry,
-            functionName: "batchPopulateHistory",
-            args: [deviceUniqueIdentifiers, eSIMUniqueIdentifiers, dataBundleDetails]
-        })
-    }});
+            target: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+            data: encodeFunctionData({
+                abi: LazyWalletRegistry,
+                functionName: "batchPopulateHistory",
+                args: [deviceUniqueIdentifiers, eSIMUniqueIdentifiers, dataBundleDetails]
+            })
+        }
+    });
 }
 
 export const _deployLazyWalletAndSetESIMIdentifier = async (
@@ -57,17 +59,18 @@ export const _deployLazyWalletAndSetESIMIdentifier = async (
     const values = _getChainSpecificConstants(await client.getChainId());
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
-        // UserOp
+    // UserOp
     return client.sendUserOperation({
         account: client.account,
         uo:{
-        target: values.factoryAddresses.LAZY_WALLET_REGISTRY,
-        data: encodeFunctionData({
-            abi: LazyWalletRegistry,
-            functionName: "deployLazyWalletAndSetESIMIdentifier",
-            args: [deviceOwnerPublicKey, deviceUniqueIdentifier, salt, depositAmount]
-        })
-    }});
+            target: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+            data: encodeFunctionData({
+                abi: LazyWalletRegistry,
+                functionName: "deployLazyWalletAndSetESIMIdentifier",
+                args: [deviceOwnerPublicKey, deviceUniqueIdentifier, salt, depositAmount]
+            })
+        }
+    });
 }
 
 export const _switchESIMIdentifierToNewDeviceIdentifier = async (
@@ -80,15 +83,16 @@ export const _switchESIMIdentifierToNewDeviceIdentifier = async (
     const values = _getChainSpecificConstants(await client.getChainId());
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
-        // UserOp
+    // UserOp
     return client.sendUserOperation({
         account: client.account,
         uo:{
-        target: values.factoryAddresses.LAZY_WALLET_REGISTRY,
-        data: encodeFunctionData({
-            abi: LazyWalletRegistry,
-            functionName: "switchESIMIdentifierToNewDeviceIdentifier",
-            args: [eSIMIdentifier, oldDeviceIdentifier, newDeviceIdentifier]
-        })
-    }});
+            target: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+            data: encodeFunctionData({
+                abi: LazyWalletRegistry,
+                functionName: "switchESIMIdentifierToNewDeviceIdentifier",
+                args: [eSIMIdentifier, oldDeviceIdentifier, newDeviceIdentifier]
+            })
+        }
+    });
 }

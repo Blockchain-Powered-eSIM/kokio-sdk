@@ -1,6 +1,6 @@
 import { Address, WalletClient } from "viem";
 import { _getSmartWallet, _getSmartWalletClient } from "../logic/account-kit/createSmartAccount.js";
-import { PublicKey, SignedRequest } from "../types";
+import { P256Key, SignedRequest } from "../types";
 import { SmartAccountClient, SmartContractAccount } from "@aa-sdk/core";
 import { TurnkeyClient } from "@turnkey/http";
 
@@ -16,7 +16,7 @@ export class smartAccountSubPackage {
         this.organizationId = organiationId;
     }
 
-    getSmartWallet (deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, sender?: Address) {
+    getSmartWallet (deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint, sender?: Address) {
         return _getSmartWallet(this.client, this.turnkeyClient, this.organizationId, deviceUniqueIdentifier, deviceWalletOwnerKey, salt, sender)
     }
 

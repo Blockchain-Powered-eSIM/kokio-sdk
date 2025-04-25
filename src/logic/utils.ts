@@ -1,5 +1,5 @@
-import { Address, createPublicClient, getContract, Hex, http, isAddress, isHex, toHex } from "viem";
-import { _getChainSpecificConstants, customErrors, ZERO } from "./constants.js"
+import { Hex, isHex } from "viem";
+import { _getChainSpecificConstants, customErrors } from "./constants.js"
 
 export const _add0x = (data: Hex | string): Hex => {
     if(!data) {
@@ -84,4 +84,3 @@ export function parseDEREncodedSignature(signature: Uint8Array): {
       s: Buffer.from(s).toString("hex"),
     };
 }
-

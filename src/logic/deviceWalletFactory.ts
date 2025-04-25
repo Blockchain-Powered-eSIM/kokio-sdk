@@ -1,4 +1,4 @@
-import { encodeFunctionData, WalletClient } from "viem";
+import { encodeFunctionData } from "viem";
 import { SmartAccountClient } from "@aa-sdk/core";
 import { _extractChainID, _getChainSpecificConstants, customErrors } from "./constants.js";
 import { DeviceWalletFactory } from "../abis/index.js";
@@ -26,17 +26,18 @@ export const _getAddress = async (
     const values = _getChainSpecificConstants(await client.getChainId());
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
-        // UserOp
+    // UserOp
     return client.sendUserOperation({
         account: client.account,
         uo:{
-        target: values.factoryAddresses.DEVICE_WALLET_FACTORY,
-        data: encodeFunctionData({
-            abi: DeviceWalletFactory,
-            functionName: "getAddress",
-            args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt]
-        })
-    }});
+            target: values.factoryAddresses.DEVICE_WALLET_FACTORY,
+            data: encodeFunctionData({
+                abi: DeviceWalletFactory,
+                functionName: "getAddress",
+                args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt]
+            })
+        }
+    });
 }
 
 export const _getCurrentDeviceWalletImplementation = async (client: SmartAccountClient) => {
@@ -48,11 +49,12 @@ export const _getCurrentDeviceWalletImplementation = async (client: SmartAccount
     return client.sendUserOperation({
         account: client.account,
         uo:{
-        target: values.factoryAddresses.DEVICE_WALLET_FACTORY,
-        data: encodeFunctionData({
-            abi: DeviceWalletFactory,
-            functionName: "getCurrentDeviceWalletImplementation",
-            args: []
-        })
-    }});
+            target: values.factoryAddresses.DEVICE_WALLET_FACTORY,
+            data: encodeFunctionData({
+                abi: DeviceWalletFactory,
+                functionName: "getCurrentDeviceWalletImplementation",
+                args: []
+            })
+        }
+    });
 }
