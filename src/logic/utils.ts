@@ -1,15 +1,15 @@
-import { Address, createPublicClient, getContract, Hex, http, isAddress, toHex } from "viem";
+import { Address, createPublicClient, getContract, Hex, http, isAddress, isHex, toHex } from "viem";
 import { _getChainSpecificConstants, customErrors, ZERO } from "./constants.js"
 
-export const _add0x = (data: Address | string): Address => {
+export const _add0x = (data: Hex | string): Hex => {
     if(!data) {
         throw customErrors.NULL_OR_UNDEFINED_VALUE;
     }
 
-    return (data.indexOf('0x') !== -1) ? isAddress(data)? data : `0x${data}` : `0x${data}`;
+    return (data.indexOf('0x') !== -1) ? isHex(data)? data : `0x${data}` : `0x${data}`;
 }
 
-export const _remove0x = (data: Address | string): string => {
+export const _remove0x = (data: Hex | string): string => {
     if(!data) {
         throw customErrors.NULL_OR_UNDEFINED_VALUE;
     }

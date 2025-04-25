@@ -39,7 +39,7 @@ const _encodeBatchExecute = async (txs: AccountOp[]) => {
   })
 }
 
-const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey): Promise<BytesLike> => {
+const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey): Promise<Hex> => {
 
   const chainID = await client.getChainId();
   const values = _getChainSpecificConstants(chainID);
@@ -47,8 +47,15 @@ const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier:
   const registry = values.factoryAddresses.REGISTRY;
   const deviceWalletFactoryAddress = values.factoryAddresses.DEVICE_WALLET_FACTORY;
 
-  const deviceWalletFactory = new ethers.Contract(deviceWalletFactoryAddress, DeviceWalletFactory);
-  const beacon = await deviceWalletFactory.beacon();
+  const deviceWalletFactory = getContract({
+    abi: DeviceWalletFactory,
+    address: deviceWalletFactoryAddress,
+    client
+  })
+  const beacon = await deviceWalletFactory.read.beacon([]);
+
+  // const deviceWalletFactory = new ethers.Contract(deviceWalletFactoryAddress, DeviceWalletFactory);
+  // const beacon = await deviceWalletFactory.beacon();
 
   const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
@@ -71,12 +78,12 @@ const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier:
   // Compute initCode
   const initCode = ethers.concat([beaconProxyBytecode, beaconProxyConstructorArgs]);
 
-  return initCode;
+  return _add0x(initCode);
 }
 
 const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey): Promise<BytesLike> => {
   
-  const initCode = await _getAccountInitCode(client ,deviceUniqueIdentifier, deviceWalletOwnerKey);
+  const initCode:BytesLike = await _getAccountInitCode(client ,deviceUniqueIdentifier, deviceWalletOwnerKey);
 
   return ethers.keccak256(initCode);
 }
@@ -96,7 +103,7 @@ const prepareSaltForCreate2 = (sender: HexString, salt: BigInt): BytesLike => {
 
 // NOTE: Sender is the address that deploys the contract.
 // In case of ERC-4337, it is the Entry Point contract address
-const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: BigInt, sender: Address):Promise<string> => {
+const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: BigInt, sender?: Address):Promise<Hex> => {
 
   const chainID = await client.getChainId();
   const values = _getChainSpecificConstants(chainID);
@@ -109,7 +116,7 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
   // Calculate deterministic address from init code hash
   const create2Address = ethers.getCreate2Address(deviceWalletFactoryAddress, uniqueSaltBytes32, initCodeHash);
 
-  return ethers.getAddress(create2Address);
+  return _add0x(ethers.getAddress(create2Address));
 }
 
 const _encodeSignature = async (webAuthnSignature: WebAuthnSignature): Promise<Hex> => {
@@ -210,9 +217,9 @@ export const _getSmartWallet = async (client: WalletClient, turnkeyClient: Turnk
         // The EntryPointDef that your account is compatible with
         entryPoint: getEntryPoint(values.chain, {addressOverride: values.factoryAddresses.ENTRY_POINT}), 
 
-        getAccountInitCode: async (): Promise<BytesLike> => await _getAccountInitCode(client, deviceUniqueIdentifier, deviceWalletOwnerKey),
+        getAccountInitCode: async (): Promise<Hex> => await _getAccountInitCode(client, deviceUniqueIdentifier, deviceWalletOwnerKey),
 
-        getAccountInitCodeHash: async (): Promise<BytesLike> => await getInitCodeHash(client, deviceUniqueIdentifier, deviceWalletOwnerKey),
+        // getAccountInitCodeHash: async (): Promise<BytesLike> => await getInitCodeHash(client, deviceUniqueIdentifier, deviceWalletOwnerKey),
         
         // an invalid signature that doesn't cause your account to revert during validation
         getDummySignature: async (): Promise<Hash> => "0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c", //from Alchemy docs
