@@ -16,7 +16,7 @@ export class smartAccountSubPackage {
         this.organizationId = organiationId;
     }
 
-    getSmartWallet (deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, depositAmount: bigint, sender?: Address) {
+    getSmartWallet (deviceUniqueIdentifier: string, deviceWalletOwnerKey: PublicKey, salt: bigint, sender?: Address) {
         return _getSmartWallet(this.client, this.turnkeyClient, this.organizationId, deviceUniqueIdentifier, deviceWalletOwnerKey, salt, sender)
     }
 
