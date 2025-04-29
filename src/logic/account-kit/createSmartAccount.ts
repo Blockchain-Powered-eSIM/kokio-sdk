@@ -59,11 +59,27 @@ const _encodeBatchExecute = async (txs: AccountOp[]) => {
 	});
 }
 
-const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<Hex> => {
+const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint): Promise<Hex> => {
 
+  // To send with user operations
+  const chainID = await client.getChainId();
+  const values = _getChainSpecificConstants(chainID);
+
+  const callData =  encodeFunctionData({
+    abi: DeviceWalletFactory, 
+    functionName: "createAccount",
+    args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt, ZERO],
+  })
+
+  return values.factoryAddresses.DEVICE_WALLET_FACTORY.concat(_remove0x(callData)) as Hex;
+}
+
+const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<BytesLike> => {
+  
 	const chainID = await client.getChainId();
 	const values = _getChainSpecificConstants(chainID);
   
+  // off-chain computation of the DeviceWallet address
 	const registry = values.factoryAddresses.REGISTRY;
 	const deviceWalletFactoryAddress = values.factoryAddresses.DEVICE_WALLET_FACTORY;
 
@@ -72,10 +88,8 @@ const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier:
 		address: deviceWalletFactoryAddress,
 		client
 	});
-	const beacon = await deviceWalletFactory.read.beacon([]);
 
-	// const deviceWalletFactory = new ethers.Contract(deviceWalletFactoryAddress, DeviceWalletFactory);
-	// const beacon = await deviceWalletFactory.beacon();
+	const beacon = await deviceWalletFactory.read.beacon([]);
 
 	const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
@@ -96,14 +110,7 @@ const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier:
 	);
 	
 	// Compute initCode
-	const initCode = ethers.concat([beaconProxyBytecode, beaconProxyConstructorArgs]);
-
-	return initCode as Hex;
-}
-
-const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<BytesLike> => {
-  
-	const initCode:BytesLike = await _getAccountInitCode(client ,deviceUniqueIdentifier, deviceWalletOwnerKey);
+	const initCode:BytesLike = ethers.concat([beaconProxyBytecode, beaconProxyConstructorArgs]);
 
 	return ethers.keccak256(initCode);
 }
@@ -129,7 +136,7 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
 	const values = _getChainSpecificConstants(chainID);
 	const deviceWalletFactoryAddress = values.factoryAddresses.DEVICE_WALLET_FACTORY;
 
-	sender = sender? sender : values.factoryAddresses.ENTRY_POINT;
+	sender = sender? sender : values.factoryAddresses.SENDER_CREATOR;
 	const uniqueSaltBytes32 = prepareSaltForCreate2(sender, salt);
 	const initCodeHash = await getInitCodeHash(client, deviceUniqueIdentifier, deviceWalletOwnerKey);
 
@@ -235,7 +242,7 @@ export const _getSmartWallet = async (client: WalletClient, turnkeyClient: Turnk
 		// The EntryPointDef that your account is compatible with
 		entryPoint: getEntryPoint(values.chain, {addressOverride: values.factoryAddresses.ENTRY_POINT}), 
 
-		getAccountInitCode: async (): Promise<Hex> => await _getAccountInitCode(client, deviceUniqueIdentifier, deviceWalletOwnerKey),
+		getAccountInitCode: async (): Promise<Hex> => await _getAccountInitCode(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt),
 
 		// getAccountInitCodeHash: async (): Promise<BytesLike> => await getInitCodeHash(client, deviceUniqueIdentifier, deviceWalletOwnerKey),
 		
