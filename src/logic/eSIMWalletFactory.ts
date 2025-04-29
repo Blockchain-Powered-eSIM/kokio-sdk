@@ -22,12 +22,41 @@ export const _addRegistryAddress = async (client: SmartAccountClient, registryCo
     });
 }
 
-// export const _deployESIMWallet = async (client: WalletClient, deviceWalletAddress: Address, salt: bigint) => {
+export const _deployESIMWalletWithEOA = async (client: WalletClient, deviceWalletAddress: Address, salt: bigint) => {
 
-//     const contract = (await getContractInstance(client)).ESIMWalletFactory();
+    const chainID = await client.getChainId();
+    const values = _getChainSpecificConstants(chainID);
 
-//     return contract.write.deployESIMWallet([deviceWalletAddress, salt]);
-// }
+    if (!client.account) throw new Error(customErrors.MISSING_EOA_WALLET);
+
+    return client.writeContract({
+        address: values.factoryAddresses.ESIM_WALLET_FACTORY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: ESIMWalletFactory,
+        functionName: 'deployESIMWallet',
+        args: [deviceWalletAddress, salt]
+    });
+}
+
+export const _deployESIMWalletWithUserOp = async (client: SmartAccountClient, deviceWalletAddress: Address, salt: bigint) => {
+
+    const values = _getChainSpecificConstants(await client.getChainId());
+    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    
+    // UserOp
+    return client.sendUserOperation({
+        account: client.account,
+        uo:{
+            target: values.factoryAddresses.ESIM_WALLET_FACTORY,
+            data: encodeFunctionData({
+                abi: ESIMWalletFactory,
+                functionName: "deployESIMWallet",
+                args: [deviceWalletAddress, salt]
+            })
+        }
+    });
+}
 
 export const _getCurrentESIMWalletImplementation = async (client: SmartAccountClient) => {
 

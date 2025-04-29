@@ -115,7 +115,8 @@ export const arbitrumSepoliaFactoryAddresses: Record<string, `0x${string}`> = {
 
 export const customErrors: Record<string, string> = {
     NULL_OR_UNDEFINED_VALUE: "Error: Null or undefined value provided",
-    MISSING_SMART_WALLET: "Error: Client does not have smart wallet account associated"
+    MISSING_SMART_WALLET: "Error: Client does not have smart wallet account associated",
+    MISSING_EOA_WALLET: "Error: Client does not have EOA wallet associated"
 }
 
 export const _extractChainID = async (client: WalletClient) => {

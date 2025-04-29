@@ -1,20 +1,30 @@
-import { encodeFunctionData } from "viem";
+import { encodeFunctionData, WalletClient } from "viem";
 import { SmartAccountClient } from "@aa-sdk/core";
 import { _extractChainID, _getChainSpecificConstants, customErrors } from "./constants.js";
 import { DeviceWalletFactory } from "../abis/index.js";
 
-// export const _createAccount = async (
-//     client: WalletClient,
-//     deviceUniqueIdentifier: string,
-//     deviceWalletOwnerKey: string,
-//     salt: bigint,
-//     depositAmount: bigint
-// ) => {
+export const _createAccountWithEOA = async (
+    client: WalletClient,
+    deviceUniqueIdentifier: string,
+    deviceWalletOwnerKey: string,
+    salt: bigint,
+    depositAmount: bigint
+) => {
 
-//     const contract = (await getContractInstance(client)).deviceWalletFactory();
+    const chainID = await client.getChainId();
+    const values = _getChainSpecificConstants(chainID);
 
-//     return contract.write.createAccount([deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount]);
-// }
+    if (!client.account) throw new Error(customErrors.MISSING_EOA_WALLET);
+
+    return client.writeContract({
+        address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: DeviceWalletFactory,
+        functionName: 'createAccount',
+        args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount]
+    });
+}
 
 export const _getAddress = async (
     client: SmartAccountClient,
