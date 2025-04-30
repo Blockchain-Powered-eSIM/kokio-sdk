@@ -40,7 +40,7 @@ export class Kokio {
         this.eSIMWalletFactory = smartAccountClient? new eSIMWalletFactorySubPackage(viemWalletClient, smartAccountClient): undefined;
         this.lazyWalletRegistry = smartAccountClient? new lazyWalletRegistrySubPackage(smartAccountClient): undefined;
         this.P256Verifier = smartAccountClient? new P256VerifierSubPackage(smartAccountClient): undefined;
-        this.deviceWallet = deviceWalletAddress && smartAccountClient? new deviceWalletSubPackage(smartAccountClient, deviceWalletAddress): undefined;
+        this.deviceWallet = deviceWalletAddress && smartAccountClient? new deviceWalletSubPackage(viemWalletClient, smartAccountClient, deviceWalletAddress): undefined;
         this.eSIMWallet = eSIMWalletAddress && smartAccountClient? new eSIMWalletSubPackage(smartAccountClient, eSIMWalletAddress): undefined;
     }
 }
