@@ -9,7 +9,7 @@ import {
     arbitrumOneFactoryAddresses,
     arbitrumSepoliaFactoryAddresses,
     customErrors
-} from "../logic/constants"
+} from "../logic/constants.js"
 
 export class ConstantsSubPackage {
     factoryAddresses!: 

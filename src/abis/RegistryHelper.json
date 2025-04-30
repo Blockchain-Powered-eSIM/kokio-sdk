@@ -78,7 +78,7 @@
         "name": "deviceWalletToOwner",
         "inputs": [
             {
-                "name": "",
+                "name": "deviceWalletAddress",
                 "type": "address",
                 "internalType": "address"
             },
@@ -90,7 +90,7 @@
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "ownerP256Keys",
                 "type": "bytes32",
                 "internalType": "bytes32"
             }
@@ -115,14 +115,14 @@
         "name": "isDeviceWalletValid",
         "inputs": [
             {
-                "name": "",
+                "name": "deviceWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "valid",
                 "type": "bool",
                 "internalType": "bool"
             }
@@ -134,14 +134,14 @@
         "name": "isESIMWalletOnStandby",
         "inputs": [
             {
-                "name": "",
+                "name": "eSIMWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "isOnStandby",
                 "type": "bool",
                 "internalType": "bool"
             }
@@ -153,14 +153,14 @@
         "name": "isESIMWalletValid",
         "inputs": [
             {
-                "name": "",
+                "name": "eSIMWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "deviceWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
@@ -185,14 +185,14 @@
         "name": "registeredP256Keys",
         "inputs": [
             {
-                "name": "",
+                "name": "hashOfOwnerP256Keys",
                 "type": "bytes32",
                 "internalType": "bytes32"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "deviceWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }
@@ -204,14 +204,14 @@
         "name": "uniqueIdentifierToDeviceWallet",
         "inputs": [
             {
-                "name": "",
+                "name": "deviceIdentifier",
                 "type": "string",
                 "internalType": "string"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "deviceWalletAddress",
                 "type": "address",
                 "internalType": "address"
             }

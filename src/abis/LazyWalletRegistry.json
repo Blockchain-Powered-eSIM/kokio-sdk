@@ -19,6 +19,13 @@
     },
     {
         "type": "function",
+        "name": "acceptOwnership",
+        "inputs": [],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
         "name": "batchPopulateHistory",
         "inputs": [
             {
@@ -96,12 +103,12 @@
         "name": "deviceIdentifierToESIMDetails",
         "inputs": [
             {
-                "name": "",
+                "name": "deviceIdentifier",
                 "type": "string",
                 "internalType": "string"
             },
             {
-                "name": "",
+                "name": "eSIMIdentifier",
                 "type": "string",
                 "internalType": "string"
             },
@@ -130,14 +137,14 @@
         "name": "eSIMIdentifierToDeviceIdentifier",
         "inputs": [
             {
-                "name": "",
+                "name": "eSIMIdentifier",
                 "type": "string",
                 "internalType": "string"
             }
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "deviceIdentifier",
                 "type": "string",
                 "internalType": "string"
             }
@@ -149,7 +156,7 @@
         "name": "eSIMIdentifiersAssociatedWithDeviceIdentifier",
         "inputs": [
             {
-                "name": "",
+                "name": "deviceIdentifier",
                 "type": "string",
                 "internalType": "string"
             },
@@ -161,7 +168,7 @@
         ],
         "outputs": [
             {
-                "name": "",
+                "name": "associatedESIMIdentifiers",
                 "type": "string",
                 "internalType": "string"
             }
@@ -208,6 +215,19 @@
     {
         "type": "function",
         "name": "owner",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "pendingOwner",
         "inputs": [],
         "outputs": [
             {
@@ -576,6 +596,25 @@
                 "type": "string",
                 "indexed": false,
                 "internalType": "string"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "OwnershipTransferStarted",
+        "inputs": [
+            {
+                "name": "previousOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "newOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
             }
         ],
         "anonymous": false

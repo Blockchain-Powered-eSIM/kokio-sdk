@@ -1,17 +1,15 @@
-import { Address, createPublicClient, getContract, Hex, http, isAddress, toHex } from "viem";
-import { _getChainSpecificConstants, customErrors, ZERO } from "./constants"
-import { AccountOp, EntryPointAbi_v6, SmartAccountClient } from "@aa-sdk/core";
-import { entryPoint06Address } from "viem/_types/constants/address";
+import { Hex, isHex } from "viem";
+import { _getChainSpecificConstants, customErrors } from "./constants.js"
 
-export const _add0x = (data: Address | string): Address => {
+export const _add0x = (data: Hex | string): Hex => {
     if(!data) {
         throw customErrors.NULL_OR_UNDEFINED_VALUE;
     }
 
-    return (data.indexOf('0x') !== -1) ? isAddress(data)? data : `0x${data}` : `0x${data}`;
+    return (data.indexOf('0x') !== -1) ? isHex(data)? data : `0x${data}` : `0x${data}`;
 }
 
-export const _remove0x = (data: Address | string): string => {
+export const _remove0x = (data: Hex | string): string => {
     if(!data) {
         throw customErrors.NULL_OR_UNDEFINED_VALUE;
     }
@@ -37,43 +35,52 @@ export function _concatUint8Arrays(arrays: Uint8Array[]): Uint8Array {
     return toReturn;
 }
 
-export const _getUserOpHash = async (uo: AccountOp, smartAccountClient: SmartAccountClient): Promise<Hex> => {
+export function base64UrlToBuffer(base64url: string): Buffer {
+    const base64 = base64url
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd((base64url.length + 3) & ~3, "=");
+    return Buffer.from(base64, "base64");
+}
 
-  if (!smartAccountClient.account || !smartAccountClient.chain) 
-    throw new Error('Error: Missing account or chain in Smart Wallet client')
+export function decodeClientDataJSON(base64url: string): any {
+    const base64 = base64url
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd((base64url.length + 3) & ~3, "=");
+    const jsonString = Buffer.from(base64, "base64").toString("utf-8");
+    return JSON.parse(jsonString);
+}
 
-  const chainID = smartAccountClient.chain?.id
-  const values = _getChainSpecificConstants(chainID);
-
-  const userOp = await smartAccountClient.buildUserOperation({
-    uo: uo,
-    account: smartAccountClient.account
-  })
-
-  const entryPointContract = getContract({
-    abi: EntryPointAbi_v6,
-    address: entryPoint06Address,
-    client: createPublicClient({
-      chain: values.chain,
-      transport: http(values.rpcURL)
-    })
-  })
-
-  const userOpHash = await entryPointContract.read.getUserOpHash([
-    {
-      sender: _add0x(userOp.sender),
-      nonce: BigInt(userOp.nonce),
-      initCode: await smartAccountClient.account.getInitCode(),
-      callData: toHex(userOp.callData),
-      callGasLimit: userOp.callGasLimit? BigInt(userOp.callGasLimit): ZERO,
-      verificationGasLimit: userOp.verificationGasLimit? BigInt(userOp.verificationGasLimit): ZERO,
-      preVerificationGas: userOp.preVerificationGas? BigInt(userOp.preVerificationGas): ZERO,
-      maxFeePerGas: userOp.maxFeePerGas? BigInt(userOp.maxFeePerGas): ZERO,
-      maxPriorityFeePerGas: userOp.maxPriorityFeePerGas? BigInt(userOp.maxPriorityFeePerGas): ZERO,
-      paymasterAndData: '0x',
-      signature: toHex(userOp.signature),
+export function hexToArrayBuffer(hexString: string): ArrayBuffer {
+    const cleanHex = hexString.startsWith("0x") ? hexString.slice(2) : hexString;
+    const bytes = new Uint8Array(cleanHex.length / 2);
+    for (let i = 0; i < bytes.length; i++) {
+      bytes[i] = parseInt(cleanHex.substr(i * 2, 2), 16);
     }
-  ]);
+    return bytes.buffer;
+}
 
-  return userOpHash;
+export function parseDEREncodedSignature(signature: Uint8Array): {
+    r: string;
+    s: string;
+  } {
+    let offset = 0;
+    if (signature[offset++] !== 0x30) throw new Error("Invalid DER sequence");
+  
+    const length = signature[offset++];
+    if (signature[offset++] !== 0x02) throw new Error("Expected integer for r");
+  
+    const rLen = signature[offset++];
+    const r = signature.slice(offset, offset + rLen);
+    offset += rLen;
+  
+    if (signature[offset++] !== 0x02) throw new Error("Expected integer for s");
+    const sLen = signature[offset++];
+    const s = signature.slice(offset, offset + sLen);
+  
+    return {
+      r: Buffer.from(r).toString("hex"),
+      s: Buffer.from(s).toString("hex"),
+    };
 }
