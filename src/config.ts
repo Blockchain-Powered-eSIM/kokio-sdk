@@ -7,7 +7,6 @@ import { LazyWalletRegistrySubPackage } from "./interface/lazyWalletRegistryClas
 import { DeviceWalletSubPackage } from "./interface/deviceWalletClass.js";
 import { ESIMWalletSubPackage } from "./interface/eSIMWalletClass.js";
 import { ESIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass.js";
-import { TypesSubPackage } from "./interface/typesClass.js";
 import { SmartAccountClient } from "@aa-sdk/core";
 import { TurnkeyClient } from "@turnkey/http";
 
@@ -16,7 +15,6 @@ export class Kokio {
     turnkeyClient: TurnkeyClient;
     organizationId: string;
 
-    types: TypesSubPackage;
     constants: ConstantsSubPackage;
 
     smartAccount: SmartAccountSubPackage;
@@ -39,7 +37,6 @@ export class Kokio {
         this.turnkeyClient = turnkeyClient;
         this.organizationId = organizationId;
 
-        this.types = new TypesSubPackage();
         this.constants = new ConstantsSubPackage(this.viemWalletClient);
 
         this.smartAccount = new SmartAccountSubPackage(this.viemWalletClient, this.turnkeyClient, this.organizationId);
