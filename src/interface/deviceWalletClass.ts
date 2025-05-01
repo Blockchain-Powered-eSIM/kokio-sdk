@@ -12,7 +12,7 @@ import {
 } from "../logic/deviceWallet.js"
 import { SmartAccountClient } from "@aa-sdk/core";
 
-export class deviceWalletSubPackage {
+export class DeviceWalletSubPackage {
 
     smartAccountClient;
     walletClient;

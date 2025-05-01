@@ -7,7 +7,7 @@ import {
 } from "../logic/eSIMWalletFactory.js"
 import { SmartAccountClient } from "@aa-sdk/core";
 
-export class eSIMWalletFactorySubPackage {
+export class ESIMWalletFactorySubPackage {
 
     smartAccountClient;
     walletClient;

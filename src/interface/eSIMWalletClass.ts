@@ -12,7 +12,7 @@ import {
 import { DataBundleDetails } from "../types";
 import { SmartAccountClient } from "@aa-sdk/core";
 
-export class eSIMWalletSubPackage {
+export class ESIMWalletSubPackage {
 
     client;
     address;

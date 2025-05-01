@@ -61,25 +61,27 @@ const _encodeBatchExecute = async (txs: AccountOp[]) => {
 
 const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint): Promise<Hex> => {
 
-  // To send with user operations
-  const chainID = await client.getChainId();
-  const values = _getChainSpecificConstants(chainID);
+	// To send with user operations
+	const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-  const callData =  encodeFunctionData({
-    abi: DeviceWalletFactory, 
-    functionName: "createAccount",
-    args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt, ZERO],
-  })
+	const callData =  encodeFunctionData({
+		abi: DeviceWalletFactory, 
+		functionName: "createAccount",
+		args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt, ZERO],
+	})
 
-  return values.factoryAddresses.DEVICE_WALLET_FACTORY.concat(_remove0x(callData)) as Hex;
+	return values.factoryAddresses.DEVICE_WALLET_FACTORY.concat(_remove0x(callData)) as Hex;
 }
 
 const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<BytesLike> => {
   
 	const chainID = await client.getChainId();
-	const values = _getChainSpecificConstants(chainID);
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
   
-  // off-chain computation of the DeviceWallet address
+	// off-chain computation of the DeviceWallet address
 	const registry = values.factoryAddresses.REGISTRY;
 	const deviceWalletFactoryAddress = values.factoryAddresses.DEVICE_WALLET_FACTORY;
 
@@ -133,7 +135,8 @@ const prepareSaltForCreate2 = (sender: Address, salt: BigInt): BytesLike => {
 const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: BigInt, sender?: Address):Promise<Hex> => {
 
 	const chainID = await client.getChainId();
-	const values = _getChainSpecificConstants(chainID);
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
 	const deviceWalletFactoryAddress = values.factoryAddresses.DEVICE_WALLET_FACTORY;
 
 	sender = sender? sender : values.factoryAddresses.SENDER_CREATOR;
@@ -227,7 +230,8 @@ const _signUserOperationHash = async (hash: Hex, turnkeyClient: TurnkeyClient, o
 export const _getSmartWallet = async (client: WalletClient, turnkeyClient: TurnkeyClient, organiationId: string, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint, sender?: Address): Promise<SmartContractAccount> => {
 
 	const chainID = await client.getChainId();
-	const values = _getChainSpecificConstants(chainID);
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
 
 	if (!client.account) throw new Error ('Error: No signer account found with WalletClient')
 	const signWith = client.account.address;
@@ -271,7 +275,8 @@ export const _getSmartWallet = async (client: WalletClient, turnkeyClient: Turnk
 export const _getSmartWalletClient = async (client: WalletClient, account: SmartContractAccount) => {
 
 	const chainID = await client.getChainId();
-	const values = _getChainSpecificConstants(chainID);
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
 
 	return createSmartAccountClient({
 		// created above
