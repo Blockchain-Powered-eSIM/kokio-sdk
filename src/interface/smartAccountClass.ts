@@ -4,7 +4,7 @@ import { P256Key, SignedRequest } from "../types";
 import { SmartAccountClient, SmartContractAccount } from "@aa-sdk/core";
 import { TurnkeyClient } from "@turnkey/http";
 
-export class smartAccountSubPackage {
+export class SmartAccountSubPackage {
 
     client;
     turnkeyClient;

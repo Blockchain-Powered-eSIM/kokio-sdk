@@ -6,7 +6,7 @@ import {
 } from "../logic/deviceWalletFactory.js"
 import { SmartAccountClient } from "@aa-sdk/core";
 
-export class deviceWalletFactorySubPackage {
+export class DeviceWalletFactorySubPackage {
 
     smartAccountClient;
     walletClient;
