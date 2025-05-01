@@ -1,5 +1,5 @@
 import { Hex, isHex } from "viem";
-import { _getChainSpecificConstants, customErrors } from "./constants.js"
+import { customErrors } from "./constants.js"
 
 export const _add0x = (data: Hex | string): Hex => {
     if(!data) {

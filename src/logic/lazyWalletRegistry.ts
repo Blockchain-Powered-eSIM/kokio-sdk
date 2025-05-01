@@ -7,7 +7,10 @@ import { LazyWalletRegistry } from "../abis/index.js";
 
 export const _isLazyWalletDeployed = async (client: SmartAccountClient, deviceUniqueIdentifier: string) => {
 
-    const values = _getChainSpecificConstants(await client.getChainId());
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
     // UserOp
@@ -31,7 +34,10 @@ export const _batchPopulateHistory = async (
     dataBundleDetails: Array<Array<DataBundleDetails>>
 ) => {
 
-    const values = _getChainSpecificConstants(await client.getChainId());
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
     // UserOp
@@ -56,7 +62,10 @@ export const _deployLazyWalletAndSetESIMIdentifier = async (
     depositAmount: bigint
 ) => {
 
-    const values = _getChainSpecificConstants(await client.getChainId());
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
     // UserOp
@@ -80,7 +89,10 @@ export const _switchESIMIdentifierToNewDeviceIdentifier = async (
     newDeviceIdentifier: string
 ) => {
 
-    const values = _getChainSpecificConstants(await client.getChainId());
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
     // UserOp
