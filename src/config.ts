@@ -14,6 +14,7 @@ export class Kokio {
     viemWalletClient: WalletClient;
     turnkeyClient: TurnkeyClient;
     organizationId: string;
+    gasPolicyId: string;
 
     constants: ConstantsSubPackage;
 
@@ -29,6 +30,7 @@ export class Kokio {
         viemWalletClient: WalletClient,
         turnkeyClient: TurnkeyClient,
         organizationId: string,
+        gasPolicyId: string,
         smartAccountClient?: SmartAccountClient,
         deviceWalletAddress?: Address,
         eSIMWalletAddress?: Address
@@ -36,10 +38,11 @@ export class Kokio {
         this.viemWalletClient = viemWalletClient;
         this.turnkeyClient = turnkeyClient;
         this.organizationId = organizationId;
+        this.gasPolicyId = gasPolicyId;
 
         this.constants = new ConstantsSubPackage(this.viemWalletClient);
 
-        this.smartAccount = new SmartAccountSubPackage(this.viemWalletClient, this.turnkeyClient, this.organizationId);
+        this.smartAccount = new SmartAccountSubPackage(this.viemWalletClient, this.turnkeyClient, this.organizationId, this.gasPolicyId);
         this.deviceWalletFactory = smartAccountClient? new DeviceWalletFactorySubPackage(viemWalletClient, smartAccountClient): undefined;
         this.eSIMWalletFactory = smartAccountClient? new ESIMWalletFactorySubPackage(viemWalletClient, smartAccountClient): undefined;
         this.lazyWalletRegistry = smartAccountClient? new LazyWalletRegistrySubPackage(smartAccountClient): undefined;
