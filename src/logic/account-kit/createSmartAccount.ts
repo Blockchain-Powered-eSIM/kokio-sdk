@@ -26,6 +26,7 @@ import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from 
 import { P256Key, WebAuthnSignature } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
 import { _signMessageWithTurnkey, _signTypedDataWithTurnkey } from "../services/turnkeyClient.js";
+import { alchemyGasManagerMiddleware } from "@account-kit/infra";
 
 const _encodeExecute = async (tx: AccountOp) => {
 
@@ -227,7 +228,15 @@ const _signUserOperationHash = async (hash: Hex, turnkeyClient: TurnkeyClient, o
 	return _signMessage(message, turnkeyClient, organiationId, signWith);
 }
 
-export const _getSmartWallet = async (client: WalletClient, turnkeyClient: TurnkeyClient, organiationId: string, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint, sender?: Address): Promise<SmartContractAccount> => {
+export const _getSmartWallet = async (
+	client: WalletClient,
+	turnkeyClient: TurnkeyClient,
+	organiationId: string,
+	deviceUniqueIdentifier: string,
+	deviceWalletOwnerKey: P256Key,
+	salt: bigint,
+	sender?: Address
+): Promise<SmartContractAccount> => {
 
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -244,14 +253,14 @@ export const _getSmartWallet = async (client: WalletClient, turnkeyClient: Turnk
 		chain: values.chain,
 
 		// The EntryPointDef that your account is compatible with
-		entryPoint: getEntryPoint(values.chain, {addressOverride: values.factoryAddresses.ENTRY_POINT}), 
+        entryPoint: getEntryPoint(values.chain, {version: "0.7.0"}), 
 
 		getAccountInitCode: async (): Promise<Hex> => await _getAccountInitCode(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt),
 
 		// getAccountInitCodeHash: async (): Promise<BytesLike> => await getInitCodeHash(client, deviceUniqueIdentifier, deviceWalletOwnerKey),
 		
 		// an invalid signature that doesn't cause your account to revert during validation
-		getDummySignature: async (): Promise<Hash> => "0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c", //from Alchemy docs
+		getDummySignature: async (): Promise<Hash> => "0x",
 		
 		// given a UO in the form of {target, data, value} should output the calldata for calling your contract's execution method
 		encodeExecute: async (uo): Promise<Hash> => _encodeExecute(uo),
@@ -272,7 +281,7 @@ export const _getSmartWallet = async (client: WalletClient, turnkeyClient: Turnk
 	});
 }
 
-export const _getSmartWalletClient = async (client: WalletClient, account: SmartContractAccount) => {
+export const _getSmartWalletClient = async (client: WalletClient, gasPolicyId: string, account: SmartContractAccount) => {
 
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -283,5 +292,6 @@ export const _getSmartWalletClient = async (client: WalletClient, account: Smart
 		account: account,
 		chain: values.chain,
 		transport: http(values.rpcURL),
+		...alchemyGasManagerMiddleware(gasPolicyId)
 	});
 }
