@@ -1,6 +1,6 @@
 {
   "name": "kokio-sdk",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "type": "module",
   "main": "./dist/esm/config.js",
@@ -9,6 +9,10 @@
       "types": "./dist/types/config.d.ts",
       "import": "./dist/esm/config.js",
       "default": "./dist/esm/config.js"
+    },
+    "./types": {
+      "types": "./dist/types/types-export.d.ts",
+      "import": "./dist/esm/types.js"
     },
     "./package.json": "./package.json"
   },

@@ -1,8 +1,4 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
-
-import { WalletClient } from "viem";
-
+import { WalletClient, Address } from 'viem';
 import {
     mainnet,
     sepolia,
@@ -14,8 +10,6 @@ import {
 
 export const ZERO = BigInt('0');
 
-export const API_KEY = process.env.API_KEY;
-
 export enum CHAIN_ID  {
     MAINNET = 1,
     SEPOLIA = 11155111,
@@ -23,15 +17,6 @@ export enum CHAIN_ID  {
     OPTIMISM_SEPOLIA = 11155420,
     ARBITRUM_ONE = 42161,
     ARBITRUM_SEPOLIA = 421614,
-}
-
-export const rpcURLs: Record<string, string> = {
-    mainnet: `https://eth-mainnet.g.alchemy.com/v2/${API_KEY}`,
-    sepolia: `https://eth-sepolia.g.alchemy.com/v2/${API_KEY}`,
-    optimismMainnet : `https://opt-mainnet.g.alchemy.com/v2/${API_KEY}`,
-    optimismSepolia: `https://opt-sepolia.g.alchemy.com/v2/${API_KEY}`,
-    arbitrum: `https://arb-mainnet.g.alchemy.com/v2/${API_KEY}`,
-    arbitrumSepolia: `https://arb-sepolia.g.alchemy.com/v2/${API_KEY}`,
 }
 
 export interface chainSpecifcConstants {
@@ -53,7 +38,7 @@ export interface chainSpecifcConstants {
     customErrors: typeof customErrors;
 }
 
-export const sepoliaFactoryAddresses: Record<string, `0x${string}`> = {
+export const sepoliaFactoryAddresses: Record<string, Address> = {
     DEVICE_WALLET_FACTORY: '0x63005d8214533fC7209678Aa39F7b9b0b51a7bcB',
     ESIM_WALLET_FACTORY: '0xB4473979ff8cE4e09161B08f74EEb66BD7718076',
     LAZY_WALLET_REGISTRY: '0x8a1E53b903efcc6b252CE4bD3b255202318505Ef',
@@ -63,7 +48,7 @@ export const sepoliaFactoryAddresses: Record<string, `0x${string}`> = {
     P256VERIFIER: '0xF04f3b3935aD461D17d4a8a78E7ea21d4a61AEb1'
 }
 
-export const mainnetFactoryAddresses: Record<string, `0x${string}`> = {
+export const mainnetFactoryAddresses: Record<string, Address> = {
     DEVICE_WALLET_FACTORY: '0x',
     ESIM_WALLET_FACTORY: '0x',
     LAZY_WALLET_REGISTRY: '0x',
@@ -73,7 +58,7 @@ export const mainnetFactoryAddresses: Record<string, `0x${string}`> = {
     P256VERIFIER: '0x'
 }
 
-export const optimismMainnetFactoryAddresses: Record<string, `0x${string}`> = {
+export const optimismMainnetFactoryAddresses: Record<string, Address> = {
     DEVICE_WALLET_FACTORY: '0x',
     ESIM_WALLET_FACTORY: '0x',
     LAZY_WALLET_REGISTRY: '0x',
@@ -83,7 +68,7 @@ export const optimismMainnetFactoryAddresses: Record<string, `0x${string}`> = {
     P256VERIFIER: '0x'
 }
 
-export const optimismSepoliaFactoryAddresses: Record<string, `0x${string}`> = {
+export const optimismSepoliaFactoryAddresses: Record<string, Address> = {
     DEVICE_WALLET_FACTORY: '0x3feA4dB0C0bBB73142d5bB6b776EE238884a3705',
     ESIM_WALLET_FACTORY: '0xaD2Ba6248D0e6990a844C94ACE78F8775A68b631',
     LAZY_WALLET_REGISTRY: '0x29b98C32D83604664fd0742b9112b0825a74849F',
@@ -93,7 +78,7 @@ export const optimismSepoliaFactoryAddresses: Record<string, `0x${string}`> = {
     P256VERIFIER: '0x5349aEA97Faa6D5d6D78A8847068300a4eC9D39E'
 }
 
-export const arbitrumOneFactoryAddresses: Record<string, `0x${string}`> = {
+export const arbitrumOneFactoryAddresses: Record<string, Address> = {
     DEVICE_WALLET_FACTORY: '0x',
     ESIM_WALLET_FACTORY: '0x',
     LAZY_WALLET_REGISTRY: '0x',
@@ -103,7 +88,7 @@ export const arbitrumOneFactoryAddresses: Record<string, `0x${string}`> = {
     P256VERIFIER: '0x'
 }
 
-export const arbitrumSepoliaFactoryAddresses: Record<string, `0x${string}`> = {
+export const arbitrumSepoliaFactoryAddresses: Record<string, Address> = {
     DEVICE_WALLET_FACTORY: '0x',
     ESIM_WALLET_FACTORY: '0x',
     LAZY_WALLET_REGISTRY: '0x',
@@ -134,14 +119,15 @@ export const _getChainSpecificConstants = (
         CHAIN_ID.OPTIMISM_MAINNET | 
         CHAIN_ID.OPTIMISM_SEPOLIA |
         CHAIN_ID.ARBITRUM_ONE |
-        CHAIN_ID.ARBITRUM_SEPOLIA
+        CHAIN_ID.ARBITRUM_SEPOLIA,
+    rpcURL: string
     ): chainSpecifcConstants => {
 
     if (chainID == CHAIN_ID.SEPOLIA) {
         return {
             factoryAddresses: sepoliaFactoryAddresses,
             chain: sepolia,
-            rpcURL: rpcURLs.sepolia,
+            rpcURL: rpcURL,
             customErrors: customErrors
         }
     }
@@ -149,7 +135,7 @@ export const _getChainSpecificConstants = (
         return {
             factoryAddresses: mainnetFactoryAddresses,
             chain: mainnet,
-            rpcURL: rpcURLs.mainnet,
+            rpcURL: rpcURL,
             customErrors: customErrors
         }
     }
@@ -157,7 +143,7 @@ export const _getChainSpecificConstants = (
         return {
             factoryAddresses: optimismMainnetFactoryAddresses,
             chain: optimism,
-            rpcURL: rpcURLs.optimismMainnet,
+            rpcURL: rpcURL,
             customErrors: customErrors
         }
     }
@@ -165,7 +151,7 @@ export const _getChainSpecificConstants = (
         return {
             factoryAddresses: optimismSepoliaFactoryAddresses,
             chain: optimismSepolia,
-            rpcURL: rpcURLs.optimismSepolia,
+            rpcURL: rpcURL,
             customErrors: customErrors
         }
     }
@@ -173,7 +159,7 @@ export const _getChainSpecificConstants = (
         return {
             factoryAddresses: arbitrumOneFactoryAddresses,
             chain: arbitrum,
-            rpcURL: rpcURLs.arbitrum,
+            rpcURL: rpcURL,
             customErrors: customErrors
         }
     }
@@ -181,7 +167,7 @@ export const _getChainSpecificConstants = (
         return {
             factoryAddresses: arbitrumSepoliaFactoryAddresses,
             chain: arbitrumSepolia,
-            rpcURL: rpcURLs.arbitrumSepolia,
+            rpcURL: rpcURL,
             customErrors: customErrors
         }
     }

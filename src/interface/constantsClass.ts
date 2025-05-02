@@ -24,7 +24,8 @@ export class ConstantsSubPackage {
     constructor(client: WalletClient) {
         (async () => {
           const chainID = await _extractChainID(client);
-          const values = _getChainSpecificConstants(chainID);
+          const rpcURL = client.transport.url;
+          const values = _getChainSpecificConstants(chainID, rpcURL);
     
           this.factoryAddresses = values?.factoryAddresses;
           this.customErrors = values?.customErrors;

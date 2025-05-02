@@ -12,7 +12,8 @@ export const _createAccountWithEOA = async (
 ) => {
 
     const chainID = await client.getChainId();
-    const values = _getChainSpecificConstants(chainID);
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
 
     if (!client.account) throw new Error(customErrors.MISSING_EOA_WALLET);
 
@@ -33,7 +34,10 @@ export const _getAddress = async (
     salt: bigint,
 ) => {
 
-    const values = _getChainSpecificConstants(await client.getChainId());
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
     // UserOp
@@ -52,7 +56,10 @@ export const _getAddress = async (
 
 export const _getCurrentDeviceWalletImplementation = async (client: SmartAccountClient) => {
 
-    const values = _getChainSpecificConstants(await client.getChainId());
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
     // UserOp

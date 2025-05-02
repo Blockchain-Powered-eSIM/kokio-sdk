@@ -1,7 +1,7 @@
 import { Address, createPublicClient, encodeFunctionData, getContract, PublicClient, WalletClient } from "viem";
 import { SmartAccountClient } from "@aa-sdk/core";
 import { DeviceWallet } from "../abis/index.js";
-import { _getChainSpecificConstants, customErrors } from "./constants.js";
+import { customErrors } from "./constants.js";
 import { P256Key } from "../types.js";
 
 export const _deployESIMWallet = async (client: SmartAccountClient, address: Address, hasAccessToETH: boolean, salt: bigint) => {
@@ -157,9 +157,6 @@ export const _removeESIMWallet = async (client: SmartAccountClient, address: Add
 }
 
 export const _getOwner = async (client: WalletClient, address: Address) => {
-
-    const chainID = await client.getChainId();
-    const values = _getChainSpecificConstants(chainID);
 
     const contract = getContract({
         abi: DeviceWallet,

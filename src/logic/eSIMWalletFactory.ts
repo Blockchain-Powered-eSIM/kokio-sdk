@@ -5,7 +5,10 @@ import { ESIMWalletFactory } from "../abis/index.js";
 
 export const _addRegistryAddress = async (client: SmartAccountClient, registryContractAddress: Address) => {
 
-    const values = _getChainSpecificConstants(await client.getChainId());
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
     // UserOp
@@ -25,7 +28,8 @@ export const _addRegistryAddress = async (client: SmartAccountClient, registryCo
 export const _deployESIMWalletWithEOA = async (client: WalletClient, deviceWalletAddress: Address, salt: bigint) => {
 
     const chainID = await client.getChainId();
-    const values = _getChainSpecificConstants(chainID);
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
 
     if (!client.account) throw new Error(customErrors.MISSING_EOA_WALLET);
 
@@ -41,7 +45,10 @@ export const _deployESIMWalletWithEOA = async (client: WalletClient, deviceWalle
 
 export const _deployESIMWalletWithUserOp = async (client: SmartAccountClient, deviceWalletAddress: Address, salt: bigint) => {
 
-    const values = _getChainSpecificConstants(await client.getChainId());
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
     // UserOp
@@ -60,7 +67,10 @@ export const _deployESIMWalletWithUserOp = async (client: SmartAccountClient, de
 
 export const _getCurrentESIMWalletImplementation = async (client: SmartAccountClient) => {
 
-    const values = _getChainSpecificConstants(await client.getChainId());
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
     // UserOp

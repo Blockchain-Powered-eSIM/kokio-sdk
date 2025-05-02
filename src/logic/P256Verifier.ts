@@ -13,7 +13,9 @@ export const _verifySignature = async (
     y: bigint
 ) => {
 
-    const values = _getChainSpecificConstants(await client.getChainId());
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
     
     // UserOp

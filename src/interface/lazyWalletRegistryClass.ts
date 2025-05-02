@@ -8,7 +8,7 @@ import {
 import { DataBundleDetails } from "../types";
 import { SmartAccountClient } from "@aa-sdk/core";
 
-export class lazyWalletRegistrySubPackage {
+export class LazyWalletRegistrySubPackage {
 
     client;
 
