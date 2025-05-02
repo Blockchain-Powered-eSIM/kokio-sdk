@@ -9,11 +9,13 @@ export class SmartAccountSubPackage {
     client;
     turnkeyClient;
     organizationId; 
+    gasPolicyId;
     
-    constructor(client: WalletClient, turnkeyClient: TurnkeyClient, organiationId: string) {
+    constructor(client: WalletClient, turnkeyClient: TurnkeyClient, organiationId: string, gasPolicyId: string) {
         this.client = client;
         this.turnkeyClient = turnkeyClient;
         this.organizationId = organiationId;
+        this.gasPolicyId = gasPolicyId;
     }
 
     getSmartWallet (deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint, sender?: Address) {
@@ -21,6 +23,6 @@ export class SmartAccountSubPackage {
     }
 
     getSmartWalletClient (account: SmartContractAccount) {
-        return _getSmartWalletClient(this.client, account)
+        return _getSmartWalletClient(this.client, this.gasPolicyId, account)
     }
 }
