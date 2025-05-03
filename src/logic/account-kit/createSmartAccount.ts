@@ -25,7 +25,7 @@ import { _getChainSpecificConstants, ZERO } from "../constants.js";
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils.js";
 import { P256Key, WebAuthnSignature } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
-import { _signMessageWithTurnkey, _signTypedDataWithTurnkey } from "../services/turnkeyClient.js";
+import { _signMessageWithTurnkey, _signTypedDataWithTurnkey, _stampAndSignMessageWithTurnkey, _stampAndSignTypedDataWithTurnkey } from "../services/turnkeyClient.js";
 import { alchemyGasManagerMiddleware } from "@account-kit/infra";
 
 const _encodeExecute = async (tx: AccountOp) => {
@@ -140,6 +140,7 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 	const deviceWalletFactoryAddress = values.factoryAddresses.DEVICE_WALLET_FACTORY;
 
+	
 	sender = sender? sender : values.factoryAddresses.SENDER_CREATOR;
 	const uniqueSaltBytes32 = prepareSaltForCreate2(sender, salt);
 	const initCodeHash = await getInitCodeHash(client, deviceUniqueIdentifier, deviceWalletOwnerKey);
@@ -207,7 +208,7 @@ const _encodeSignature = async (webAuthnSignature: WebAuthnSignature): Promise<H
 
 const _signMessage = async (message: SignableMessage, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
-	const webAuthnSignature = await _signMessageWithTurnkey(turnkeyClient, organiationId, signWith, message);
+	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, message);
 
 	return _encodeSignature(webAuthnSignature);
 }
@@ -217,7 +218,7 @@ const _signTypedData = async <
     primaryType extends keyof typedData | "EIP712Domain" = keyof typedData
 > (typedData: TypedDataDefinition<typedData, primaryType>, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
-	const webAuthnSignature = await _signTypedDataWithTurnkey(turnkeyClient, organiationId, signWith, typedData);
+	const webAuthnSignature = await _stampAndSignTypedDataWithTurnkey(turnkeyClient, organiationId, signWith, typedData);
 
 	return _encodeSignature(webAuthnSignature);
 }
