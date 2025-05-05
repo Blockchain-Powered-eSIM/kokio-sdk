@@ -10,6 +10,8 @@ import {
 
 export const ZERO = BigInt('0');
 
+export const SIGNATURE_VALIDITY_SECONDS = 180; // 3 minutes validity
+
 export enum CHAIN_ID  {
     MAINNET = 1,
     SEPOLIA = 11155111,

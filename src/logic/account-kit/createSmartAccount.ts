@@ -21,7 +21,7 @@ import {
 } from "viem";
 import { TurnkeyClient } from "@turnkey/http";
 import { BytesLike, ethers, hexlify } from "ethers";
-import { _getChainSpecificConstants, ZERO } from "../constants.js";
+import { _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS } from "../constants.js";
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils.js";
 import { P256Key, WebAuthnSignature } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
@@ -139,7 +139,6 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 	const deviceWalletFactoryAddress = values.factoryAddresses.DEVICE_WALLET_FACTORY;
-
 	
 	sender = sender? sender : values.factoryAddresses.SENDER_CREATOR;
 	const uniqueSaltBytes32 = prepareSaltForCreate2(sender, salt);
@@ -151,66 +150,59 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
 	return ethers.getAddress(create2Address) as Address;
 }
 
-const _encodeSignature = async (webAuthnSignature: WebAuthnSignature): Promise<Hex> => {
+const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil: number): Promise<Hex> => {
+
+	const encodedWebAuthnTuple = encodeAbiParameters([
+		{
+			type: "tuple",
+			name: "credentials",
+			components: [
+				{ name: "authenticatorData", type: "bytes" },
+				{ name: "clientDataJSON", type: "string" },
+				{ name: "challengeIndex", type: "uint256" },
+				{ name: "typeIndex", type: "uint256" },
+				{ name: "r", type: "uint256" },
+				{ name: "s", type: "uint256" },
+			],
+		},
+	],
+	[
+		{
+			authenticatorData: _add0x(webAuthnSignature.authenticatorData),
+			clientDataJSON: JSON.stringify(webAuthnSignature.clientDataJSON),
+			challengeIndex: webAuthnSignature.challengeIndex,
+			typeIndex: webAuthnSignature.typeIndex,
+			r: webAuthnSignature.r,
+			s: webAuthnSignature.s,
+		},
+	]);
 
 	const signature = encodePacked(
 		["uint8", "uint48", "bytes"],
 		[
-		1,
-		0,
-		encodeAbiParameters([
-			{
-				type: "tuple",
-				name: "credentials",
-				components: [
-					{
-						name: "authenticatorData",
-						type: "bytes",
-					},
-					{
-						name: "clientDataJSON",
-						type: "string",
-					},
-					{
-						name: "challengeIndex",
-						type: "uint256",
-					},
-					{
-						name: "typeIndex",
-						type: "uint256",
-					},
-					{
-						name: "r",
-						type: "uint256",
-					},
-					{
-						name: "s",
-						type: "uint256",
-					},
-				],
-			},
-		],
-		[
-			{
-				authenticatorData: _add0x(webAuthnSignature.authenticatorData),
-				clientDataJSON: JSON.stringify(webAuthnSignature.clientDataJSON),
-				challengeIndex: BigInt(23),
-				typeIndex: BigInt(1),
-				r: webAuthnSignature.r,
-				s: webAuthnSignature.s,
-			},
-		]),
-		],
+			1,
+			validUntil,
+			encodedWebAuthnTuple
+		]
 	);
 
 	return signature;
 }
 
-const _signMessage = async (message: SignableMessage, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
+const _signMessage = async (message: SignableMessage, validUntil: number, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
-	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, message);
+	const messagePrecursor = encodePacked(
+		["uint8", "uint48", "bytes32"],
+		[
+			1,
+			validUntil,
+			message as Hex
+		]
+	);
 
-	return _encodeSignature(webAuthnSignature);
+	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, messagePrecursor as SignableMessage);
+
+	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
 const _signTypedData = async <
@@ -218,15 +210,20 @@ const _signTypedData = async <
     primaryType extends keyof typedData | "EIP712Domain" = keyof typedData
 > (typedData: TypedDataDefinition<typedData, primaryType>, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
+	// signature valid until, UNIX timestamp in seconds
+	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
+
 	const webAuthnSignature = await _stampAndSignTypedDataWithTurnkey(turnkeyClient, organiationId, signWith, typedData);
 
-	return _encodeSignature(webAuthnSignature);
+	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
 const _signUserOperationHash = async (hash: Hex, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
-	const message = encodePacked(["uint8", "uint48", "bytes32"], [1, 0, hash]);
-	return _signMessage(message, turnkeyClient, organiationId, signWith);
+	// signature valid until, UNIX timestamp in seconds
+	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
+
+	return _signMessage(hash, validUntil, turnkeyClient, organiationId, signWith);
 }
 
 export const _getSmartWallet = async (
@@ -266,7 +263,7 @@ export const _getSmartWallet = async (
 		// given a UO in the form of {target, data, value} should output the calldata for calling your contract's execution method
 		encodeExecute: async (uo): Promise<Hash> => _encodeExecute(uo),
 		
-		signMessage: async ({ message }): Promise<Hash> => _signMessage(message, turnkeyClient, organiationId, signWith),
+		signMessage: async ({ message, validUntil }): Promise<Hash> => _signMessage(message, validUntil, turnkeyClient, organiationId, signWith),
 
 		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, turnkeyClient, organiationId, signWith),
 		
