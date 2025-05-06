@@ -144,6 +144,16 @@ export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, org
     console.log("*************************************************************")
     const authenticatorData = isoBase64URL.toBuffer(stampedHeaderValue.authenticatorData);
     console.log("SDK authenticatorData: ", toHex(authenticatorData));
+    
+    const clientDataJSON = stampedHeaderValue.clientDataJSON;
+    const typeIndex = clientDataJSON.indexOf('"type":');
+    console.log("SDK typeIndex: ", typeIndex);
+    const challengeIndex = clientDataJSON.indexOf('"challenge":');
+    console.log("challengeIndex: ", challengeIndex);
+    if (typeIndex === -1 || challengeIndex === -1) {
+        throw new Error("Could not find type or challenge in clientDataJSON");
+    }
+    
     const decodedClientDataJson = decodeClientDataJSON(stampedHeaderValue.clientDataJson);
     console.log("SDK decodedClientDataJson: ", JSON.stringify(decodedClientDataJson, null, 2));
     const signature = assertNonNull(response.activity.result.signRawPayloadResult);
@@ -151,21 +161,21 @@ export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, org
     const webAuthnSignature = {
         authenticatorData: toHex(authenticatorData),
         clientDataJSON: JSON.stringify(decodedClientDataJson),
-        challengeIndex: BigInt(23),
-        typeIndex: BigInt(1),
+        challengeIndex: BigInt(challengeIndex),
+        typeIndex: BigInt(typeIndex),
         r: BigInt(`0x${signature.r}`),
         s: BigInt(`0x${signature.s}`)
     }
-    console.log('WebAuthn signature: \n', webAuthnSignature)
+    console.log('WebAuthn signature: \n', webAuthnSignature);
     return {
         authenticatorData: toHex(authenticatorData),
         clientDataJSON: JSON.stringify(decodedClientDataJson),
-        challengeIndex: BigInt(23),
-        typeIndex: BigInt(1),
+        challengeIndex: BigInt(challengeIndex),
+        typeIndex: BigInt(typeIndex),
         r: BigInt(`0x${signature.r}`),
         s: BigInt(`0x${signature.s}`)
     };
-} 
+}
 
 export const _stampAndSignTypedDataWithTurnkey = async <
     const typedData extends TypedData | Record<string, unknown>,
