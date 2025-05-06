@@ -151,43 +151,55 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
 }
 
 const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil: number): Promise<Hex> => {
+	const authenticatorDataBytes = _add0x(webAuthnSignature.authenticatorData);
+	const clientJsonString = webAuthnSignature.clientDataJSON;
+	const challengeIndexBigInt = BigInt(webAuthnSignature.challengeIndex);
+	const typeIndexBigInt = BigInt(webAuthnSignature.typeIndex);
+	const rBigInt = BigInt(webAuthnSignature.r);
+	const sBigInt = BigInt(webAuthnSignature.s);
 
-	const encodedWebAuthnTuple = encodeAbiParameters([
-		{
-			type: "tuple",
-			name: "credentials",
-			components: [
-				{ name: "authenticatorData", type: "bytes" },
-				{ name: "clientDataJSON", type: "string" },
-				{ name: "challengeIndex", type: "uint256" },
-				{ name: "typeIndex", type: "uint256" },
-				{ name: "r", type: "uint256" },
-				{ name: "s", type: "uint256" },
-			],
-		},
-	],
-	[
-		{
-			authenticatorData: _add0x(webAuthnSignature.authenticatorData),
-			clientDataJSON: JSON.stringify(webAuthnSignature.clientDataJSON),
-			challengeIndex: webAuthnSignature.challengeIndex,
-			typeIndex: webAuthnSignature.typeIndex,
-			r: webAuthnSignature.r,
-			s: webAuthnSignature.s,
-		},
-	]);
+	// Encoding the struct's fields directly as a list of parameters.
+	// This produces the direct ABI encoding of the struct's content.
+	const directStructEncoding = encodeAbiParameters(
+		[ // Define the types of the struct fields IN ORDER
+			{ type: "bytes" },          // authenticatorData
+			{ type: "string" },         // clientDataJSON
+			{ type: "uint256" },        // challengeIndex
+			{ type: "uint256" },        // typeIndex
+			{ type: "uint256" },        // r
+			{ type: "uint256" },        // s
+		],
+		[ // Fields provided IN ORDER as an array
+			authenticatorDataBytes,
+			clientJsonString,
+			challengeIndexBigInt,
+			typeIndexBigInt,
+			rBigInt,
+			sBigInt
+		]
+	);
+
+	console.log("SDK: webAuthnSignature object being encoded:", {
+		authenticatorData: authenticatorDataBytes,
+		clientDataJSON: clientJsonString,
+		challengeIndex: challengeIndexBigInt.toString(),
+		typeIndex: typeIndexBigInt.toString(),
+		r: rBigInt.toString(),
+		s: sBigInt.toString()
+	});
+	console.log("SDK: Direct ABI encoded struct fields:", directStructEncoding);
 
 	const signature = encodePacked(
 		["uint8", "uint48", "bytes"],
 		[
-			1,
+			1, // version
 			validUntil,
-			encodedWebAuthnTuple
+			directStructEncoding
 		]
 	);
-
+	console.log("SDK: Final packed signature for UserOp:", signature);
 	return signature;
-}
+};
 
 // message here is the original message data (string or Uint8Array) directly from the app
 const _signMessage = async (message: SignableMessage, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
