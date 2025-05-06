@@ -17,8 +17,7 @@ import {
 	encodeAbiParameters,
 	getContract,
 	TypedDataDefinition,
-	TypedData,
-	hashMessage as viemHashMessage
+	TypedData
 } from "viem";
 import { TurnkeyClient } from "@turnkey/http";
 import { BytesLike, ethers, hexlify } from "ethers";
