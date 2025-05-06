@@ -17,7 +17,8 @@ import {
 	encodeAbiParameters,
 	getContract,
 	TypedDataDefinition,
-	TypedData
+	TypedData,
+	hashMessage as viemHashMessage
 } from "viem";
 import { TurnkeyClient } from "@turnkey/http";
 import { BytesLike, ethers, hexlify } from "ethers";
@@ -189,18 +190,20 @@ const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil
 	return signature;
 }
 
-const _signMessage = async (message: SignableMessage, validUntil: number, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
+// message here is the original message data (string or Uint8Array) directly from the app
+const _signMessage = async (message: SignableMessage, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
-	const messagePrecursor = encodePacked(
-		["uint8", "uint48", "bytes32"],
-		[
-			1,
-			validUntil,
-			message as Hex
-		]
+	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
+
+	// The original message is passed to the stamp and sign function.
+	// The stamp and sign function creates the EIP-191 digest hash using its hashMessage function
+	// The result of the hashMessage(message) will be the `payload` used by Turnkey as a challenge
+	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(
+		turnkeyClient,
+		organiationId,
+		signWith,
+		message
 	);
-
-	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, messagePrecursor as SignableMessage);
 
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
@@ -220,10 +223,20 @@ const _signTypedData = async <
 
 const _signUserOperationHash = async (hash: Hex, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
-	// signature valid until, UNIX timestamp in seconds
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
-	return _signMessage(hash, validUntil, turnkeyClient, organiationId, signWith);
+	const messagePrecursor = encodePacked(
+		["uint8", "uint48", "bytes32"],
+		[
+			1,
+			validUntil,
+			hash
+		]
+	);
+
+	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, messagePrecursor as SignableMessage);
+
+	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
 export const _getSmartWallet = async (
@@ -263,7 +276,7 @@ export const _getSmartWallet = async (
 		// given a UO in the form of {target, data, value} should output the calldata for calling your contract's execution method
 		encodeExecute: async (uo): Promise<Hash> => _encodeExecute(uo),
 		
-		signMessage: async ({ message, validUntil }): Promise<Hash> => _signMessage(message, validUntil, turnkeyClient, organiationId, signWith),
+		signMessage: async ({ message}): Promise<Hash> => _signMessage(message, turnkeyClient, organiationId, signWith),
 
 		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, turnkeyClient, organiationId, signWith),
 		
