@@ -1,8 +1,12 @@
 import { assertActivityCompleted, assertNonNull, TurnkeyClient, TActivityResponse } from "@turnkey/http"
-import { Address, hashMessage, hashTypedData, SignableMessage, toHex, TypedData, TypedDataDefinition } from "viem";
+import { Address, hashMessage, hashTypedData, Hex, hexToBytes, SignableMessage, toHex, TypedData, TypedDataDefinition } from "viem";
 import { decodeAttestationObject, decodeClientDataJSON, isoBase64URL, parseAuthenticatorData } from "@simplewebauthn/server/helpers";
 import { base64UrlToBuffer } from "../utils.js";
 import { WebAuthnSignature } from "../../types.js";
+
+const getBytesFromPayload = (payloadHex: Hex): Uint8Array => {
+    return hexToBytes(payloadHex);
+};
 
 export const _signMessageWithTurnkey = async (client: TurnkeyClient, organizationId: string, signWith: Address, message: SignableMessage): Promise<WebAuthnSignature> => {
     
@@ -79,11 +83,8 @@ export const _signTypedDataWithTurnkey = async <
     }
 }
 
-export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, organizationId: string, signWith: Address, message: SignableMessage): Promise<WebAuthnSignature> => {
-    
-    console.log("SDK message to be signed: ", message);
-    const payload = hashMessage(message);
-    console.log("SDK payload: ", payload);
+export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, organizationId: string, signWith: Address, payload: SignableMessage): Promise<WebAuthnSignature> => {
+    console.log("SDK _stampAndSignMessageWithTurnkey (payload):", payload);
     let signedRequest;
     try {
         signedRequest = await client.stampSignRawPayload({
@@ -91,22 +92,21 @@ export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, org
             organizationId: organizationId,
             parameters: {
                 signWith: signWith,
-                payload: payload,
+                payload: `${payload}`,
                 encoding: "PAYLOAD_ENCODING_HEXADECIMAL",
                 hashFunction: "HASH_FUNCTION_NO_OP",
             },
             timestampMs: String(Date.now()), // millisecond timestamp
         });
-        console.log("SDK signedRequest: ", signedRequest, "\n", JSON.stringify(signedRequest, null, 2));
+        console.log("SDK _stampAndSignMessageWithTurnkey (signedRequest):", signedRequest, "\n", JSON.stringify(signedRequest, null, 2));
     }
     catch (e) {
         console.log("SDK error with signedRequest: ", e);
     }
-
     if (!signedRequest)
         throw new Error('Error: Failed to get signed request');
     const stampedHeaderValue = JSON.parse(signedRequest.stamp.stampHeaderValue);
-    console.log("SDK stampedHeaderValue: ", JSON.stringify(stampedHeaderValue, null, 2));
+    console.log("SDK _stampAndSignMessageWithTurnkey (stampedHeaderValue):", JSON.stringify(stampedHeaderValue, null, 2));
     let response;
     try {
         // response = await client.request('/api/v1/submit/sign_raw_payload', JSON.parse(signedRequest.body));
@@ -123,9 +123,9 @@ export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, org
             const errorBody = await res.text();
             throw new Error(`SDK Turnkey API request failed: ${res.status} ${res.statusText} - ${errorBody}`);
         }
-        console.log("SDK response for stampedRequest: ", JSON.stringify(res, null, 2));
+        console.log("SDK _stampAndSignMessageWithTurnkey (res):", res, "\n--->", JSON.stringify(res, null, 2));
         const responseData = await res.json();
-        console.log("SDK stamped and signed responseData: ", responseData, "\n\n\n", JSON.stringify(responseData, null, 2));
+        console.log("SDK _stampAndSignMessageWithTurnkey (responseData):", responseData, "\n--->", JSON.stringify(responseData, null, 2));
         response = responseData;
     }
     catch (e) {
@@ -141,23 +141,26 @@ export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, org
     // catch (e) {
     //     console.log("SDK error with assertActivityCompleted: ", e);
     // }
-    console.log("*************************************************************")
     const authenticatorData = isoBase64URL.toBuffer(stampedHeaderValue.authenticatorData);
-    console.log("SDK authenticatorData: ", toHex(authenticatorData));
-    
+    console.log("SDK _stampAndSignMessageWithTurnkey (authenticatorData):", toHex(authenticatorData));
     const decodedClientDataJson = decodeClientDataJSON(stampedHeaderValue.clientDataJson);
-    console.log("SDK decodedClientDataJson: ", JSON.stringify(decodedClientDataJson, null, 2));
-    
+    console.log("SDK _stampAndSignMessageWithTurnkey (decodedClientDataJson):", decodedClientDataJson, "\n--->", JSON.stringify(decodedClientDataJson, null, 2));
+    // `payload` here is the hex string (e.g., "0x...") that was sent to Turnkey
+    // const originalPayloadBytes = Buffer.from(payload.startsWith('0x') ? payload.substring(2) : payload, 'hex');
+    const originalPayloadBytes = getBytesFromPayload(payload as Hex);
+    // Replace the challenge in decodedClientDataJson with the Base64URL of the *actual bytes*
+    // isoBase64URL.fromBuffer from simplewebauthn/server removes padding, which is standard for WebAuthn.
+    decodedClientDataJson.challenge = isoBase64URL.fromBuffer(originalPayloadBytes);
+    console.log("SDK _stampAndSignMessageWithTurnkey (MODIFIED decodedClientDataJson with correct challenge):", JSON.stringify(decodedClientDataJson, null, 2));
     const typeIndex = JSON.stringify(decodedClientDataJson).indexOf('"type":"webauthn.get"');
-    console.log("SDK typeIndex: ", typeIndex);
+    console.log("SDK _stampAndSignMessageWithTurnkey (typeIndex):", typeIndex);
     const challengeIndex = JSON.stringify(decodedClientDataJson).indexOf('"challenge":');
-    console.log("challengeIndex: ", challengeIndex);
+    console.log("SDK _stampAndSignMessageWithTurnkey (challengeIndex):", challengeIndex);
     if (typeIndex === -1 || challengeIndex === -1) {
         throw new Error("Could not find type or challenge in clientDataJSON");
     }
-
     const signature = assertNonNull(response.activity.result.signRawPayloadResult);
-    console.log("SDK signature: ", JSON.stringify(signature, null, 2));
+    console.log("SDK _stampAndSignMessageWithTurnkey (signature):", signature, "\n--->", JSON.stringify(signature, null, 2));
     const webAuthnSignature = {
         authenticatorData: toHex(authenticatorData),
         clientDataJSON: JSON.stringify(decodedClientDataJson),
@@ -165,8 +168,8 @@ export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, org
         typeIndex: BigInt(typeIndex),
         r: BigInt(`0x${signature.r}`),
         s: BigInt(`0x${signature.s}`)
-    }
-    console.log('WebAuthn signature: \n', webAuthnSignature);
+    };
+    console.log("SDK _stampAndSignMessageWithTurnkey (webAuthnSignature):", webAuthnSignature);
     return {
         authenticatorData: toHex(authenticatorData),
         clientDataJSON: JSON.stringify(decodedClientDataJson),

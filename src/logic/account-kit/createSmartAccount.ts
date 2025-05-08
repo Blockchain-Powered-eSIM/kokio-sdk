@@ -17,7 +17,8 @@ import {
 	encodeAbiParameters,
 	getContract,
 	TypedDataDefinition,
-	TypedData
+	TypedData,
+	hashMessage
 } from "viem";
 import { TurnkeyClient } from "@turnkey/http";
 import { BytesLike, ethers, hexlify } from "ethers";
@@ -151,53 +152,51 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
 }
 
 const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil: number): Promise<Hex> => {
+	console.log("SDK _encodeSignature (webAuthnSignature):", webAuthnSignature);
 	const authenticatorDataBytes = _add0x(webAuthnSignature.authenticatorData);
-	const clientJsonString = webAuthnSignature.clientDataJSON;
+	const clientDataJSON = webAuthnSignature.clientDataJSON;
 	const challengeIndexBigInt = BigInt(webAuthnSignature.challengeIndex);
 	const typeIndexBigInt = BigInt(webAuthnSignature.typeIndex);
 	const rBigInt = BigInt(webAuthnSignature.r);
 	const sBigInt = BigInt(webAuthnSignature.s);
-
-	// Encoding the struct's fields directly as a list of parameters.
-	// This produces the direct ABI encoding of the struct's content.
-	const directStructEncoding = encodeAbiParameters(
-		[ // Define the types of the struct fields IN ORDER
-			{ type: "bytes" },          // authenticatorData
-			{ type: "string" },         // clientDataJSON
-			{ type: "uint256" },        // challengeIndex
-			{ type: "uint256" },        // typeIndex
-			{ type: "uint256" },        // r
-			{ type: "uint256" },        // s
-		],
-		[ // Fields provided IN ORDER as an array
-			authenticatorDataBytes,
-			clientJsonString,
-			challengeIndexBigInt,
-			typeIndexBigInt,
-			rBigInt,
-			sBigInt
-		]
-	);
-
-	console.log("SDK: webAuthnSignature object being encoded:", {
+	console.log("SDK: _encodeSignature (before getting encoded):", {
 		authenticatorData: authenticatorDataBytes,
-		clientDataJSON: clientJsonString,
-		challengeIndex: challengeIndexBigInt.toString(),
-		typeIndex: typeIndexBigInt.toString(),
-		r: rBigInt.toString(),
-		s: sBigInt.toString()
+		clientDataJSON: clientDataJSON,
+		challengeIndex: challengeIndexBigInt,
+		typeIndex: typeIndexBigInt,
+		r: rBigInt,
+		s: sBigInt
 	});
-	console.log("SDK: Direct ABI encoded struct fields:", directStructEncoding);
-
-	const signature = encodePacked(
-		["uint8", "uint48", "bytes"],
-		[
-			1, // version
-			validUntil,
-			directStructEncoding
-		]
-	);
-	console.log("SDK: Final packed signature for UserOp:", signature);
+	const encodedWebAuthnSignatureBytes = encodeAbiParameters([
+		{
+			type: "tuple",
+			name: "WebAuthnSignature",
+			components: [
+				{ name: "authenticatorData", type: "bytes", },
+				{ name: "clientDataJSON", type: "string", },
+				{ name: "challengeIndex", type: "uint256", },
+				{ name: "typeIndex", type: "uint256", },
+				{ name: "r", type: "uint256", },
+				{ name: "s", type: "uint256", },
+			],
+		},
+	], [
+		{
+			authenticatorData: authenticatorDataBytes,
+			clientDataJSON: clientDataJSON,
+			challengeIndex: challengeIndexBigInt,
+			typeIndex: typeIndexBigInt,
+			r: rBigInt,
+			s: sBigInt
+		}
+	]);
+	console.log("SDK _encodeSignature (encodedWebAuthnSignatureBytes):", encodedWebAuthnSignatureBytes);
+	const signature = encodePacked(["uint8", "uint48", "bytes"], [
+		1, // version
+		validUntil,
+		encodedWebAuthnSignatureBytes
+	]);
+	console.log("SDK _encodeSignature (signature):", signature);
 	return signature;
 };
 
@@ -205,17 +204,15 @@ const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil
 const _signMessage = async (message: SignableMessage, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
+	console.log("SDK _signMessage (validUntil):", validUntil);
 
+	const payload = hashMessage(message);
+	console.log("SDK _signMessage (payload):", payload);
 	// The original message is passed to the stamp and sign function.
 	// The stamp and sign function creates the EIP-191 digest hash using its hashMessage function
 	// The result of the hashMessage(message) will be the `payload` used by Turnkey as a challenge
-	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(
-		turnkeyClient,
-		organiationId,
-		signWith,
-		message
-	);
-
+	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, payload);
+	console.log("SDK _signMessage (webAuthnSignature):", webAuthnSignature);
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
@@ -234,18 +231,22 @@ const _signTypedData = async <
 
 const _signUserOperationHash = async (hash: Hex, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
 
+	console.log("SDK _signUserOperationHash (hash):", hash);
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
+    console.log("SDK _signUserOperationHash (validUntil):", validUntil);
 
-	const messagePrecursor = encodePacked(
-		["uint8", "uint48", "bytes32"],
-		[
-			1,
-			validUntil,
-			hash
-		]
-	);
+	const messagePrecursor = encodePacked(["uint8", "uint48", "bytes32"], [
+        1,
+        validUntil,
+        hash
+    ]);
+    console.log("SDK _signUserOperationHash (messagePrecursor):", messagePrecursor);
 
-	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, messagePrecursor as SignableMessage);
+	const payload = hashMessage({ raw: messagePrecursor });
+    console.log("SDK _signUserOperationHash (payload):", payload);
+
+	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, payload);
+    console.log("SDK _signUserOperationHash (webAuthnSignature):", webAuthnSignature);
 
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
