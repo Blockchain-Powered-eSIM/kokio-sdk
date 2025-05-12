@@ -1,7 +1,7 @@
 import { assertActivityCompleted, assertNonNull, TurnkeyClient, TActivityResponse } from "@turnkey/http"
 import { Address, hashMessage, hashTypedData, Hex, hexToBytes, SignableMessage, toHex, TypedData, TypedDataDefinition } from "viem";
 import { decodeAttestationObject, decodeClientDataJSON, isoBase64URL, parseAuthenticatorData } from "@simplewebauthn/server/helpers";
-import { base64UrlToBuffer } from "../utils.js";
+import { _add0x, base64UrlToBuffer, parseSignature } from "../utils.js";
 import { WebAuthnSignature } from "../../types.js";
 
 const getBytesFromPayload = (payloadHex: Hex): Uint8Array => {
@@ -159,15 +159,16 @@ export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, org
     if (typeIndex === -1 || challengeIndex === -1) {
         throw new Error("Could not find type or challenge in clientDataJSON");
     }
-    const signature = assertNonNull(response.activity.result.signRawPayloadResult);
+    // const signature = assertNonNull(response.activity.result.signRawPayloadResult);
+    const signature = parseSignature(isoBase64URL.toBuffer(stampedHeaderValue.signature));
     console.log("SDK _stampAndSignMessageWithTurnkey (signature):", signature, "\n--->", JSON.stringify(signature, null, 2));
     const webAuthnSignature = {
         authenticatorData: toHex(authenticatorData),
         clientDataJSON: JSON.stringify(decodedClientDataJson),
         challengeIndex: BigInt(challengeIndex),
         typeIndex: BigInt(typeIndex),
-        r: BigInt(`0x${signature.r}`),
-        s: BigInt(`0x${signature.s}`)
+        r: BigInt(_add0x(signature.r)),
+        s: BigInt(_add0x(signature.s))
     };
     console.log("SDK _stampAndSignMessageWithTurnkey (webAuthnSignature):", webAuthnSignature);
     return {
@@ -175,8 +176,8 @@ export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, org
         clientDataJSON: JSON.stringify(decodedClientDataJson),
         challengeIndex: BigInt(challengeIndex),
         typeIndex: BigInt(typeIndex),
-        r: BigInt(`0x${signature.r}`),
-        s: BigInt(`0x${signature.s}`)
+        r: BigInt(_add0x(signature.r)),
+        s: BigInt(_add0x(signature.s))
     };
 }
 
@@ -250,15 +251,16 @@ export const _stampAndSignTypedDataWithTurnkey = async <
     console.log("SDK authenticatorData: ", toHex(authenticatorData));
     const decodedClientDataJson = decodeClientDataJSON(stampedHeaderValue.clientDataJson);
     console.log("SDK decodedClientDataJson: ", JSON.stringify(decodedClientDataJson, null, 2));
-    const signature = assertNonNull(response.activity.result.signRawPayloadResult);
+    // const signature = assertNonNull(response.activity.result.signRawPayloadResult);
+    const signature = parseSignature(isoBase64URL.toBuffer(stampedHeaderValue.signature));
     console.log("SDK signature: ", JSON.stringify(signature, null, 2));
     const webAuthnSignature = {
         authenticatorData: toHex(authenticatorData),
         clientDataJSON: JSON.stringify(decodedClientDataJson),
         challengeIndex: BigInt(23),
         typeIndex: BigInt(1),
-        r: BigInt(`0x${signature.r}`),
-        s: BigInt(`0x${signature.s}`)
+        r: BigInt(_add0x(signature.r)),
+        s: BigInt(_add0x(signature.s))
     }
     console.log('WebAuthn signature: \n', webAuthnSignature)
     return {
@@ -266,7 +268,7 @@ export const _stampAndSignTypedDataWithTurnkey = async <
         clientDataJSON: JSON.stringify(decodedClientDataJson),
         challengeIndex: BigInt(23),
         typeIndex: BigInt(1),
-        r: BigInt(`0x${signature.r}`),
-        s: BigInt(`0x${signature.s}`)
+        r: BigInt(_add0x(signature.r)),
+        s: BigInt(_add0x(signature.s))
     };
 }
