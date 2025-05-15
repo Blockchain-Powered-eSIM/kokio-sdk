@@ -18,7 +18,8 @@ import {
 	getContract,
 	TypedDataDefinition,
 	TypedData,
-	hashMessage
+	hashMessage,
+	stringToBytes
 } from "viem";
 import { TurnkeyClient } from "@turnkey/http";
 import { BytesLike, ethers, hexlify } from "ethers";
@@ -26,7 +27,7 @@ import { _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS } from "..
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils.js";
 import { P256Key, WebAuthnSignature } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
-import { _signMessageWithTurnkey, _signTypedDataWithTurnkey, _stampAndSignMessageWithTurnkey, _stampAndSignTypedDataWithTurnkey } from "../services/turnkeyClient.js";
+import { _signMessageWithTurnkey, _signTypedDataWithTurnkey, _stamp, _stampAndSignMessageWithTurnkey, _stampAndSignTypedDataWithTurnkey } from "../services/turnkeyClient.js";
 import { alchemyGasManagerMiddleware } from "@account-kit/infra";
 
 const _encodeExecute = async (tx: AccountOp) => {
@@ -153,20 +154,7 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
 
 const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil: number): Promise<Hex> => {
 	console.log("SDK _encodeSignature (webAuthnSignature):", webAuthnSignature);
-	const authenticatorDataBytes = _add0x(webAuthnSignature.authenticatorData);
-	const clientDataJSON = webAuthnSignature.clientDataJSON;
-	const challengeIndexBigInt = BigInt(webAuthnSignature.challengeIndex);
-	const typeIndexBigInt = BigInt(webAuthnSignature.typeIndex);
-	const rBigInt = BigInt(webAuthnSignature.r);
-	const sBigInt = BigInt(webAuthnSignature.s);
-	console.log("SDK: _encodeSignature (before getting encoded):", {
-		authenticatorData: authenticatorDataBytes,
-		clientDataJSON: clientDataJSON,
-		challengeIndex: challengeIndexBigInt,
-		typeIndex: typeIndexBigInt,
-		r: rBigInt,
-		s: sBigInt
-	});
+
 	const encodedWebAuthnSignatureBytes = encodeAbiParameters([
 		{
 			type: "tuple",
@@ -180,38 +168,32 @@ const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil
 				{ name: "s", type: "uint256", },
 			],
 		},
-	], [
-		{
-			authenticatorData: authenticatorDataBytes,
-			clientDataJSON: clientDataJSON,
-			challengeIndex: challengeIndexBigInt,
-			typeIndex: typeIndexBigInt,
-			r: rBigInt,
-			s: sBigInt
-		}
+	], 
+	[
+		webAuthnSignature
 	]);
 	console.log("SDK _encodeSignature (encodedWebAuthnSignatureBytes):", encodedWebAuthnSignatureBytes);
-	const signature = encodePacked(["uint8", "uint48", "bytes"], [
-		1, // version
-		validUntil,
-		encodedWebAuthnSignatureBytes
-	]);
+	const signature = encodePacked(
+		["uint8", "uint48", "bytes"],
+		[1, validUntil, encodedWebAuthnSignatureBytes]
+	);
 	console.log("SDK _encodeSignature (signature):", signature);
 	return signature;
 };
 
 // message here is the original message data (string or Uint8Array) directly from the app
-const _signMessage = async (message: SignableMessage, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
+const _signMessage = async (message: SignableMessage, credentialId: string, rpId: string): Promise<Hex> => {
 
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 	console.log("SDK _signMessage (validUntil):", validUntil);
 
-	const payload = hashMessage(message);
+	const payload = hashMessage({raw: stringToBytes(message as string)});
 	console.log("SDK _signMessage (payload):", payload);
 	// The original message is passed to the stamp and sign function.
 	// The stamp and sign function creates the EIP-191 digest hash using its hashMessage function
 	// The result of the hashMessage(message) will be the `payload` used by Turnkey as a challenge
-	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, payload);
+	const webAuthnSignature = await _stamp(credentialId, rpId, payload);
+	// const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, payload);
 	console.log("SDK _signMessage (webAuthnSignature):", webAuthnSignature);
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
@@ -229,23 +211,24 @@ const _signTypedData = async <
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
-const _signUserOperationHash = async (hash: Hex, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
+const _signUserOperationHash = async (credentialId: string, rpId: string, userOpHash: Hex): Promise<Hex> => {
 
-	console.log("SDK _signUserOperationHash (hash):", hash);
+	console.log("SDK _signUserOperationHash (userOpHash):", userOpHash);
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
     console.log("SDK _signUserOperationHash (validUntil):", validUntil);
 
 	const messagePrecursor = encodePacked(["uint8", "uint48", "bytes32"], [
         1,
         validUntil,
-        hash
+        userOpHash
     ]);
     console.log("SDK _signUserOperationHash (messagePrecursor):", messagePrecursor);
 
 	const payload = hashMessage({ raw: messagePrecursor });
     console.log("SDK _signUserOperationHash (payload):", payload);
 
-	const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, payload);
+	// const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, payload);
+	const webAuthnSignature = await _stamp(credentialId, rpId, payload);
     console.log("SDK _signUserOperationHash (webAuthnSignature):", webAuthnSignature);
 
 	return _encodeSignature(webAuthnSignature, validUntil);
@@ -254,6 +237,8 @@ const _signUserOperationHash = async (hash: Hex, turnkeyClient: TurnkeyClient, o
 export const _getSmartWallet = async (
 	client: WalletClient,
 	turnkeyClient: TurnkeyClient,
+	credentialId: string,
+	rpId: string,
 	organiationId: string,
 	deviceUniqueIdentifier: string,
 	deviceWalletOwnerKey: P256Key,
@@ -288,7 +273,7 @@ export const _getSmartWallet = async (
 		// given a UO in the form of {target, data, value} should output the calldata for calling your contract's execution method
 		encodeExecute: async (uo): Promise<Hash> => _encodeExecute(uo),
 		
-		signMessage: async ({ message}): Promise<Hash> => _signMessage(message, turnkeyClient, organiationId, signWith),
+		signMessage: async ({ message}): Promise<Hash> => _signMessage(message, credentialId, rpId),
 
 		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, turnkeyClient, organiationId, signWith),
 		
@@ -298,7 +283,7 @@ export const _getSmartWallet = async (
 		// if your account supports batching, this should take an array of UOs and return the calldata for calling your contract's batchExecute method
 		encodeBatchExecute: async (uos): Promise<Hash> => _encodeBatchExecute(uos),
 		// if your contract expects a different signing scheme than the default signMessage scheme, you can override that here
-		signUserOperationHash: async (hash): Promise<Hash> => _signUserOperationHash(hash, turnkeyClient, organiationId, signWith),
+		signUserOperationHash: async (hash): Promise<Hash> => _signUserOperationHash(credentialId, rpId, hash),
 		// allows you to define the calldata for upgrading your account
 		// encodeUpgradeToAndCall: async (params): Promise<Hash> => "0x...",
 	});

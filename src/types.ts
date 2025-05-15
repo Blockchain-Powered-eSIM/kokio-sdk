@@ -3,7 +3,7 @@ import { Hex } from "viem";
 export type P256Key = [Hex, Hex];
 
 export type WebAuthnSignature = {
-    authenticatorData: string,
+    authenticatorData: Hex,
     clientDataJSON: string,
     challengeIndex: bigint,
     typeIndex: bigint,
