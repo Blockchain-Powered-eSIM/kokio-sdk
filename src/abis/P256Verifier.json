@@ -1,73 +1,73 @@
 [
     {
-        "type": "function",
-        "name": "verifySignature",
         "inputs": [
             {
+                "internalType": "bytes",
                 "name": "message",
-                "type": "bytes",
-                "internalType": "bytes"
+                "type": "bytes"
             },
             {
+                "internalType": "bool",
                 "name": "requireUserVerification",
-                "type": "bool",
-                "internalType": "bool"
+                "type": "bool"
             },
             {
-                "name": "webAuthnSignature",
-                "type": "tuple",
-                "internalType": "struct WebAuthnSignature",
                 "components": [
                     {
+                        "internalType": "bytes",
                         "name": "authenticatorData",
-                        "type": "bytes",
-                        "internalType": "bytes"
+                        "type": "bytes"
                     },
                     {
+                        "internalType": "string",
                         "name": "clientDataJSON",
-                        "type": "string",
-                        "internalType": "string"
+                        "type": "string"
                     },
                     {
+                        "internalType": "uint256",
                         "name": "challengeIndex",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "type": "uint256"
                     },
                     {
+                        "internalType": "uint256",
                         "name": "typeIndex",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "type": "uint256"
                     },
                     {
+                        "internalType": "uint256",
                         "name": "r",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "type": "uint256"
                     },
                     {
+                        "internalType": "uint256",
                         "name": "s",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "type": "uint256"
                     }
-                ]
+                ],
+                "internalType": "struct WebAuthnSignature",
+                "name": "webAuthnSignature",
+                "type": "tuple"
             },
             {
+                "internalType": "uint256",
                 "name": "x",
-                "type": "uint256",
-                "internalType": "uint256"
+                "type": "uint256"
             },
             {
+                "internalType": "uint256",
                 "name": "y",
-                "type": "uint256",
-                "internalType": "uint256"
+                "type": "uint256"
             }
         ],
+        "name": "verifySignature",
         "outputs": [
             {
+                "internalType": "bool",
                 "name": "",
-                "type": "bool",
-                "internalType": "bool"
+                "type": "bool"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     }
 ]

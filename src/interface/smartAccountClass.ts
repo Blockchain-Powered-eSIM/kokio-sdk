@@ -22,11 +22,11 @@ export class SmartAccountSubPackage {
         this.gasPolicyId = gasPolicyId;
     }
 
-    getSmartWallet (deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint, sender?: Address) {
-        return _getSmartWallet(this.client, this.turnkeyClient, this.credentialId, this.rpId, this.organizationId, deviceUniqueIdentifier, deviceWalletOwnerKey, salt, sender)
+    getSmartWallet (deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint) {
+        return _getSmartWallet(this.client, this.turnkeyClient, this.credentialId, this.rpId, this.organizationId, deviceUniqueIdentifier, deviceWalletOwnerKey, salt);
     }
 
     getSmartWalletClient (account: SmartContractAccount) {
-        return _getSmartWalletClient(this.client, this.gasPolicyId, account)
+        return _getSmartWalletClient(this.client, this.gasPolicyId, account);
     }
 }
