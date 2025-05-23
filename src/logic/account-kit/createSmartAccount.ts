@@ -133,17 +133,14 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
 
 	const uniqueSaltBytes32 = toHex(salt, {size: 32});
 	const initCodeHash = await getInitCodeHash(client, deviceUniqueIdentifier, deviceWalletOwnerKey);
-	console.log("initCodeHash: ", initCodeHash);
 
 	// Calculate deterministic address from init code hash
 	const create2Address = ethers.getCreate2Address(deviceWalletFactoryAddress, uniqueSaltBytes32, initCodeHash);
-	console.log("create2Address: ", create2Address);
 
 	return ethers.getAddress(create2Address) as Address;
 }
 
 const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil: number): Promise<Hex> => {
-	console.log("SDK _encodeSignature (webAuthnSignature):", webAuthnSignature);
 
 	const encodedWebAuthnSignatureBytes = encodeAbiParameters([
 		{
@@ -162,12 +159,12 @@ const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil
 	[
 		webAuthnSignature
 	]);
-	console.log("SDK _encodeSignature (encodedWebAuthnSignatureBytes):", encodedWebAuthnSignatureBytes);
+
 	const signature = encodePacked(
 		["uint8", "uint48", "bytes"],
 		[1, validUntil, encodedWebAuthnSignatureBytes]
 	);
-	console.log("SDK _encodeSignature (signature):", signature);
+
 	return signature;
 };
 
@@ -175,16 +172,13 @@ const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil
 const _signMessage = async (message: SignableMessage, credentialId: string, rpId: string): Promise<Hex> => {
 
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
-	console.log("SDK _signMessage (validUntil):", validUntil);
 
 	const payload = hashMessage({raw: stringToBytes(message as string)});
-	console.log("SDK _signMessage (payload):", payload);
 	// The original message is passed to the stamp and sign function.
 	// The stamp and sign function creates the EIP-191 digest hash using its hashMessage function
 	// The result of the hashMessage(message) will be the `payload` used by Turnkey as a challenge
 	const webAuthnSignature = await _stamp(credentialId, rpId, payload);
-	// const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, payload);
-	console.log("SDK _signMessage (webAuthnSignature):", webAuthnSignature);
+
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
@@ -203,23 +197,17 @@ const _signTypedData = async <
 
 const _signUserOperationHash = async (credentialId: string, rpId: string, userOpHash: Hex): Promise<Hex> => {
 
-	console.log("SDK _signUserOperationHash (userOpHash):", userOpHash);
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
-    console.log("SDK _signUserOperationHash (validUntil):", validUntil);
 
 	const messagePrecursor = encodePacked(["uint8", "uint48", "bytes32"], [
         1,
         validUntil,
         userOpHash
     ]);
-    console.log("SDK _signUserOperationHash (messagePrecursor):", messagePrecursor);
 
 	const payload = hashMessage({ raw: messagePrecursor });
-    console.log("SDK _signUserOperationHash (payload):", payload);
 
-	// const webAuthnSignature = await _stampAndSignMessageWithTurnkey(turnkeyClient, organiationId, signWith, payload);
 	const webAuthnSignature = await _stamp(credentialId, rpId, payload);
-    console.log("SDK _signUserOperationHash (webAuthnSignature):", webAuthnSignature);
 
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
@@ -283,31 +271,12 @@ export const _getSmartWalletClient = async (client: WalletClient, gasPolicyId: s
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
-	// TODO: Defined PIMLICO_RPC_URL
-	const PIMLICO_RPC_URL = "";
-
-	const bundlerMethods = [
-			"eth_sendUserOperation",
-			"eth_estimateUserOperationGas",
-			"eth_getUserOperationReceipt",
-			"eth_getUserOperationByHash",
-			"eth_supportedEntryPoints",
-	];
 
 	return createSmartAccountClient({
 		// created above
 		account: account,
 		chain: values.chain,
-		transport: split({
-			overrides: [
-				{
-					methods: bundlerMethods,
-					transport: http(`${PIMLICO_RPC_URL}`),
-				},
-			],
-			fallback: http(values.rpcURL),
-		}),
-		// transport: http(values.rpcURL),
+		transport: http(values.rpcURL),
 		...alchemyGasManagerMiddleware(gasPolicyId)
 	});
 }

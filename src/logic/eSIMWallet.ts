@@ -70,7 +70,7 @@ export const _owner = async (client: SmartAccountClient, address: Address) => {
             target: address,
             data: encodeFunctionData({
                 abi: ESIMWallet,
-                functionName: "ow",
+                functionName: "owner",
                 args: []
             })
         }
