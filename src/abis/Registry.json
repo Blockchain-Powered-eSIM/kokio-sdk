@@ -1,811 +1,806 @@
 [
     {
-        "type": "constructor",
-        "inputs": [],
-        "stateMutability": "nonpayable"
-    },
-    {
-        "type": "function",
-        "name": "UPGRADE_INTERFACE_VERSION",
-        "inputs": [],
-        "outputs": [
-            {
-                "name": "",
-                "type": "string",
-                "internalType": "string"
-            }
-        ],
-        "stateMutability": "view"
-    },
-    {
-        "type": "function",
-        "name": "acceptOwnership",
-        "inputs": [],
-        "outputs": [],
-        "stateMutability": "nonpayable"
-    },
-    {
-        "type": "function",
-        "name": "addOrUpdateLazyWalletRegistryAddress",
         "inputs": [
             {
-                "name": "_lazyWalletRegistry",
-                "type": "address",
-                "internalType": "address"
+                "internalType": "address",
+                "name": "target",
+                "type": "address"
             }
         ],
-        "outputs": [
-            {
-                "name": "",
-                "type": "address",
-                "internalType": "address"
-            }
-        ],
-        "stateMutability": "nonpayable"
+        "name": "AddressEmptyCode",
+        "type": "error"
     },
     {
-        "type": "function",
-        "name": "deployLazyWallet",
         "inputs": [
             {
-                "name": "_deviceWalletOwnerKey",
-                "type": "bytes32[2]",
-                "internalType": "bytes32[2]"
+                "internalType": "address",
+                "name": "implementation",
+                "type": "address"
+            }
+        ],
+        "name": "ERC1967InvalidImplementation",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ERC1967NonPayable",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "FailedInnerCall",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidInitialization",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NotInitializing",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OnlyDeviceWallet",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OnlyDeviceWalletFactory",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OnlyLazyWalletRegistry",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            }
+        ],
+        "name": "OwnableInvalidOwner",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            }
+        ],
+        "name": "OwnableUnauthorizedAccount",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "UUPSUnauthorizedCallContext",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "slot",
+                "type": "bytes32"
+            }
+        ],
+        "name": "UUPSUnsupportedProxiableUUID",
+        "type": "error"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_deviceWallet",
+                "type": "address"
             },
             {
+                "indexed": false,
+                "internalType": "string",
                 "name": "_deviceUniqueIdentifier",
-                "type": "string",
-                "internalType": "string"
+                "type": "string"
             },
             {
+                "indexed": false,
+                "internalType": "bytes32[2]",
+                "name": "_deviceWalletOwnerKey",
+                "type": "bytes32[2]"
+            }
+        ],
+        "name": "DeviceWalletInfoUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_eSIMWalletAddress",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "bool",
+                "name": "_isOnStandby",
+                "type": "bool"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_deviceWalletAddress",
+                "type": "address"
+            }
+        ],
+        "name": "ESIMWalletSetOnStandby",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "version",
+                "type": "uint64"
+            }
+        ],
+        "name": "Initialized",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_deviceWallet",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "_deviceUniqueIdentifier",
+                "type": "string"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_eSIMWallet",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "_eSIMUniqueIdentifier",
+                "type": "string"
+            }
+        ],
+        "name": "LazyWalletDeployed",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "previousOwner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "OwnershipTransferStarted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "previousOwner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "_eSIMWalletAdmin",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "_vault",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_upgradeManager",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_deviceWalletFactory",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_eSIMWalletFactory",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "_verifier",
+                "type": "address"
+            }
+        ],
+        "name": "RegistryInitialized",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_eSIMWalletAddress",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_deviceWalletAddress",
+                "type": "address"
+            }
+        ],
+        "name": "UpdatedDeviceWalletassociatedWithESIMWallet",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "_lazyWalletRegistry",
+                "type": "address"
+            }
+        ],
+        "name": "UpdatedLazyWalletRegistryAddress",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "implementation",
+                "type": "address"
+            }
+        ],
+        "name": "Upgraded",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "UPGRADE_INTERFACE_VERSION",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "acceptOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_lazyWalletRegistry",
+                "type": "address"
+            }
+        ],
+        "name": "addOrUpdateLazyWalletRegistryAddress",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32[2]",
+                "name": "_deviceWalletOwnerKey",
+                "type": "bytes32[2]"
+            },
+            {
+                "internalType": "string",
+                "name": "_deviceUniqueIdentifier",
+                "type": "string"
+            },
+            {
+                "internalType": "uint256",
                 "name": "_salt",
-                "type": "uint256",
-                "internalType": "uint256"
+                "type": "uint256"
             },
             {
+                "internalType": "string[]",
                 "name": "_eSIMUniqueIdentifiers",
-                "type": "string[]",
-                "internalType": "string[]"
+                "type": "string[]"
             },
             {
-                "name": "_dataBundleDetails",
-                "type": "tuple[][]",
-                "internalType": "struct DataBundleDetails[][]",
                 "components": [
                     {
+                        "internalType": "string",
                         "name": "dataBundleID",
-                        "type": "string",
-                        "internalType": "string"
+                        "type": "string"
                     },
                     {
+                        "internalType": "uint256",
                         "name": "dataBundlePrice",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "type": "uint256"
                     }
-                ]
+                ],
+                "internalType": "struct DataBundleDetails[][]",
+                "name": "_dataBundleDetails",
+                "type": "tuple[][]"
             },
             {
+                "internalType": "uint256",
                 "name": "_depositAmount",
-                "type": "uint256",
-                "internalType": "uint256"
+                "type": "uint256"
             }
         ],
+        "name": "deployLazyWallet",
         "outputs": [
             {
+                "internalType": "address",
                 "name": "",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             },
             {
+                "internalType": "address[]",
                 "name": "",
-                "type": "address[]",
-                "internalType": "address[]"
+                "type": "address[]"
             }
         ],
-        "stateMutability": "payable"
+        "stateMutability": "payable",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [],
         "name": "deviceWalletFactory",
-        "inputs": [],
         "outputs": [
             {
+                "internalType": "contract DeviceWalletFactory",
                 "name": "",
-                "type": "address",
-                "internalType": "contract DeviceWalletFactory"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "deviceWalletAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
         "name": "deviceWalletToOwner",
-        "inputs": [
-            {
-                "name": "deviceWalletAddress",
-                "type": "address",
-                "internalType": "address"
-            },
-            {
-                "name": "",
-                "type": "uint256",
-                "internalType": "uint256"
-            }
-        ],
         "outputs": [
             {
+                "internalType": "bytes32",
                 "name": "ownerP256Keys",
-                "type": "bytes32",
-                "internalType": "bytes32"
+                "type": "bytes32"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [],
         "name": "eSIMWalletAdmin",
-        "inputs": [],
         "outputs": [
             {
+                "internalType": "address",
                 "name": "",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [],
         "name": "eSIMWalletFactory",
-        "inputs": [],
         "outputs": [
             {
+                "internalType": "contract ESIMWalletFactory",
                 "name": "",
-                "type": "address",
-                "internalType": "contract ESIMWalletFactory"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [],
         "name": "entryPoint",
-        "inputs": [],
         "outputs": [
             {
+                "internalType": "contract IEntryPoint",
                 "name": "",
-                "type": "address",
-                "internalType": "contract IEntryPoint"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
-        "name": "initialize",
         "inputs": [
             {
+                "internalType": "address",
                 "name": "_eSIMWalletAdmin",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             },
             {
+                "internalType": "address",
                 "name": "_vault",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             },
             {
+                "internalType": "address",
                 "name": "_upgradeManager",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             },
             {
+                "internalType": "address",
                 "name": "_deviceWalletFactory",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             },
             {
+                "internalType": "address",
                 "name": "_eSIMWalletFactory",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             },
             {
+                "internalType": "contract IEntryPoint",
                 "name": "_entryPoint",
-                "type": "address",
-                "internalType": "contract IEntryPoint"
+                "type": "address"
             },
             {
+                "internalType": "contract P256Verifier",
                 "name": "_verifier",
-                "type": "address",
-                "internalType": "contract P256Verifier"
+                "type": "address"
             }
         ],
+        "name": "initialize",
         "outputs": [],
-        "stateMutability": "nonpayable"
+        "stateMutability": "nonpayable",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "deviceWalletAddress",
+                "type": "address"
+            }
+        ],
         "name": "isDeviceWalletValid",
-        "inputs": [
-            {
-                "name": "deviceWalletAddress",
-                "type": "address",
-                "internalType": "address"
-            }
-        ],
         "outputs": [
             {
+                "internalType": "bool",
                 "name": "valid",
-                "type": "bool",
-                "internalType": "bool"
+                "type": "bool"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "eSIMWalletAddress",
+                "type": "address"
+            }
+        ],
         "name": "isESIMWalletOnStandby",
-        "inputs": [
-            {
-                "name": "eSIMWalletAddress",
-                "type": "address",
-                "internalType": "address"
-            }
-        ],
         "outputs": [
             {
+                "internalType": "bool",
                 "name": "isOnStandby",
-                "type": "bool",
-                "internalType": "bool"
+                "type": "bool"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
-        "name": "isESIMWalletValid",
         "inputs": [
             {
+                "internalType": "address",
                 "name": "eSIMWalletAddress",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             }
         ],
+        "name": "isESIMWalletValid",
         "outputs": [
             {
+                "internalType": "address",
                 "name": "deviceWalletAddress",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [],
         "name": "lazyWalletRegistry",
-        "inputs": [],
         "outputs": [
             {
+                "internalType": "address",
                 "name": "",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [],
         "name": "owner",
-        "inputs": [],
         "outputs": [
             {
+                "internalType": "address",
                 "name": "",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [],
         "name": "pendingOwner",
-        "inputs": [],
         "outputs": [
             {
+                "internalType": "address",
                 "name": "",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [],
         "name": "proxiableUUID",
-        "inputs": [],
         "outputs": [
             {
+                "internalType": "bytes32",
                 "name": "",
-                "type": "bytes32",
-                "internalType": "bytes32"
+                "type": "bytes32"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
-        "name": "registeredP256Keys",
         "inputs": [
             {
+                "internalType": "bytes32",
                 "name": "hashOfOwnerP256Keys",
-                "type": "bytes32",
-                "internalType": "bytes32"
+                "type": "bytes32"
             }
         ],
+        "name": "registeredP256Keys",
         "outputs": [
             {
+                "internalType": "address",
                 "name": "deviceWalletAddress",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [],
         "name": "renounceOwnership",
-        "inputs": [],
         "outputs": [],
-        "stateMutability": "nonpayable"
+        "stateMutability": "nonpayable",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_eSIMWalletAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "bool",
+                "name": "_isOnStandby",
+                "type": "bool"
+            }
+        ],
         "name": "toggleESIMWalletStandbyStatus",
-        "inputs": [
-            {
-                "name": "_eSIMWalletAddress",
-                "type": "address",
-                "internalType": "address"
-            },
-            {
-                "name": "_isOnStandby",
-                "type": "bool",
-                "internalType": "bool"
-            }
-        ],
         "outputs": [],
-        "stateMutability": "nonpayable"
+        "stateMutability": "nonpayable",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
         "name": "transferOwnership",
-        "inputs": [
-            {
-                "name": "newOwner",
-                "type": "address",
-                "internalType": "address"
-            }
-        ],
         "outputs": [],
-        "stateMutability": "nonpayable"
+        "stateMutability": "nonpayable",
+        "type": "function"
     },
     {
-        "type": "function",
-        "name": "uniqueIdentifierToDeviceWallet",
         "inputs": [
             {
+                "internalType": "string",
                 "name": "deviceIdentifier",
-                "type": "string",
-                "internalType": "string"
+                "type": "string"
             }
         ],
+        "name": "uniqueIdentifierToDeviceWallet",
         "outputs": [
             {
+                "internalType": "address",
                 "name": "deviceWalletAddress",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_eSIMWalletAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_deviceWalletAddress",
+                "type": "address"
+            }
+        ],
         "name": "updateDeviceWalletAssociatedWithESIMWallet",
-        "inputs": [
-            {
-                "name": "_eSIMWalletAddress",
-                "type": "address",
-                "internalType": "address"
-            },
-            {
-                "name": "_deviceWalletAddress",
-                "type": "address",
-                "internalType": "address"
-            }
-        ],
         "outputs": [],
-        "stateMutability": "nonpayable"
+        "stateMutability": "nonpayable",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_deviceWallet",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "_deviceUniqueIdentifier",
+                "type": "string"
+            },
+            {
+                "internalType": "bytes32[2]",
+                "name": "_deviceWalletOwnerKey",
+                "type": "bytes32[2]"
+            }
+        ],
         "name": "updateDeviceWalletInfo",
-        "inputs": [
-            {
-                "name": "_deviceWallet",
-                "type": "address",
-                "internalType": "address"
-            },
-            {
-                "name": "_deviceUniqueIdentifier",
-                "type": "string",
-                "internalType": "string"
-            },
-            {
-                "name": "_deviceWalletOwnerKey",
-                "type": "bytes32[2]",
-                "internalType": "bytes32[2]"
-            }
-        ],
         "outputs": [],
-        "stateMutability": "nonpayable"
+        "stateMutability": "nonpayable",
+        "type": "function"
     },
     {
-        "type": "function",
+        "inputs": [],
         "name": "upgradeManager",
-        "inputs": [],
         "outputs": [
             {
+                "internalType": "address",
                 "name": "",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
+        "stateMutability": "view",
+        "type": "function"
     },
     {
-        "type": "function",
-        "name": "upgradeToAndCall",
         "inputs": [
             {
+                "internalType": "address",
                 "name": "newImplementation",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             },
             {
+                "internalType": "bytes",
                 "name": "data",
-                "type": "bytes",
-                "internalType": "bytes"
+                "type": "bytes"
             }
         ],
+        "name": "upgradeToAndCall",
         "outputs": [],
-        "stateMutability": "payable"
+        "stateMutability": "payable",
+        "type": "function"
     },
     {
-        "type": "function",
-        "name": "vault",
         "inputs": [],
+        "name": "vault",
         "outputs": [
             {
+                "internalType": "address",
                 "name": "",
-                "type": "address",
-                "internalType": "address"
+                "type": "address"
             }
         ],
-        "stateMutability": "view"
-    },
-    {
-        "type": "event",
-        "name": "DeviceWalletInfoUpdated",
-        "inputs": [
-            {
-                "name": "_deviceWallet",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "_deviceUniqueIdentifier",
-                "type": "string",
-                "indexed": false,
-                "internalType": "string"
-            },
-            {
-                "name": "_deviceWalletOwnerKey",
-                "type": "bytes32[2]",
-                "indexed": false,
-                "internalType": "bytes32[2]"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
-        "name": "ESIMWalletSetOnStandby",
-        "inputs": [
-            {
-                "name": "_eSIMWalletAddress",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "_isOnStandby",
-                "type": "bool",
-                "indexed": false,
-                "internalType": "bool"
-            },
-            {
-                "name": "_deviceWalletAddress",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
-        "name": "Initialized",
-        "inputs": [
-            {
-                "name": "version",
-                "type": "uint64",
-                "indexed": false,
-                "internalType": "uint64"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
-        "name": "LazyWalletDeployed",
-        "inputs": [
-            {
-                "name": "_deviceWallet",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "_deviceUniqueIdentifier",
-                "type": "string",
-                "indexed": false,
-                "internalType": "string"
-            },
-            {
-                "name": "_eSIMWallet",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "_eSIMUniqueIdentifier",
-                "type": "string",
-                "indexed": false,
-                "internalType": "string"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
-        "name": "OwnershipTransferStarted",
-        "inputs": [
-            {
-                "name": "previousOwner",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "newOwner",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
-        "name": "OwnershipTransferred",
-        "inputs": [
-            {
-                "name": "previousOwner",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "newOwner",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
-        "name": "RegistryInitialized",
-        "inputs": [
-            {
-                "name": "_eSIMWalletAdmin",
-                "type": "address",
-                "indexed": false,
-                "internalType": "address"
-            },
-            {
-                "name": "_vault",
-                "type": "address",
-                "indexed": false,
-                "internalType": "address"
-            },
-            {
-                "name": "_upgradeManager",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "_deviceWalletFactory",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "_eSIMWalletFactory",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "_verifier",
-                "type": "address",
-                "indexed": false,
-                "internalType": "address"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
-        "name": "UpdatedDeviceWalletassociatedWithESIMWallet",
-        "inputs": [
-            {
-                "name": "_eSIMWalletAddress",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "_deviceWalletAddress",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
-        "name": "UpdatedLazyWalletRegistryAddress",
-        "inputs": [
-            {
-                "name": "_lazyWalletRegistry",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
-        "name": "Upgraded",
-        "inputs": [
-            {
-                "name": "implementation",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "error",
-        "name": "AddressEmptyCode",
-        "inputs": [
-            {
-                "name": "target",
-                "type": "address",
-                "internalType": "address"
-            }
-        ]
-    },
-    {
-        "type": "error",
-        "name": "ERC1967InvalidImplementation",
-        "inputs": [
-            {
-                "name": "implementation",
-                "type": "address",
-                "internalType": "address"
-            }
-        ]
-    },
-    {
-        "type": "error",
-        "name": "ERC1967NonPayable",
-        "inputs": []
-    },
-    {
-        "type": "error",
-        "name": "FailedInnerCall",
-        "inputs": []
-    },
-    {
-        "type": "error",
-        "name": "InvalidInitialization",
-        "inputs": []
-    },
-    {
-        "type": "error",
-        "name": "NotInitializing",
-        "inputs": []
-    },
-    {
-        "type": "error",
-        "name": "OnlyDeviceWallet",
-        "inputs": []
-    },
-    {
-        "type": "error",
-        "name": "OnlyDeviceWalletFactory",
-        "inputs": []
-    },
-    {
-        "type": "error",
-        "name": "OnlyLazyWalletRegistry",
-        "inputs": []
-    },
-    {
-        "type": "error",
-        "name": "OwnableInvalidOwner",
-        "inputs": [
-            {
-                "name": "owner",
-                "type": "address",
-                "internalType": "address"
-            }
-        ]
-    },
-    {
-        "type": "error",
-        "name": "OwnableUnauthorizedAccount",
-        "inputs": [
-            {
-                "name": "account",
-                "type": "address",
-                "internalType": "address"
-            }
-        ]
-    },
-    {
-        "type": "error",
-        "name": "UUPSUnauthorizedCallContext",
-        "inputs": []
-    },
-    {
-        "type": "error",
-        "name": "UUPSUnsupportedProxiableUUID",
-        "inputs": [
-            {
-                "name": "slot",
-                "type": "bytes32",
-                "internalType": "bytes32"
-            }
-        ]
+        "stateMutability": "view",
+        "type": "function"
     }
 ]

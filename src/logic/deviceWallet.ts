@@ -78,7 +78,7 @@ export const _pullETH = async (client: SmartAccountClient, address: Address, amo
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "pullETH",
-                args: [address, amount]
+                args: [amount]
             })
         }
     });
@@ -96,7 +96,7 @@ export const _getVaultAddress = async (client: SmartAccountClient, address: Addr
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "getVaultAddress",
-                args: [address]
+                args: []
             })
         }
     });
@@ -114,7 +114,7 @@ export const _toggleAccessToETH = async (client: SmartAccountClient, address: Ad
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "toggleAccessToETH",
-                args: [address, eSIMWalletAddress, hasAccessToETH]
+                args: [eSIMWalletAddress, hasAccessToETH]
             })
         }
     });
@@ -132,7 +132,7 @@ export const _addESIMWallet = async (client: SmartAccountClient, address: Addres
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "addESIMWallet",
-                args: [address, eSIMWalletAddress, hasAccessToETH]
+                args: [eSIMWalletAddress, hasAccessToETH]
             })
         }
     });
@@ -150,7 +150,7 @@ export const _removeESIMWallet = async (client: SmartAccountClient, address: Add
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "removeESIMWallet",
-                args: [address, eSIMWalletAddress, hasAccessToETH]
+                args: [eSIMWalletAddress, hasAccessToETH]
             })
         }
     });

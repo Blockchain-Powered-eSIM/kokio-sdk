@@ -25,7 +25,7 @@ export const _verifySignature = async (
             target: values.factoryAddresses.P256VERIFIER,
             data: encodeFunctionData({
                 abi: P256Verifier,
-                functionName: "deployLazyWalletAndSetESIMIdentifier",
+                functionName: "verifySignature",
                 args: [message, requireMessageVerification, webAuthnSignature, x, y]
             })
         }
