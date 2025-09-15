@@ -10,15 +10,17 @@ export class SmartAccountSubPackage {
     turnkeyClient;
     credentialId;
     rpId;
-    organizationId; 
+    organizationId;
+    pimlicoAPIKey;
     gasPolicyId;
     
-    constructor(client: WalletClient, turnkeyClient: TurnkeyClient, credentialId: string, rpId: string, organiationId: string, gasPolicyId: string) {
+    constructor(client: WalletClient, turnkeyClient: TurnkeyClient, credentialId: string, rpId: string, organiationId: string, pimlicoAPIKey: string, gasPolicyId: string) {
         this.client = client;
         this.turnkeyClient = turnkeyClient;
         this.credentialId = credentialId;
         this.rpId = rpId;
         this.organizationId = organiationId;
+        this.pimlicoAPIKey = pimlicoAPIKey;
         this.gasPolicyId = gasPolicyId;
     }
 
@@ -27,6 +29,6 @@ export class SmartAccountSubPackage {
     }
 
     getSmartWalletClient (account: SmartContractAccount) {
-        return _getSmartWalletClient(this.client, this.gasPolicyId, account);
+        return _getSmartWalletClient(this.client, this.pimlicoAPIKey, this.gasPolicyId, account);
     }
 }

@@ -36,7 +36,8 @@ export interface chainSpecifcConstants {
         typeof optimismSepolia |
         typeof arbitrum |
         typeof arbitrumSepolia
-    rpcURL: string; 
+    rpcURL: string;
+    pimlicoRpcURL: string;
     customErrors: typeof customErrors;
 }
 
@@ -122,7 +123,8 @@ export const _getChainSpecificConstants = (
         CHAIN_ID.OPTIMISM_SEPOLIA |
         CHAIN_ID.ARBITRUM_ONE |
         CHAIN_ID.ARBITRUM_SEPOLIA,
-    rpcURL: string
+    rpcURL: string,
+    pimlicoAPIKey?: string
     ): chainSpecifcConstants => {
 
     if (chainID == CHAIN_ID.SEPOLIA) {
@@ -130,6 +132,7 @@ export const _getChainSpecificConstants = (
             factoryAddresses: sepoliaFactoryAddresses,
             chain: sepolia,
             rpcURL: rpcURL,
+            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
             customErrors: customErrors
         }
     }
@@ -138,6 +141,7 @@ export const _getChainSpecificConstants = (
             factoryAddresses: mainnetFactoryAddresses,
             chain: mainnet,
             rpcURL: rpcURL,
+            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
             customErrors: customErrors
         }
     }
@@ -146,6 +150,7 @@ export const _getChainSpecificConstants = (
             factoryAddresses: optimismMainnetFactoryAddresses,
             chain: optimism,
             rpcURL: rpcURL,
+            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
             customErrors: customErrors
         }
     }
@@ -154,6 +159,7 @@ export const _getChainSpecificConstants = (
             factoryAddresses: optimismSepoliaFactoryAddresses,
             chain: optimismSepolia,
             rpcURL: rpcURL,
+            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
             customErrors: customErrors
         }
     }
@@ -162,6 +168,7 @@ export const _getChainSpecificConstants = (
             factoryAddresses: arbitrumOneFactoryAddresses,
             chain: arbitrum,
             rpcURL: rpcURL,
+            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
             customErrors: customErrors
         }
     }
@@ -170,6 +177,7 @@ export const _getChainSpecificConstants = (
             factoryAddresses: arbitrumSepoliaFactoryAddresses,
             chain: arbitrumSepolia,
             rpcURL: rpcURL,
+            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
             customErrors: customErrors
         }
     }

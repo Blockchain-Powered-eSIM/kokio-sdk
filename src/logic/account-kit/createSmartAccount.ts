@@ -266,17 +266,35 @@ export const _getSmartWallet = async (
 	});
 }
 
-export const _getSmartWalletClient = async (client: WalletClient, gasPolicyId: string, account: SmartContractAccount) => {
+export const _getSmartWalletClient = async (client: WalletClient, pimlicoAPIKey: string, gasPolicyId: string, account: SmartContractAccount) => {
 
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
-	const values = _getChainSpecificConstants(chainID, rpcURL);
+	const values = _getChainSpecificConstants(chainID, rpcURL, pimlicoAPIKey);
 
+	const bundlerMethods = [
+			"eth_sendUserOperation",
+			"eth_estimateUserOperationGas",
+			"eth_getUserOperationReceipt",
+			"eth_getUserOperationByHash",
+			"eth_supportedEntryPoints",
+	];
+
+	// Uses Pimlico paymaster by default for above defined bundler methods and Alchemy as fallback
 	return createSmartAccountClient({
 		// created above
 		account: account,
 		chain: values.chain,
-		transport: http(values.rpcURL),
+		transport: split({
+			overrides: [
+				{
+					methods: bundlerMethods,
+					transport: http(`${values.pimlicoRpcURL}`),
+				},
+			],
+			fallback: http(values.rpcURL),
+		}),
+		// transport: http(values.rpcURL),
 		...alchemyGasManagerMiddleware(gasPolicyId)
 	});
 }

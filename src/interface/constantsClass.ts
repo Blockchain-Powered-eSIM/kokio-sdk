@@ -21,11 +21,11 @@ export class ConstantsSubPackage {
             typeof arbitrumSepoliaFactoryAddresses;
     customErrors!: typeof customErrors;
 
-    constructor(client: WalletClient) {
+    constructor(client: WalletClient, pimlicoAPIKey: string) {
         (async () => {
           const chainID = await _extractChainID(client);
           const rpcURL = client.transport.url;
-          const values = _getChainSpecificConstants(chainID, rpcURL);
+          const values = _getChainSpecificConstants(chainID, rpcURL, pimlicoAPIKey);
     
           this.factoryAddresses = values?.factoryAddresses;
           this.customErrors = values?.customErrors;
