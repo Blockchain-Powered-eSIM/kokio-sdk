@@ -5,7 +5,9 @@ import {
     optimism,
     optimismSepolia,
     arbitrum,
-    arbitrumSepolia
+    arbitrumSepolia,
+    base,
+    baseSepolia
 } from "viem/chains";
 
 export const ZERO = BigInt('0');
@@ -17,6 +19,8 @@ export enum CHAIN_ID  {
     SEPOLIA = 11155111,
     OPTIMISM_MAINNET = 10,
     OPTIMISM_SEPOLIA = 11155420,
+    BASE_MAINNET = 8453,
+    BASE_SEPOLIA = 84532,
     ARBITRUM_ONE = 42161,
     ARBITRUM_SEPOLIA = 421614,
 }
@@ -27,6 +31,8 @@ export interface chainSpecifcConstants {
         typeof mainnetFactoryAddresses |
         typeof optimismMainnetFactoryAddresses |
         typeof optimismSepoliaFactoryAddresses |
+        typeof baseMainnetFactoryAddresses |
+        typeof baseSepoliaFactoryAddresses |
         typeof arbitrumOneFactoryAddresses |
         typeof arbitrumSepoliaFactoryAddresses;
     chain: 
@@ -34,6 +40,8 @@ export interface chainSpecifcConstants {
         typeof sepolia |
         typeof optimism |
         typeof optimismSepolia |
+        typeof base |
+        typeof baseSepolia |
         typeof arbitrum |
         typeof arbitrumSepolia
     rpcURL: string;
@@ -81,6 +89,26 @@ export const optimismSepoliaFactoryAddresses: Record<string, Address> = {
     P256VERIFIER: '0x3c15a78046838481788613A9F111F972B562623C'
 }
 
+export const baseMainnetFactoryAddresses: Record<string, Address> = {
+    DEVICE_WALLET_FACTORY: '0x',
+    ESIM_WALLET_FACTORY: '0x',
+    LAZY_WALLET_REGISTRY: '0x',
+    REGISTRY: '0x',
+    ENTRY_POINT: '0x',
+    SENDER_CREATOR: '0x',
+    P256VERIFIER: '0x'
+}
+
+export const baseSepoliaFactoryAddresses: Record<string, Address> = {
+    DEVICE_WALLET_FACTORY: '0xB4473979ff8cE4e09161B08f74EEb66BD7718076',
+    ESIM_WALLET_FACTORY: '0x63005d8214533fC7209678Aa39F7b9b0b51a7bcB',
+    LAZY_WALLET_REGISTRY: '0x8a1E53b903efcc6b252CE4bD3b255202318505Ef',
+    REGISTRY: '0xCa447f5C75C57f6C59027304A5Fb5A09F0E005c9',
+    ENTRY_POINT: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
+    SENDER_CREATOR: '0xefc2c1444ebcc4db75e7613d20c6a62ff67a167c',
+    P256VERIFIER: '0xF04f3b3935aD461D17d4a8a78E7ea21d4a61AEb1'
+}
+
 export const arbitrumOneFactoryAddresses: Record<string, Address> = {
     DEVICE_WALLET_FACTORY: '0x',
     ESIM_WALLET_FACTORY: '0x',
@@ -121,6 +149,8 @@ export const _getChainSpecificConstants = (
         CHAIN_ID.MAINNET | 
         CHAIN_ID.OPTIMISM_MAINNET | 
         CHAIN_ID.OPTIMISM_SEPOLIA |
+        CHAIN_ID.BASE_MAINNET | 
+        CHAIN_ID.BASE_SEPOLIA |
         CHAIN_ID.ARBITRUM_ONE |
         CHAIN_ID.ARBITRUM_SEPOLIA,
     rpcURL: string,
@@ -155,6 +185,24 @@ export const _getChainSpecificConstants = (
         }
     }
     else if (chainID == CHAIN_ID.OPTIMISM_SEPOLIA) {
+        return {
+            factoryAddresses: optimismSepoliaFactoryAddresses,
+            chain: optimismSepolia,
+            rpcURL: rpcURL,
+            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
+            customErrors: customErrors
+        }
+    }
+    else if (chainID == CHAIN_ID.BASE_MAINNET) {
+        return {
+            factoryAddresses: optimismMainnetFactoryAddresses,
+            chain: optimism,
+            rpcURL: rpcURL,
+            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
+            customErrors: customErrors
+        }
+    }
+    else if (chainID == CHAIN_ID.BASE_SEPOLIA) {
         return {
             factoryAddresses: optimismSepoliaFactoryAddresses,
             chain: optimismSepolia,
