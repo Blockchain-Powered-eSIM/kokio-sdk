@@ -4,7 +4,8 @@ import {
 	getEntryPoint,
 	SmartContractAccount,
 	toSmartContractAccount,
-	split
+	split,
+	SmartAccountClient
 } from "@aa-sdk/core";
 import { 
 	http,
@@ -266,7 +267,7 @@ export const _getSmartWallet = async (
 	});
 }
 
-export const _getSmartWalletClient = async (client: WalletClient, pimlicoAPIKey: string, gasPolicyId: string, account: SmartContractAccount) => {
+export const _getSmartWalletClient = async (client: WalletClient, pimlicoAPIKey: string, gasPolicyId: string, account: SmartContractAccount): Promise<SmartAccountClient> => {
 
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
