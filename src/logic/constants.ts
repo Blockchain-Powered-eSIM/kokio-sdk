@@ -195,8 +195,8 @@ export const _getChainSpecificConstants = (
     }
     else if (chainID == CHAIN_ID.BASE_MAINNET) {
         return {
-            factoryAddresses: optimismMainnetFactoryAddresses,
-            chain: optimism,
+            factoryAddresses: baseMainnetFactoryAddresses,
+            chain: base,
             rpcURL: rpcURL,
             pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
             customErrors: customErrors
@@ -204,8 +204,8 @@ export const _getChainSpecificConstants = (
     }
     else if (chainID == CHAIN_ID.BASE_SEPOLIA) {
         return {
-            factoryAddresses: optimismSepoliaFactoryAddresses,
-            chain: optimismSepolia,
+            factoryAddresses: baseSepoliaFactoryAddresses,
+            chain: baseSepolia,
             rpcURL: rpcURL,
             pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
             customErrors: customErrors
