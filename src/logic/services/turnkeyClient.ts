@@ -4,7 +4,7 @@ import { decodeAttestationObject, decodeClientDataJSON, isoBase64URL, parseAuthe
 import { _add0x, base64UrlToBuffer, parseSignature } from "../utils.js";
 import { WebAuthnSignature } from "../../types.js";
 import { Passkey, PasskeyGetResult } from "react-native-passkey";
-import { p256 } from "@noble/curves/p256";
+import { p256 } from "@noble/curves/nist.js";
 import { AuthenticatorTransport } from "@turnkey/react-native-passkey-stamper";
 
 type BrokenPasskeyGetResult = PasskeyGetResult | string;
@@ -16,7 +16,7 @@ type BrokenPasskeyGetResult = PasskeyGetResult | string;
 */
 export const _stamp = async (credentialId: string, rpId: string, payload: Hex): Promise<WebAuthnSignature> => {
     const signingOptions = {
-        challenge: isoBase64URL.fromBuffer(hexToBytes(payload)), // Base64URL of the raw EIP-191 hash bytes
+        challenge: isoBase64URL.fromBuffer((hexToBytes(payload) as unknown) as Uint8Array<ArrayBuffer> ), // Base64URL of the raw EIP-191 hash bytes
         allowCredentials: [{
             id: credentialId,
             type: 'public-key',
@@ -109,7 +109,7 @@ export const _signMessageWithTurnkey = async (client: TurnkeyClient, organizatio
     assertActivityCompleted(activity);
 
     const attestationObject = assertNonNull(activity.intent.createOrganizationIntent?.rootAuthenticator.attestation.response.attestationObject);
-    const decodedAttestationObj = decodeAttestationObject(base64UrlToBuffer(attestationObject))
+    const decodedAttestationObj = decodeAttestationObject((base64UrlToBuffer(attestationObject) as unknown) as Uint8Array<ArrayBuffer>)
 
     const clientDataJson = assertNonNull(activity.intent.createOrganizationIntent?.rootAuthenticator.attestation.response.clientDataJson);
     const decodedClientDataJson = decodeClientDataJSON(clientDataJson);
@@ -148,7 +148,7 @@ export const _signTypedDataWithTurnkey = async <
     assertActivityCompleted(activity);
 
     const attestationObject = assertNonNull(activity.intent.createOrganizationIntent?.rootAuthenticator.attestation.response.attestationObject);
-    const decodedAttestationObj = decodeAttestationObject(base64UrlToBuffer(attestationObject))
+    const decodedAttestationObj = decodeAttestationObject((base64UrlToBuffer(attestationObject) as unknown) as Uint8Array<ArrayBuffer>)
 
     const clientDataJson = assertNonNull(activity.intent.createOrganizationIntent?.rootAuthenticator.attestation.response.clientDataJson);
     const decodedClientDataJson = decodeClientDataJSON(clientDataJson);
@@ -215,7 +215,7 @@ export const _stampAndSignMessageWithTurnkey = async (client: TurnkeyClient, org
     const originalPayloadBytes = getBytesFromPayload(payload as Hex);
     // Replace the challenge in decodedClientDataJson with the Base64URL of the *actual bytes*
     // isoBase64URL.fromBuffer from simplewebauthn/server removes padding, which is standard for WebAuthn.
-    decodedClientDataJson.challenge = isoBase64URL.fromBuffer(originalPayloadBytes);
+    decodedClientDataJson.challenge = isoBase64URL.fromBuffer((originalPayloadBytes as unknown) as Uint8Array<ArrayBuffer>);
     const typeIndex = JSON.stringify(decodedClientDataJson).indexOf('"type":"webauthn.get"');
     const challengeIndex = JSON.stringify(decodedClientDataJson).indexOf('"challenge":');
     if (typeIndex === -1 || challengeIndex === -1) {
