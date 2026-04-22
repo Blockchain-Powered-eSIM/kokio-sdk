@@ -250,7 +250,7 @@ const _signMessage = async (message: SignableMessage, credentialId: string, rpId
 	const payload = hashMessage({raw: stringToBytes(message as string)});
 	// The original message is passed to the stamp and sign function.
 	// The stamp and sign function creates the EIP-191 digest hash using its hashMessage function
-	// The result of the hashMessage(message) will be the `payload` used by Turnkey as a challenge
+	// The result of the hashMessage(message) will be the `payload` used as a challenge
 	const webAuthnSignature = await _stamp(credentialId, rpId, payload);
 
 	return _encodeSignature(webAuthnSignature, validUntil);
