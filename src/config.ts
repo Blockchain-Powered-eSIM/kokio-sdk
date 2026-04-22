@@ -8,11 +8,9 @@ import { DeviceWalletSubPackage } from "./interface/deviceWalletClass.js";
 import { ESIMWalletSubPackage } from "./interface/eSIMWalletClass.js";
 import { ESIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass.js";
 import { SmartAccountClient } from "@aa-sdk/core";
-import { TurnkeyClient } from "@turnkey/http";
 
 export class Kokio {
     viemWalletClient: WalletClient;
-    turnkeyClient: TurnkeyClient;
     credentialId: string;
     rpId: string;
     organizationId: string;
@@ -31,7 +29,6 @@ export class Kokio {
 
     constructor(
         viemWalletClient: WalletClient,
-        turnkeyClient: TurnkeyClient,
         credentialId: string,
         rpId: string,
         organizationId: string,
@@ -42,7 +39,6 @@ export class Kokio {
         eSIMWalletAddress?: Address
     ) {
         this.viemWalletClient = viemWalletClient;
-        this.turnkeyClient = turnkeyClient;
         this.credentialId = credentialId;
         this.rpId = rpId;
         this.organizationId = organizationId;
@@ -51,7 +47,7 @@ export class Kokio {
 
         this.constants = new ConstantsSubPackage(this.viemWalletClient, this.pimlicoAPIKey);
 
-        this.smartAccount = new SmartAccountSubPackage(this.viemWalletClient, this.turnkeyClient, this.credentialId, this.rpId, this.organizationId, this.pimlicoAPIKey, this.gasPolicyId);
+        this.smartAccount = new SmartAccountSubPackage(this.viemWalletClient, this.credentialId, this.rpId, this.organizationId, this.pimlicoAPIKey, this.gasPolicyId);
         this.deviceWalletFactory = smartAccountClient? new DeviceWalletFactorySubPackage(viemWalletClient, smartAccountClient): undefined;
         this.eSIMWalletFactory = smartAccountClient? new ESIMWalletFactorySubPackage(viemWalletClient, smartAccountClient): undefined;
         this.lazyWalletRegistry = smartAccountClient? new LazyWalletRegistrySubPackage(smartAccountClient): undefined;
