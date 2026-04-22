@@ -39,7 +39,7 @@ export const _stamp = async (credentialId: string, rpId: string, payload: Hex): 
 		challenge: isoBase64URL.fromBuffer((hexToBytes(payload) as unknown) as Uint8Array<ArrayBuffer> ), // Base64URL of the raw EIP-191 hash bytes
 		allowCredentials: [{
 			id: credentialId,
-			type: 'public-key',
+			type: "public-key",
 			transports: [AuthenticatorTransport.internal]
 		}],
 		rpId: rpId,
