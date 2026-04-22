@@ -1,37 +1,110 @@
 import { 
-	AccountOp,
-	createSmartAccountClient,
-	getEntryPoint,
-	SmartContractAccount,
-	toSmartContractAccount,
-	split,
-	SmartAccountClient
+	AccountOp, createSmartAccountClient, getEntryPoint, SmartContractAccount,
+	toSmartContractAccount, split, SmartAccountClient
 } from "@aa-sdk/core";
 import { 
-	http,
-	type SignableMessage,
-	type Hash,
-	WalletClient,
-	Hex,
-	encodeFunctionData,
-	Address,
-	encodePacked,
-	encodeAbiParameters,
-	getContract,
-	TypedDataDefinition,
-	TypedData,
-	hashMessage,
-	stringToBytes,
-	toHex
+	http, type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData,
+	Address, encodePacked, encodeAbiParameters, getContract,
+	TypedDataDefinition, TypedData, hashMessage, stringToBytes, toHex, hashTypedData, hexToBytes, bytesToHex
 } from "viem";
-import { TurnkeyClient } from "@turnkey/http";
 import { BytesLike, ethers, hexlify, toBeHex, toBigInt, zeroPadValue } from "ethers";
 import { _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS } from "../constants.js";
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils.js";
 import { P256Key, WebAuthnSignature } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
-import { _signMessageWithTurnkey, _signTypedDataWithTurnkey, _stamp, _stampAndSignMessageWithTurnkey, _stampAndSignTypedDataWithTurnkey } from "../services/turnkeyClient.js";
 import { alchemyGasManagerMiddleware } from "@account-kit/infra";
+
+import { decodeAttestationObject, decodeClientDataJSON, isoBase64URL, parseAuthenticatorData } from "@simplewebauthn/server/helpers";
+import { Passkey, PasskeyGetResult } from "react-native-passkey";
+import { p256 } from "@noble/curves/nist.js";
+
+type BrokenPasskeyGetResult = PasskeyGetResult | string;
+
+enum AuthenticatorTransport {
+	usb = "usb",
+	nfc = "nfc",
+	ble = "ble",
+	smartCard = "smart-card",
+	hybrid = "hybrid",
+	internal = "internal"
+}
+
+/*
+** Stamp is client-side authentication. Since the passkeys are one the user's mobile device
+** react-native-passkey helps fetch passkey for the user (provided credentialId, rpId).
+** This is exactly how the WebAuthn.sol contract needs it to be.
+*/
+export const _stamp = async (credentialId: string, rpId: string, payload: Hex): Promise<WebAuthnSignature> => {
+	const signingOptions = {
+		challenge: isoBase64URL.fromBuffer((hexToBytes(payload) as unknown) as Uint8Array<ArrayBuffer> ), // Base64URL of the raw EIP-191 hash bytes
+		allowCredentials: [{
+			id: credentialId,
+			type: 'public-key',
+			transports: [AuthenticatorTransport.internal]
+		}],
+		rpId: rpId,
+		userVerification: "required"
+	};
+
+	let authenticationResult;
+	try {
+		authenticationResult = await Passkey.get(signingOptions);
+	} catch (e) {
+		console.log("Failed to get authenticationResult");
+		console.error(JSON.stringify(e, Object.getOwnPropertyNames(e)))
+	}
+
+	// See https://github.com/f-23/react-native-passkey/issues/54
+	// On Android the typedef lies. Authentication result is actually a string!
+	// TODO: remove me once the above is resolved.
+	const brokenAuthenticationResult =
+		authenticationResult as BrokenPasskeyGetResult;
+	if (typeof brokenAuthenticationResult === "string") {
+		authenticationResult = JSON.parse(brokenAuthenticationResult);
+	}
+
+	const { clientDataJSON, authenticatorData, signature } = authenticationResult.response;
+
+	// 1. Decode clientDataJSON
+	const clientDataJSONBuffer = isoBase64URL.toBuffer(clientDataJSON);
+	const clientDataJSONString = new TextDecoder().decode(clientDataJSONBuffer);
+
+	// 2. Calculate indices for the contract (byte offsets)
+	const typeSearchString = '"type":"webauthn.get"';
+	const challengeSearchString = '"challenge":';
+
+	const typeIndex = clientDataJSONString.indexOf(typeSearchString);
+	const challengeIndex = clientDataJSONString.indexOf(challengeSearchString);
+
+	if (typeIndex === -1) {
+		console.warn(`Warning: Could not find type substring '${typeSearchString}' in clientDataJSON. Setting typeIndex to 0.`);
+	}
+	if (challengeIndex === -1) {
+		throw new Error(`Could not find challenge substring '${challengeSearchString}' in clientDataJSON for index calculation.`);
+	}
+
+	// 3. Decode authenticatorData
+	const authenticatorDataBytes = isoBase64URL.toBuffer(authenticatorData);
+	const authenticatorDataHex = bytesToHex(authenticatorDataBytes);
+
+	// 4. Decode signature (ASN.1 DER encoded)
+	const signatureBytes = isoBase64URL.toBuffer(signature);
+	let parsedSignature = p256.Signature.fromDER(signatureBytes);
+	parsedSignature = parsedSignature.normalizeS();
+	let r = parsedSignature.r;
+	let s = parsedSignature.s;
+
+	const webAuthnSig =  {
+		authenticatorData: authenticatorDataHex,
+		clientDataJSON: clientDataJSONString,
+		challengeIndex: BigInt(challengeIndex),
+		typeIndex: BigInt(typeIndex),
+		r: r,
+		s: s
+	};
+
+	return webAuthnSig;
+}
 
 const _encodeExecute = async (tx: AccountOp) => {
 
@@ -186,12 +259,20 @@ const _signMessage = async (message: SignableMessage, credentialId: string, rpId
 const _signTypedData = async <
     const typedData extends TypedData | Record<string, unknown>,
     primaryType extends keyof typedData | "EIP712Domain" = keyof typedData
-> (typedData: TypedDataDefinition<typedData, primaryType>, turnkeyClient: TurnkeyClient, organiationId: string, signWith: Address): Promise<Hex> => {
+> (typedData: TypedDataDefinition<typedData, primaryType>, organiationId: string, signWith: Address): Promise<Hex> => {
 
 	// signature valid until, UNIX timestamp in seconds
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
-	const webAuthnSignature = await _stampAndSignTypedDataWithTurnkey(turnkeyClient, organiationId, signWith, typedData);
+	// TODO: Implement stamping for Typed Data
+	let webAuthnSignature = {
+		authenticatorData: `0x` as `0x${string}`,
+		clientDataJSON: "",
+		challengeIndex: BigInt(0),
+		typeIndex: BigInt(0),
+		r: BigInt(0),
+		s: BigInt(0)
+	}
 
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
@@ -215,7 +296,6 @@ const _signUserOperationHash = async (credentialId: string, rpId: string, userOp
 
 export const _getSmartWallet = async (
 	client: WalletClient,
-	turnkeyClient: TurnkeyClient,
 	credentialId: string,
 	rpId: string,
 	organiationId: string,
@@ -253,7 +333,7 @@ export const _getSmartWallet = async (
 		
 		signMessage: async ({ message}): Promise<Hash> => _signMessage(message, credentialId, rpId),
 
-		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, turnkeyClient, organiationId, signWith),
+		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, organiationId, signWith),
 		
 		/// OPTIONAL PARAMS ///
 		// if you already know your account's address, pass that in here to avoid generating a new counterfactual
