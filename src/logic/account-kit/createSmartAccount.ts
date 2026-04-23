@@ -44,8 +44,8 @@ export const _stamp = async (credentialId: string, rpId: string, payload: Hex): 
 			type: "public-key",
 			transports: [AuthenticatorTransport.internal]
 		}],
-			rpId,
-			userVerification: "required"
+		rpId,
+		userVerification: "required"
 	};
 
 	let authenticationResult;
