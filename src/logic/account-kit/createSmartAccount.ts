@@ -54,6 +54,7 @@ export const _stamp = async (credentialId: string, rpId: string, payload: Hex): 
 	} catch (e) {
 		console.log("Failed to get authenticationResult");
 		console.error(JSON.stringify(e, Object.getOwnPropertyNames(e)))
+		throw e;
 	}
 
 	// See https://github.com/f-23/react-native-passkey/issues/54
@@ -75,11 +76,16 @@ export const _stamp = async (credentialId: string, rpId: string, payload: Hex): 
 	const typeSearchString = '"type":"webauthn.get"';
 	const challengeSearchString = '"challenge":';
 
-	const typeIndex = clientDataJSONString.indexOf(typeSearchString);
+	const rawTypeIndex = clientDataJSONString.indexOf(typeSearchString);
 	const challengeIndex = clientDataJSONString.indexOf(challengeSearchString);
 
-	if (typeIndex === -1) {
-		console.warn(`Warning: Could not find type substring '${typeSearchString}' in clientDataJSON. Setting typeIndex to 0.`);
+	let typeIndex = rawTypeIndex;
+	if (rawTypeIndex === -1) {
+		console.warn("typeIndex not found", {
+			expected: typeSearchString,
+			clientDataSnippet: clientDataJSONString.slice(0, 200),
+		});
+		typeIndex = 0;
 	}
 	if (challengeIndex === -1) {
 		throw new Error(`Could not find challenge substring '${challengeSearchString}' in clientDataJSON for index calculation.`);
@@ -91,10 +97,22 @@ export const _stamp = async (credentialId: string, rpId: string, payload: Hex): 
 
 	// 4. Decode signature (ASN.1 DER encoded)
 	const signatureBytes = isoBase64URL.toBuffer(signature);
-	let parsedSignature = p256.Signature.fromDER(signatureBytes);
-	parsedSignature = parsedSignature.normalizeS();
-	let r = parsedSignature.r;
-	let s = parsedSignature.s;
+	// let parsedSignature = p256.Signature.fromDER(signatureBytes);
+	let parsedSignature = p256.Signature.fromBytes(
+		signatureBytes instanceof Uint8Array
+			? signatureBytes
+			: new Uint8Array(signatureBytes),
+		"der"
+	);
+
+	// Normalize s
+	const n = p256.Point.CURVE().n;
+	const halfN = n >> 1n;
+
+	const r = parsedSignature.r;
+	const s = parsedSignature.s > halfN
+		? n - parsedSignature.s
+		: parsedSignature.s;
 
 	const webAuthnSig =  {
 		authenticatorData: authenticatorDataHex,
