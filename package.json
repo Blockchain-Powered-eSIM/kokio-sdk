@@ -1,9 +1,12 @@
 {
   "name": "kokio-sdk",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "",
   "type": "module",
   "main": "./dist/esm/config.js",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/types/config.d.ts",
@@ -17,7 +20,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "postinstall": "tsc && cp ./src/abis/*.json ./dist/esm/abis/",
+    "build": "tsc",
+    "prepack": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -25,7 +29,7 @@
     "url": "git+https://github.com/Blockchain-Powered-eSIM/kokio-sdk.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Blockchain-Powered-eSIM/kokio-sdk/issues"
   },
@@ -35,16 +39,18 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@aa-sdk/core": "^4.14.0",
-    "@account-kit/core": "^4.13.0",
-    "@account-kit/infra": "^4.15.3",
-    "@account-kit/signer": "^4.14.0",
-    "@noble/curves": "^2.2.0",
-    "@peculiar/asn1-ecc": "^2.3.15",
-    "@peculiar/asn1-schema": "^2.3.15",
-    "@simplewebauthn/server": "^13.1.1",
-    "ethers": "^6.13.5",
-    "react-native-passkey": "^3.1.0",
-    "viem": "^2.23.5"
+    "@aa-sdk/core": "4.88.4",
+    "@account-kit/infra": "4.88.4",
+    "@noble/curves": "2.2.0",
+    "@peculiar/asn1-ecc": "2.8.0",
+    "@peculiar/asn1-schema": "2.8.0",
+    "@simplewebauthn/server": "13.3.2",
+    "react-native-passkey": "3.5.0",
+    "viem": "2.53.1"
+  },
+  "overrides": {
+    "ws": "8.21.0",
+    "uuid": "14.0.0",
+    "js-cookie": "3.0.8"
   }
 }

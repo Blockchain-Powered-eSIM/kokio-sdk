@@ -7,7 +7,7 @@ import { SmartAccountClient } from "@aa-sdk/core";
 
 export class P256VerifierSubPackage {
 
-    client;
+    client: SmartAccountClient;
 
     constructor(client: SmartAccountClient) {
         this.client = client;

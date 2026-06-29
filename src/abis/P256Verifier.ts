@@ -1,4 +1,6 @@
-[
+import type { Abi } from "viem";
+
+const P256Verifier: Abi = [
     {
         "inputs": [
             {
@@ -70,4 +72,6 @@
         "stateMutability": "view",
         "type": "function"
     }
-]
+];
+
+export default P256Verifier;

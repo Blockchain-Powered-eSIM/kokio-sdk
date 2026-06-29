@@ -1,4 +1,6 @@
-[
+import type { Abi } from "viem";
+
+const DeviceWalletFactory: Abi = [
     {
         "inputs": [
             {
@@ -820,4 +822,6 @@
         "stateMutability": "view",
         "type": "function"
     }
-]
+];
+
+export default DeviceWalletFactory;

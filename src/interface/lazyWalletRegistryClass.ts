@@ -10,7 +10,7 @@ import { SmartAccountClient } from "@aa-sdk/core";
 
 export class LazyWalletRegistrySubPackage {
 
-    client;
+    client: SmartAccountClient;
 
     constructor(client: SmartAccountClient) {
         this.client = client;

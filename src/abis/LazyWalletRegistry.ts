@@ -1,4 +1,6 @@
-[
+import type { Abi } from "viem";
+
+const LazyWalletRegistry: Abi = [
     {
         "inputs": [
             {
@@ -726,4 +728,6 @@
         "stateMutability": "payable",
         "type": "function"
     }
-]
+];
+
+export default LazyWalletRegistry;

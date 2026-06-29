@@ -9,7 +9,7 @@ import { SmartAccountClient } from "@aa-sdk/core";
 
 export class ESIMWalletFactorySubPackage {
 
-    smartAccountClient;
+    smartAccountClient: SmartAccountClient;
     walletClient;
 
     constructor(walletClient: WalletClient, smartAccountClient: SmartAccountClient) {

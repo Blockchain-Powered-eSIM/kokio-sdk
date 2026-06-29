@@ -14,7 +14,7 @@ import { SmartAccountClient } from "@aa-sdk/core";
 
 export class ESIMWalletSubPackage {
 
-    client;
+    client: SmartAccountClient;
     address;
 
     constructor(client: SmartAccountClient, address: Address) {

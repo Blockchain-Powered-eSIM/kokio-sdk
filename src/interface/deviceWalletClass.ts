@@ -14,7 +14,7 @@ import { SmartAccountClient } from "@aa-sdk/core";
 
 export class DeviceWalletSubPackage {
 
-    smartAccountClient;
+    smartAccountClient: SmartAccountClient;
     walletClient;
     address;
 

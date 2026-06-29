@@ -25,7 +25,7 @@ export class SmartAccountSubPackage {
         return _getSmartWallet(this.client, this.credentialId, this.rpId, this.organizationId, deviceUniqueIdentifier, deviceWalletOwnerKey, salt);
     }
 
-    getSmartWalletClient (account: SmartContractAccount) {
+    getSmartWalletClient (account: SmartContractAccount): Promise<SmartAccountClient> {
         return _getSmartWalletClient(this.client, this.pimlicoAPIKey, this.gasPolicyId, account);
     }
 }
