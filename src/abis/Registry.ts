@@ -1,4 +1,6 @@
-[
+import type { Abi } from "viem";
+
+const Registry: Abi = [
     {
         "inputs": [
             {
@@ -803,4 +805,6 @@
         "stateMutability": "view",
         "type": "function"
     }
-]
+];
+
+export default Registry;

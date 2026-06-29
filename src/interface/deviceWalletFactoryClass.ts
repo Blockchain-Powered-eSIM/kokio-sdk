@@ -8,7 +8,7 @@ import { SmartAccountClient } from "@aa-sdk/core";
 
 export class DeviceWalletFactorySubPackage {
 
-    smartAccountClient;
+    smartAccountClient: SmartAccountClient;
     walletClient;
 
     constructor(walletClient: WalletClient, smartAccountClient: SmartAccountClient) {

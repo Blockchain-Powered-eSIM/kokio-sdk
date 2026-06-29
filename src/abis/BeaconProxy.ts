@@ -1,4 +1,6 @@
-[
+import type { Abi } from "viem";
+
+const BeaconProxy: Abi = [
     {
         "inputs": [
             {
@@ -75,4 +77,6 @@
         "stateMutability": "payable",
         "type": "fallback"
     }
-]
+];
+
+export default BeaconProxy;

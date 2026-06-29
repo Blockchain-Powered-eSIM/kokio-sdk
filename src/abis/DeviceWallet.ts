@@ -1,4 +1,6 @@
-[
+import type { Abi } from "viem";
+
+const DeviceWallet: Abi = [
   {
     "inputs": [
       {
@@ -909,4 +911,6 @@
     "stateMutability": "payable",
     "type": "receive"
   }
-]
+];
+
+export default DeviceWallet;
