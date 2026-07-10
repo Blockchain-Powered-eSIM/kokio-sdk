@@ -1,5 +1,5 @@
 import { Address, WalletClient } from "viem";
-import { ConstantsSubPackage } from "./interface/constantsClass.js";
+import { ConstantsSubPackage, KokioConstants } from "./interface/constantsClass.js";
 import { SmartAccountSubPackage } from "./interface/smartAccountClass.js";
 import { DeviceWalletFactorySubPackage } from "./interface/deviceWalletFactoryClass.js";
 import { P256VerifierSubPackage } from "./interface/P256VerifierClass.js";
@@ -17,7 +17,7 @@ export class Kokio {
     pimlicoAPIKey: string;
     gasPolicyId: string;
 
-    constants: ConstantsSubPackage;
+    private _constants: ConstantsSubPackage;
 
     smartAccount: SmartAccountSubPackage;
     deviceWalletFactory?: DeviceWalletFactorySubPackage;
@@ -45,7 +45,7 @@ export class Kokio {
         this.pimlicoAPIKey = pimlicoAPIKey;
         this.gasPolicyId = gasPolicyId;
 
-        this.constants = new ConstantsSubPackage(this.viemWalletClient, this.pimlicoAPIKey);
+        this._constants = new ConstantsSubPackage(this.viemWalletClient, this.pimlicoAPIKey);
 
         this.smartAccount = new SmartAccountSubPackage(this.viemWalletClient, this.credentialId, this.rpId, this.organizationId, this.pimlicoAPIKey, this.gasPolicyId);
         this.deviceWalletFactory = smartAccountClient? new DeviceWalletFactorySubPackage(viemWalletClient, smartAccountClient): undefined;
@@ -54,5 +54,18 @@ export class Kokio {
         this.P256Verifier = smartAccountClient? new P256VerifierSubPackage(smartAccountClient): undefined;
         this.deviceWallet = deviceWalletAddress && smartAccountClient? new DeviceWalletSubPackage(viemWalletClient, smartAccountClient, deviceWalletAddress): undefined;
         this.eSIMWallet = eSIMWalletAddress && smartAccountClient? new ESIMWalletSubPackage(smartAccountClient, eSIMWalletAddress): undefined;
+    }
+
+    /**
+     * Chain-specific constants (factory addresses, chain, RPC URLs, custom errors)
+     * for the wallet client's connected chain. Resolution is asynchronous because
+     * the chain id is read from the client, so this getter returns a promise:
+     *
+     *   const { factoryAddresses } = await kokio.constants;
+     *
+     * The underlying value is memoized, so repeated awaits do not re-fetch.
+     */
+    get constants(): Promise<KokioConstants> {
+        return this._constants.load();
     }
 }

@@ -17,6 +17,11 @@
       "types": "./dist/types/types-export.d.ts",
       "import": "./dist/esm/types.js"
     },
+    "./abis": {
+      "types": "./dist/types/abis/index.d.ts",
+      "import": "./dist/esm/abis/index.js",
+      "default": "./dist/esm/abis/index.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
