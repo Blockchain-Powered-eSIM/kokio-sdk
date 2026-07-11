@@ -157,7 +157,7 @@ const _encodeBatchExecute = async (txs: AccountOp[]) => {
 	});
 }
 
-const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint): Promise<Hex> => {
+export const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint): Promise<Hex> => {
 
 	// To send with user operations
 	const chainID = await client.getChainId();
@@ -173,7 +173,7 @@ const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier:
 	return values.factoryAddresses.DEVICE_WALLET_FACTORY.concat(_remove0x(callData)) as Hex;
 }
 
-const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<Hex> => {
+export const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<Hex> => {
   
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -218,7 +218,7 @@ const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: str
 	return keccak256(initCode);
 }
 
-const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint):Promise<Hex> => {
+export const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint):Promise<Hex> => {
 
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -239,7 +239,7 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
 	return getAddress(create2Address) as Address;
 }
 
-const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil: number): Promise<Hex> => {
+export const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil: number): Promise<Hex> => {
 
 	const encodedWebAuthnSignatureBytes = encodeAbiParameters([
 		{
@@ -268,7 +268,7 @@ const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil
 };
 
 // message here is the original message data (string or Uint8Array) directly from the app
-const _signMessage = async (message: SignableMessage, credentialId: string, rpId: string): Promise<Hex> => {
+export const _signMessage = async (message: SignableMessage, credentialId: string, rpId: string): Promise<Hex> => {
 
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
@@ -281,7 +281,7 @@ const _signMessage = async (message: SignableMessage, credentialId: string, rpId
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
-const _signTypedData = async <
+export const _signTypedData = async <
     const typedData extends TypedData | Record<string, unknown>,
     primaryType extends keyof typedData | "EIP712Domain" = keyof typedData
 > (typedData: TypedDataDefinition<typedData, primaryType>, organiationId: string, signWith: Address): Promise<Hex> => {
@@ -302,7 +302,7 @@ const _signTypedData = async <
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
-const _signUserOperationHash = async (credentialId: string, rpId: string, userOpHash: Hex): Promise<Hex> => {
+export const _signUserOperationHash = async (credentialId: string, rpId: string, userOpHash: Hex): Promise<Hex> => {
 
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
