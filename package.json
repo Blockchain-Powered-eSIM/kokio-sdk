@@ -45,7 +45,6 @@
   },
   "dependencies": {
     "@aa-sdk/core": "4.88.4",
-    "@account-kit/infra": "4.88.4",
     "@noble/curves": "2.2.0",
     "@peculiar/asn1-ecc": "2.8.0",
     "@peculiar/asn1-schema": "2.8.0",
