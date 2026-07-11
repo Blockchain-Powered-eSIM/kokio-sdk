@@ -31,10 +31,17 @@ import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 /** The public Base Sepolia endpoint the fork pulls state from when no RPC is configured. */
 const DEFAULT_FORK_RPC = "https://sepolia.base.org";
 
-/** True when the `anvil` binary is on PATH (Foundry installed). */
+/**
+ * The `anvil` binary to run. Defaults to whatever is on PATH, overridable via
+ * `ANVIL_BIN` — useful when a newer Foundry lives outside PATH (a recent anvil
+ * is required so the fork serves the RIP-7212 P256 precompile at 0x100).
+ */
+export const getAnvilBin = (): string => process.env.ANVIL_BIN ?? "anvil";
+
+/** True when the resolved `anvil` binary is runnable (Foundry installed). */
 export const anvilInstalled = (): boolean => {
   try {
-    return spawnSync("anvil", ["--version"], { stdio: "ignore" }).status === 0;
+    return spawnSync(getAnvilBin(), ["--version"], { stdio: "ignore" }).status === 0;
   } catch {
     return false;
   }

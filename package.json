@@ -35,7 +35,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "INTEGRATION=1 vitest run",
-    "test:integration:fork": "INTEGRATION=1 vitest run tests/integration"
+    "test:integration:fork": "INTEGRATION=1 vitest run tests/integration --no-file-parallelism"
   },
   "repository": {
     "type": "git",
