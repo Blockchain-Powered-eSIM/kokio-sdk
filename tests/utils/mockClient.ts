@@ -11,15 +11,23 @@ export const makeMockWalletClient = (opts: {
   chainId: number;
   url?: string;
   account?: `0x${string}`;
+  readResult?: unknown;
 }): WalletClient => {
-  const { chainId, url = "https://rpc.test.invalid", account } = opts;
+  const { chainId, url = "https://rpc.test.invalid", account, readResult = "0xreadresult" } = opts;
 
-  return {
+  // Reads extend the wallet client with `publicActions` before calling
+  // `readContract`; the stub's `extend` returns the same object so tests can
+  // assert against `client.readContract`.
+  const client: Record<string, unknown> = {
     getChainId: async () => chainId,
     transport: { url },
     account: account ? { address: account, type: "json-rpc" } : undefined,
     writeContract: vi.fn(async () => "0xwritehash"),
-  } as unknown as WalletClient;
+    readContract: vi.fn(async () => readResult),
+  };
+  client.extend = () => client;
+
+  return client as unknown as WalletClient;
 };
 
 const SENT_USER_OP = { hash: "0xuserophash" } as const;

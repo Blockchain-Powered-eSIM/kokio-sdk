@@ -12,6 +12,8 @@ const ESIM_A = "0x0000000000000000000000000000000000005111" as Address;
 const CHAIN_ID = 11155111;
 const lastWrite = (client: ReturnType<typeof makeMockWalletClient>) =>
   (client.writeContract as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0];
+const lastRead = (client: ReturnType<typeof makeMockWalletClient>) =>
+  (client.readContract as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0];
 
 describe("KokioAdmin construction", () => {
   it("exposes the chain-wide surfaces with only a wallet client", () => {
@@ -85,6 +87,25 @@ describe("KokioAdmin setters", () => {
     expect((second.writeContract as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
     expect((first.writeContract as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(0);
     expect(lastWrite(second).address).toBe(DEVICE_A);
+  });
+
+  it("routes an instance-scoped read to the bound device-wallet address", async () => {
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
+    const admin = new KokioAdmin(client).setDeviceWalletAddress(DEVICE_A);
+
+    await admin.deviceWallet!.isValidESIMWallet(ESIM_A);
+    expect(lastRead(client).address).toBe(DEVICE_A);
+    expect(lastRead(client).functionName).toBe("isValidESIMWallet");
+    expect(lastRead(client).args).toEqual([ESIM_A]);
+  });
+
+  it("exposes a chain-wide read on a surface available without any address", async () => {
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
+    const admin = new KokioAdmin(client);
+
+    await admin.registry.isDeviceWalletValid(DEVICE_A);
+    expect(lastRead(client).functionName).toBe("isDeviceWalletValid");
+    expect(lastRead(client).args).toEqual([DEVICE_A]);
   });
 
   it("supports chaining setters", () => {
