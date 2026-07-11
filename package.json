@@ -13,6 +13,11 @@
       "import": "./dist/esm/config.js",
       "default": "./dist/esm/config.js"
     },
+    "./admin": {
+      "types": "./dist/types/admin/config-admin.d.ts",
+      "import": "./dist/esm/admin/config-admin.js",
+      "default": "./dist/esm/admin/config-admin.js"
+    },
     "./types": {
       "types": "./dist/types/types-export.d.ts",
       "import": "./dist/esm/types.js"
