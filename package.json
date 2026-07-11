@@ -28,7 +28,8 @@
     "build": "tsc",
     "prepack": "npm run build",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:integration": "INTEGRATION=1 vitest run"
   },
   "repository": {
     "type": "git",
