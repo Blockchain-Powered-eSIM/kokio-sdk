@@ -32,6 +32,17 @@ import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 const DEFAULT_FORK_RPC = "https://sepolia.base.org";
 
 /**
+ * HTTP request timeout for the fork clients. A fork fetches upstream state lazily,
+ * so a single write that touches many contracts or storage slots can spend well
+ * over viem's 10s default waiting on the (rate-limited) public endpoint. Give it
+ * room so those calls do not time out mid-execution.
+ */
+const FORK_HTTP_TIMEOUT = 90_000;
+
+/** Shared transport options for every client bound to the fork. */
+const forkTransport = (rpcUrl: string) => http(rpcUrl, { timeout: FORK_HTTP_TIMEOUT });
+
+/**
  * The `anvil` binary to run. Defaults to whatever is on PATH, overridable via
  * `ANVIL_BIN` — useful when a newer Foundry lives outside PATH (a recent anvil
  * is required so the fork serves the RIP-7212 P256 precompile at 0x100).
@@ -79,13 +90,13 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export const startFork = async (port = 8545): Promise<Fork> => {
   const upstream = getForkUpstreamRpc();
   const proc: ChildProcess = spawn(
-    "anvil",
+    getAnvilBin(),
     ["--fork-url", upstream, "--port", String(port), "--chain-id", "84532", "--silent"],
     { stdio: "ignore" },
   );
 
   const rpcUrl = `http://127.0.0.1:${port}`;
-  const publicClient = createPublicClient({ chain: baseSepolia, transport: http(rpcUrl) });
+  const publicClient = createPublicClient({ chain: baseSepolia, transport: forkTransport(rpcUrl) });
 
   // Poll until the fork is serving requests (fork state fetch can take a moment).
   const deadline = Date.now() + 30_000;
@@ -102,7 +113,7 @@ export const startFork = async (port = 8545): Promise<Fork> => {
     await sleep(250);
   }
 
-  const testClient = createTestClient({ chain: baseSepolia, mode: "anvil", transport: http(rpcUrl) });
+  const testClient = createTestClient({ chain: baseSepolia, mode: "anvil", transport: forkTransport(rpcUrl) });
 
   // anvil's first default account, deterministic across runs.
   const FUNDED_PK = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" as const;
@@ -110,7 +121,7 @@ export const startFork = async (port = 8545): Promise<Fork> => {
   const funded = createWalletClient({
     account: privateKeyToAccount(FUNDED_PK),
     chain: baseSepolia,
-    transport: http(rpcUrl),
+    transport: forkTransport(rpcUrl),
   });
 
   const stop = async () => {
@@ -144,7 +155,7 @@ export const impersonateAdmin = async (fork: Fork): Promise<{ admin: Address; cl
   const client = createWalletClient({
     account: admin,
     chain: baseSepolia,
-    transport: http(fork.rpcUrl),
+    transport: forkTransport(fork.rpcUrl),
   });
 
   return { admin, client };
