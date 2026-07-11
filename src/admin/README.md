@@ -15,7 +15,16 @@ transaction.
 - [interface/](interface/) holds the thin SubPackage wrappers, one per contract
   group, mirroring the layout of the mobile [../interface/](../interface/).
 - The wrappers forward to the EOA logic functions in
-  [../logic/admin/](../logic/admin/).
+  [../logic/admin/](../logic/admin/) — `*.eoa.ts` for writes, `*.reads.ts` for reads.
+
+Each SubPackage also exposes the contract's **read-only** state: the public
+storage mappings/variables and `view` getters (e.g. `registry.isDeviceWalletValid`,
+`registry.eSIMWalletAdmin`, `deviceWallet.isValidESIMWallet`,
+`lazyWalletRegistry.eSIMIdentifierToDeviceIdentifier`). Reads need no EOA account —
+they extend the wallet client with viem `publicActions` internally. Array-backed
+mappings (`deviceIdentifierToESIMDetails`,
+`eSIMIdentifiersAssociatedWithDeviceIdentifier`) expose the on-chain index-based
+getter: pass an element index and iterate to read the whole list.
 
 Instance-scoped surfaces (`deviceWallet`, `eSIMWallet`) can be bound after
 construction with `setDeviceWalletAddress` / `setESIMWalletAddress`, since the
