@@ -10,6 +10,14 @@ import {
     _acceptAdminUpdate,
     _updateDeviceWalletImplementation,
 } from "../../logic/admin/deviceWalletFactory.eoa.js";
+import {
+    _eSIMWalletAdmin,
+    _vault,
+    _newRequestedAdmin,
+    _deviceWalletInfoAdded,
+    _getCurrentDeviceWalletImplementation,
+    _getCounterFactualAddress,
+} from "../../logic/admin/deviceWalletFactory.reads.js";
 
 /**
  * Thin EOA wrapper around `DeviceWalletFactory`. Holds only the wallet client;
@@ -60,5 +68,31 @@ export class AdminDeviceWalletFactorySubPackage {
 
     updateDeviceWalletImplementation(newDeviceImpl: Address) {
         return _updateDeviceWalletImplementation(this.walletClient, newDeviceImpl);
+    }
+
+    // --- Reads (public storage getters + views) ---
+
+    eSIMWalletAdmin() {
+        return _eSIMWalletAdmin(this.walletClient);
+    }
+
+    vault() {
+        return _vault(this.walletClient);
+    }
+
+    newRequestedAdmin() {
+        return _newRequestedAdmin(this.walletClient);
+    }
+
+    deviceWalletInfoAdded(deviceWallet: Address) {
+        return _deviceWalletInfoAdded(this.walletClient, deviceWallet);
+    }
+
+    getCurrentDeviceWalletImplementation() {
+        return _getCurrentDeviceWalletImplementation(this.walletClient);
+    }
+
+    getCounterFactualAddress(deviceWalletOwnerKey: P256Key, deviceUniqueIdentifier: string, salt: bigint) {
+        return _getCounterFactualAddress(this.walletClient, deviceWalletOwnerKey, deviceUniqueIdentifier, salt);
     }
 }
