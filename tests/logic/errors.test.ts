@@ -11,8 +11,8 @@ import {
     CounterfactualMismatchError,
     ContractRevertError,
     decodeContractRevert,
-} from "./errors.js";
-import { DeviceWalletFactory } from "../abis/index.js";
+} from "../../src/logic/errors.js";
+import { DeviceWalletFactory } from "../../src/abis/index.js";
 
 describe("typed errors", () => {
     it("every typed error is a KokioError with a stable code and its own name", () => {

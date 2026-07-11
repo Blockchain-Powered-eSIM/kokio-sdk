@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { encodeFunctionData, type Address, type Hex } from "viem";
 
-import { makeMockSmartAccountClient } from "../test-utils/mockClient.js";
-import { sepoliaFactoryAddresses } from "./constants.js";
+import { makeMockSmartAccountClient } from "../utils/mockClient.js";
+import { sepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import {
   DeviceWallet,
   DeviceWalletFactory,
@@ -10,15 +10,15 @@ import {
   ESIMWalletFactory,
   LazyWalletRegistry,
   P256Verifier,
-} from "../abis/index.js";
-import type { DataBundleDetails, WebAuthnSignature } from "../types.js";
+} from "../../src/abis/index.js";
+import type { DataBundleDetails, WebAuthnSignature } from "../../src/types.js";
 
-import * as deviceWallet from "./deviceWallet.js";
-import * as deviceWalletFactory from "./deviceWalletFactory.js";
-import * as eSIMWallet from "./eSIMWallet.js";
-import * as eSIMWalletFactory from "./eSIMWalletFactory.js";
-import * as lazyWalletRegistry from "./lazyWalletRegistry.js";
-import * as p256Verifier from "./P256Verifier.js";
+import * as deviceWallet from "../../src/logic/deviceWallet.js";
+import * as deviceWalletFactory from "../../src/logic/deviceWalletFactory.js";
+import * as eSIMWallet from "../../src/logic/eSIMWallet.js";
+import * as eSIMWalletFactory from "../../src/logic/eSIMWalletFactory.js";
+import * as lazyWalletRegistry from "../../src/logic/lazyWalletRegistry.js";
+import * as p256Verifier from "../../src/logic/P256Verifier.js";
 
 // --- Fixtures ---------------------------------------------------------------
 const WALLET = "0x00000000000000000000000000000000000dead1" as Address;
@@ -244,7 +244,7 @@ describe("sub-package UserOp calldata", () => {
 // --- EOA writeContract paths ------------------------------------------------
 describe("EOA writeContract paths", () => {
   it("deviceWalletFactory._createAccountWithEOA calls writeContract on the factory", async () => {
-    const { makeMockWalletClient } = await import("../test-utils/mockClient.js");
+    const { makeMockWalletClient } = await import("../utils/mockClient.js");
     const client = makeMockWalletClient({ chainId: 11155111, account: "0x00000000000000000000000000000000000e0a01" });
 
     await deviceWalletFactory._createAccountWithEOA(client, "Device_11", OWNER_KEY, 1n, 100n);
@@ -260,7 +260,7 @@ describe("EOA writeContract paths", () => {
   });
 
   it("eSIMWalletFactory._deployESIMWalletWithEOA calls writeContract on the factory", async () => {
-    const { makeMockWalletClient } = await import("../test-utils/mockClient.js");
+    const { makeMockWalletClient } = await import("../utils/mockClient.js");
     const client = makeMockWalletClient({ chainId: 11155111, account: "0x00000000000000000000000000000000000e0a01" });
 
     await eSIMWalletFactory._deployESIMWalletWithEOA(client, WALLET, 2n);
@@ -273,7 +273,7 @@ describe("EOA writeContract paths", () => {
   });
 
   it("_createAccountWithEOA throws MISSING_EOA_WALLET without an account", async () => {
-    const { makeMockWalletClient } = await import("../test-utils/mockClient.js");
+    const { makeMockWalletClient } = await import("../utils/mockClient.js");
     const client = makeMockWalletClient({ chainId: 11155111 });
     await expect(
       deviceWalletFactory._createAccountWithEOA(client, "Device_11", OWNER_KEY, 1n, 100n),
@@ -299,8 +299,8 @@ describe("deviceWallet._getOwner", () => {
         })),
       };
     });
-    const { _getOwner } = await import("./deviceWallet.js");
-    const { makeMockWalletClient } = await import("../test-utils/mockClient.js");
+    const { _getOwner } = await import("../../src/logic/deviceWallet.js");
+    const { makeMockWalletClient } = await import("../utils/mockClient.js");
     const client = makeMockWalletClient({ chainId: 11155111 });
 
     const owner = await _getOwner(client, WALLET);

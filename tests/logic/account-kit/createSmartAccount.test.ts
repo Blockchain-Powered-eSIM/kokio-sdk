@@ -15,9 +15,9 @@ import {
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { p256 } from "@noble/curves/nist.js";
 
-import { makeMockWalletClient } from "../../test-utils/mockClient.js";
-import { sepoliaFactoryAddresses, CHAIN_ID } from "../constants.js";
-import type { P256Key, WebAuthnSignature } from "../../types.js";
+import { makeMockWalletClient } from "../../utils/mockClient.js";
+import { sepoliaFactoryAddresses, CHAIN_ID } from "../../../src/logic/constants.js";
+import type { P256Key, WebAuthnSignature } from "../../../src/types.js";
 
 // --- Mock the on-chain beacon read (getContract(...).read.beacon()) ---------
 const FIXED_BEACON = "0x00000000000000000000000000000000000beac0" as const;
@@ -56,7 +56,7 @@ import {
   BEACON_PROXY_CREATION_CODE,
   getCounterFactualAddress,
   getInitCodeHash,
-} from "./createSmartAccount.js";
+} from "../../../src/logic/account-kit/createSmartAccount.js";
 
 // Fixed fixture mirroring smart-contract-suite/scripts/compute-initCode.js
 const OWNER_KEY: P256Key = [

@@ -9,7 +9,7 @@ import {
   hexToArrayBuffer,
   parseDEREncodedSignature,
   parseSignature,
-} from "./utils.js";
+} from "../../src/logic/utils.js";
 
 describe("_add0x / _remove0x", () => {
   it("_add0x prefixes bare hex and leaves 0x-prefixed input intact", () => {

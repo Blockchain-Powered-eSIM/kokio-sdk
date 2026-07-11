@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { WalletClient } from "viem";
-import { ConstantsSubPackage } from "./constantsClass.js";
-import { sepoliaFactoryAddresses, CHAIN_ID } from "../logic/constants.js";
+import { ConstantsSubPackage } from "../../src/interface/constantsClass.js";
+import { sepoliaFactoryAddresses, CHAIN_ID } from "../../src/logic/constants.js";
 
 const makeClient = (chainId: number) => {
   const getChainId = vi.fn(async () => chainId);

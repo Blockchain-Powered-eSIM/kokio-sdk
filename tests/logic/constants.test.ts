@@ -6,7 +6,7 @@ import {
   sepoliaFactoryAddresses,
   optimismSepoliaFactoryAddresses,
   baseSepoliaFactoryAddresses,
-} from "./constants.js";
+} from "../../src/logic/constants.js";
 
 const RPC = "https://rpc.test.invalid";
 
