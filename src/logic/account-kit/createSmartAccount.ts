@@ -1,6 +1,6 @@
-import { 
+import {
 	AccountOp, createSmartAccountClient, getEntryPoint, SmartContractAccount,
-	toSmartContractAccount, split, SmartAccountClient
+	toSmartContractAccount, split, SmartAccountClient, erc7677Middleware
 } from "@aa-sdk/core";
 import { 
 	http, type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData,
@@ -12,7 +12,6 @@ import { _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS } from "..
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils.js";
 import { P256Key, WebAuthnSignature } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
-import { alchemyGasManagerMiddleware } from "@account-kit/infra";
 
 import { decodeAttestationObject, decodeClientDataJSON, isoBase64URL, parseAuthenticatorData } from "@simplewebauthn/server/helpers";
 import { Passkey, PasskeyGetRequest, PasskeyGetResult } from "react-native-passkey";
@@ -402,6 +401,6 @@ export const _getSmartWalletClient = async (client: WalletClient, pimlicoAPIKey:
 			fallback: http(values.rpcURL),
 		}),
 		// transport: http(values.rpcURL),
-		...alchemyGasManagerMiddleware(gasPolicyId)
+		...erc7677Middleware({ context: { policyId: gasPolicyId } })
 	});
 }
