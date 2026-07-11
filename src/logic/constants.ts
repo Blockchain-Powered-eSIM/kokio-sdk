@@ -1,5 +1,10 @@
 import { WalletClient, Address } from 'viem';
 import {
+    InvalidClientError,
+    UnconfiguredChainError,
+    UnsupportedChainError,
+} from './errors.js';
+import {
     mainnet,
     sepolia,
     optimism,
@@ -138,7 +143,7 @@ export const customErrors: Record<string, string> = {
 export const _extractChainID = async (client: WalletClient) => {
 
     if (!client) {
-        throw "Invalid Signer or Provider instance";
+        throw new InvalidClientError();
     }
     return client.getChainId();
 }
@@ -180,16 +185,11 @@ export const _getChainSpecificConstants = (
     const config = CHAIN_CONFIG[chainID];
 
     if (!config) {
-        throw new Error(
-            `Error: Unsupported chain id ${chainID}. Kokio SDK has no configuration for this chain.`,
-        );
+        throw new UnsupportedChainError(chainID);
     }
 
     if (_hasUnconfiguredAddresses(config.factoryAddresses)) {
-        throw new Error(
-            `Error: Chain id ${chainID} is not yet configured (factory addresses are '0x' placeholders). ` +
-            `Deploy the contracts and populate its address book before using this chain.`,
-        );
+        throw new UnconfiguredChainError(chainID);
     }
 
     return {

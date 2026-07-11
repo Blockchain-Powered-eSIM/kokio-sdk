@@ -1,7 +1,8 @@
 import { encodeFunctionData, Hex, WalletClient } from "viem";
 import { WebAuthnSignature } from "../types.js";
 import { SmartAccountClient } from "@aa-sdk/core";
-import { _getChainSpecificConstants, customErrors } from "./constants.js";
+import { _getChainSpecificConstants } from "./constants.js";
+import { MissingSmartWalletError } from "./errors.js";
 import { P256Verifier } from "../abis/index.js";
 
 export const _verifySignature = async (
@@ -16,7 +17,7 @@ export const _verifySignature = async (
     const chainID = await client.getChainId();
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({

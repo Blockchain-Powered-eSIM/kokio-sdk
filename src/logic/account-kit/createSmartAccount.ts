@@ -9,6 +9,7 @@ import {
 	TypedDataDefinition, TypedData, hashMessage, toHex, hashTypedData, hexToBytes, bytesToHex
 } from "viem";
 import { _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS } from "../constants.js";
+import { CounterfactualMismatchError } from "../errors.js";
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils.js";
 import { P256Key, WebAuthnSignature } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
@@ -52,9 +53,10 @@ export const BEACON_PROXY_CREATION_CODE: Hex = "0x60a06040908082526104a880380380
 */
 export const _stamp = async (credentialId: string, rpId: string, payload: Hex): Promise<WebAuthnSignature> => {
 	const signingOptions: PasskeyGetRequest = {
-		challenge: isoBase64URL.fromBuffer(
-			(hexToBytes(payload) as unknown) as Uint8Array<ArrayBuffer>
-		),
+		// `Uint8Array.from` gives a fresh ArrayBuffer-backed view, matching the
+		// `Uint8Array<ArrayBuffer>` that `fromBuffer` expects (viem's `hexToBytes`
+		// is typed over the wider `ArrayBufferLike`).
+		challenge: isoBase64URL.fromBuffer(Uint8Array.from(hexToBytes(payload))),
 		allowCredentials: [{
 			id: credentialId,
 			type: "public-key",
@@ -295,11 +297,7 @@ export const _assertCounterfactualMatchesOnChain = async (
 	]) as Hex;
 
 	if (getAddress(offChain) !== getAddress(onChain)) {
-		throw new Error(
-			`Counterfactual address mismatch: off-chain ${getAddress(offChain)} != ` +
-			`on-chain ${getAddress(onChain)}. The pinned BeaconProxy creation code has ` +
-			`likely drifted from the deployed DeviceWalletFactory.`,
-		);
+		throw new CounterfactualMismatchError(getAddress(offChain), getAddress(onChain));
 	}
 
 	return offChain;

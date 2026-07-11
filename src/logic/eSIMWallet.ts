@@ -1,13 +1,13 @@
 import { Address, encodeFunctionData, WalletClient } from "viem"
 import { DataBundleDetails } from "../types.js";
 import { SmartAccountClient } from "@aa-sdk/core";
-import { customErrors } from "./constants.js";
+import { MissingSmartWalletError } from "./errors.js";
 import { ESIMWallet } from "../abis/index.js";
 
 
 export const _setESIMUniqueIdentifier = async (client: SmartAccountClient, address: Address, eSIMUniqueIdentifier: string) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -25,7 +25,7 @@ export const _setESIMUniqueIdentifier = async (client: SmartAccountClient, addre
 
 export const _buyDataBundle = async (client: SmartAccountClient, address: Address, dataBundleDetails: DataBundleDetails) => {
     
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -43,7 +43,7 @@ export const _buyDataBundle = async (client: SmartAccountClient, address: Addres
 
 export const _populateHistory = async (client: SmartAccountClient, address: Address, dataBundleDetails: Array<DataBundleDetails>) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -61,7 +61,7 @@ export const _populateHistory = async (client: SmartAccountClient, address: Addr
 
 export const _owner = async (client: SmartAccountClient, address: Address) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -79,7 +79,7 @@ export const _owner = async (client: SmartAccountClient, address: Address) => {
 
 export const _requestTransferOwnership = async (client: SmartAccountClient, address: Address, newOwner: Address) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -96,7 +96,7 @@ export const _requestTransferOwnership = async (client: SmartAccountClient, addr
 }
 
 export const _acceptOwnershipTransfer = async (client: SmartAccountClient, address: Address) => {
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -114,7 +114,7 @@ export const _acceptOwnershipTransfer = async (client: SmartAccountClient, addre
 
 export const _sendETHToDeviceWallet = async (client: SmartAccountClient, address: Address, amount: bigint) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -132,7 +132,7 @@ export const _sendETHToDeviceWallet = async (client: SmartAccountClient, address
 
 export const _transferOwnership = async (client: SmartAccountClient, address: Address, newOwner: Address) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
 
     // UserOp — transferOwnership(address newOwner); the arg is the new owner's
     // address, not an amount.

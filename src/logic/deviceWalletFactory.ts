@@ -1,6 +1,7 @@
 import { encodeFunctionData, WalletClient } from "viem";
 import { SmartAccountClient } from "@aa-sdk/core";
-import { _extractChainID, _getChainSpecificConstants, customErrors } from "./constants.js";
+import { _extractChainID, _getChainSpecificConstants } from "./constants.js";
+import { MissingEOAWalletError, MissingSmartWalletError } from "./errors.js";
 import { DeviceWalletFactory } from "../abis/index.js";
 import { P256Key } from "../types.js";
 
@@ -16,7 +17,7 @@ export const _createAccountWithEOA = async (
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if (!client.account) throw new Error(customErrors.MISSING_EOA_WALLET);
+    if (!client.account) throw new MissingEOAWalletError();
 
     // createAccount(string uid, bytes32[2] ownerKey, uint256 salt) is payable —
     // the deposit is the msg.value, not a 4th positional argument.
@@ -42,7 +43,7 @@ export const _getAddress = async (
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
 
     // UserOp — the on-chain view is `getCounterFactualAddress(bytes32[2] ownerKey,
     // string uid, uint256 salt)`; note the arg order differs from createAccount.
@@ -65,7 +66,7 @@ export const _getCurrentDeviceWalletImplementation = async (client: SmartAccount
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({

@@ -1,5 +1,6 @@
 import { Address, encodeFunctionData, WalletClient } from "viem"
-import { _getChainSpecificConstants, customErrors } from "./constants.js";
+import { _getChainSpecificConstants } from "./constants.js";
+import { MissingEOAWalletError, MissingSmartWalletError } from "./errors.js";
 import { SmartAccountClient } from "@aa-sdk/core";
 import { ESIMWalletFactory } from "../abis/index.js";
 
@@ -9,7 +10,7 @@ export const _addRegistryAddress = async (client: SmartAccountClient, registryCo
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -31,7 +32,7 @@ export const _deployESIMWalletWithEOA = async (client: WalletClient, deviceWalle
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if (!client.account) throw new Error(customErrors.MISSING_EOA_WALLET);
+    if (!client.account) throw new MissingEOAWalletError();
 
     return client.writeContract({
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
@@ -49,7 +50,7 @@ export const _deployESIMWalletWithUserOp = async (client: SmartAccountClient, de
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -71,7 +72,7 @@ export const _getCurrentESIMWalletImplementation = async (client: SmartAccountCl
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({

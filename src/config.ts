@@ -9,6 +9,23 @@ import { ESIMWalletSubPackage } from "./interface/eSIMWalletClass.js";
 import { ESIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass.js";
 import { SmartAccountClient } from "@aa-sdk/core";
 
+// Re-export the typed error surface so consumers can `instanceof KokioError`
+// (or a specific subclass) and decode on-chain reverts without reaching into
+// internal module paths.
+export {
+    KokioError,
+    NullOrUndefinedValueError,
+    MissingSmartWalletError,
+    MissingEOAWalletError,
+    InvalidClientError,
+    UnsupportedChainError,
+    UnconfiguredChainError,
+    CounterfactualMismatchError,
+    ContractRevertError,
+    decodeContractRevert,
+} from "./logic/errors.js";
+export type { DecodedRevert } from "./logic/errors.js";
+
 export class Kokio {
     viemWalletClient: WalletClient;
     credentialId: string;

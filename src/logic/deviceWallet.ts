@@ -1,12 +1,12 @@
 import { Address, createPublicClient, encodeFunctionData, getContract, PublicClient, WalletClient } from "viem";
 import { SmartAccountClient } from "@aa-sdk/core";
 import { DeviceWallet } from "../abis/index.js";
-import { customErrors } from "./constants.js";
+import { MissingSmartWalletError } from "./errors.js";
 import { P256Key } from "../types.js";
 
 export const _deployESIMWallet = async (client: SmartAccountClient, address: Address, hasAccessToETH: boolean, salt: bigint) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET);
+    if(!client.account) throw new MissingSmartWalletError();
     
     // UserOp
     return client.sendUserOperation({
@@ -29,7 +29,7 @@ export const _setESIMUniqueIdentifierForAnESIMWallet = async (
     eSIMUniqueIdentifier: string
 ) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET);
+    if(!client.account) throw new MissingSmartWalletError();
     
     // UserOp
     return client.sendUserOperation({
@@ -50,7 +50,7 @@ export const _setESIMUniqueIdentifierForAnESIMWallet = async (
 
 export const _payETHForDataBundles = async (client: SmartAccountClient, address: Address, amount: bigint) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -68,7 +68,7 @@ export const _payETHForDataBundles = async (client: SmartAccountClient, address:
 
 export const _pullETH = async (client: SmartAccountClient, address: Address, amount: bigint) => {
     
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET);
+    if(!client.account) throw new MissingSmartWalletError();
     
     // UserOp
     return client.sendUserOperation({
@@ -86,7 +86,7 @@ export const _pullETH = async (client: SmartAccountClient, address: Address, amo
 
 export const _getVaultAddress = async (client: SmartAccountClient, address: Address) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET);
+    if(!client.account) throw new MissingSmartWalletError();
     
     // UserOp
     return client.sendUserOperation({
@@ -104,7 +104,7 @@ export const _getVaultAddress = async (client: SmartAccountClient, address: Addr
 
 export const _toggleAccessToETH = async (client: SmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET);
+    if(!client.account) throw new MissingSmartWalletError();
     
     // UserOp
     return client.sendUserOperation({
@@ -122,7 +122,7 @@ export const _toggleAccessToETH = async (client: SmartAccountClient, address: Ad
 
 export const _addESIMWallet = async (client: SmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET);
+    if(!client.account) throw new MissingSmartWalletError();
     
     // UserOp
     return client.sendUserOperation({
@@ -140,7 +140,7 @@ export const _addESIMWallet = async (client: SmartAccountClient, address: Addres
 
 export const _removeESIMWallet = async (client: SmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET);
+    if(!client.account) throw new MissingSmartWalletError();
     
     // UserOp
     return client.sendUserOperation({
@@ -167,6 +167,6 @@ export const _getOwner = async (client: WalletClient, address: Address) => {
     const x = await contract.read.owner([0n]);
     const y = await contract.read.owner([1n]);
 
-    const owner = [x,y]; 
-    return owner as P256Key;
+    const owner: P256Key = [x, y];
+    return owner;
 }

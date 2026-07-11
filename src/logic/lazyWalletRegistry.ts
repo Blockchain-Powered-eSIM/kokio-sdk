@@ -1,6 +1,7 @@
 import { encodeFunctionData, Hex, WalletClient } from "viem";
 import { DataBundleDetails, P256Key } from "../types.js";
-import { _getChainSpecificConstants, customErrors } from "./constants.js";
+import { _getChainSpecificConstants } from "./constants.js";
+import { MissingSmartWalletError } from "./errors.js";
 import { SmartAccountClient } from "@aa-sdk/core";
 import { LazyWalletRegistry } from "../abis/index.js";
 
@@ -11,7 +12,7 @@ export const _isLazyWalletDeployed = async (client: SmartAccountClient, deviceUn
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -38,7 +39,7 @@ export const _batchPopulateHistory = async (
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -66,7 +67,7 @@ export const _deployLazyWalletAndSetESIMIdentifier = async (
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
@@ -93,7 +94,7 @@ export const _switchESIMIdentifierToNewDeviceIdentifier = async (
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
+    if(!client.account) throw new MissingSmartWalletError()
     
     // UserOp
     return client.sendUserOperation({
