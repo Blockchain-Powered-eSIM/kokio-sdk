@@ -27,7 +27,8 @@
   "scripts": {
     "build": "tsc",
     "prepack": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "repository": {
     "type": "git",
@@ -41,7 +42,8 @@
   "homepage": "https://github.com/Blockchain-Powered-eSIM/kokio-sdk#readme",
   "devDependencies": {
     "dotenv": "^16.5.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "4.1.10"
   },
   "dependencies": {
     "@aa-sdk/core": "4.88.4",
