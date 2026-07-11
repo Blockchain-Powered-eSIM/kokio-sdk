@@ -3,11 +3,14 @@ import {
   decodeAbiParameters,
   getAddress,
   getContractAddress,
+  hashMessage,
+  hashTypedData,
   keccak256,
   parseAbiParameters,
   sliceHex,
   toHex,
   type Hex,
+  type TypedDataDefinition,
 } from "viem";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { p256 } from "@noble/curves/nist.js";
@@ -39,6 +42,7 @@ vi.mock("react-native-passkey", () => ({
 import {
   _encodeSignature,
   _signMessage,
+  _signTypedData,
   _signUserOperationHash,
   _stamp,
   getCounterFactualAddress,
@@ -226,5 +230,72 @@ describe("_signMessage / _signUserOperationHash envelope shape", () => {
     // the challenge handed to the passkey is hashMessage(uint8|uint48|bytes32)
     const req = passkeyGet.mock.calls[0][0];
     expect(req.challenge).toBeTypeOf("string");
+  });
+
+  it("_signMessage forwards a string message to hashMessage as the challenge", async () => {
+    await _signMessage("hello", "cred-id", "kokio.test");
+    const req = passkeyGet.mock.calls[0][0];
+    // EIP-191 digest of the UTF-8 string — NOT the raw-bytes force-cast path.
+    expect(isoBase64URL.toBuffer(req.challenge)).toEqual(
+      new Uint8Array(Buffer.from(hashMessage("hello").slice(2), "hex")),
+    );
+  });
+
+  it("_signMessage handles the { raw } SignableMessage form (pre-serialized bytes)", async () => {
+    const raw = keccak256("0xbeef"); // a 32-byte pre-computed digest
+    await _signMessage({ raw }, "cred-id", "kokio.test");
+    const req = passkeyGet.mock.calls[0][0];
+    // hashMessage applies the EIP-191 prefix to the raw bytes; the old
+    // `stringToBytes(message as string)` cast would have thrown / mangled this.
+    expect(isoBase64URL.toBuffer(req.challenge)).toEqual(
+      new Uint8Array(Buffer.from(hashMessage({ raw }).slice(2), "hex")),
+    );
+  });
+});
+
+describe("_signTypedData (P0: stub replaced with real passkey stamping)", () => {
+  beforeEach(() => {
+    passkeyGet.mockReset();
+    passkeyGet.mockResolvedValue(mockPasskeyResponse());
+  });
+
+  const typedData: TypedDataDefinition = {
+    domain: { name: "Kokio", version: "1", chainId: 11155111 },
+    types: {
+      Mail: [
+        { name: "from", type: "address" },
+        { name: "contents", type: "string" },
+      ],
+    },
+    primaryType: "Mail",
+    message: {
+      from: "0x0000000000000000000000000000000000000001",
+      contents: "gm",
+    },
+  };
+
+  it("produces a non-zero WebAuthnSignature (proves the zero-filled stub is gone)", async () => {
+    const sig = await _signTypedData(typedData, "cred-id", "kokio.test");
+    expect(sliceHex(sig, 0, 1)).toBe("0x01");
+
+    const [decoded] = decodeAbiParameters(
+      parseAbiParameters(
+        "(bytes authenticatorData, string clientDataJSON, uint256 challengeIndex, uint256 typeIndex, uint256 r, uint256 s)",
+      ),
+      sliceHex(sig, 7),
+    );
+    const wa = decoded as WebAuthnSignature;
+    expect(wa.r).toBe(RAW_R);
+    expect(wa.s).toBe(5n);
+    expect(wa.r).not.toBe(0n);
+    expect(wa.clientDataJSON).toBe(CLIENT_DATA_JSON);
+  });
+
+  it("uses hashTypedData(typedData) as the passkey challenge", async () => {
+    await _signTypedData(typedData, "cred-id", "kokio.test");
+    const req = passkeyGet.mock.calls[0][0];
+    expect(isoBase64URL.toBuffer(req.challenge)).toEqual(
+      new Uint8Array(Buffer.from(hashTypedData(typedData).slice(2), "hex")),
+    );
   });
 });

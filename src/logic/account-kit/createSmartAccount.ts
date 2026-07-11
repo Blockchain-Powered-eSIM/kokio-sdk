@@ -6,7 +6,7 @@ import {
 	http, type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData,
 	Address, encodePacked, encodeAbiParameters, parseAbiParameters, getContract,
 	concat, keccak256, getContractAddress, getAddress,
-	TypedDataDefinition, TypedData, hashMessage, stringToBytes, toHex, hashTypedData, hexToBytes, bytesToHex
+	TypedDataDefinition, TypedData, hashMessage, toHex, hashTypedData, hexToBytes, bytesToHex
 } from "viem";
 import { _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS } from "../constants.js";
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils.js";
@@ -272,7 +272,11 @@ export const _signMessage = async (message: SignableMessage, credentialId: strin
 
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
-	const payload = hashMessage({raw: stringToBytes(message as string)});
+	// viem's SignableMessage is `string | { raw: Hex | ByteArray }`. A plain
+	// string is a UTF-8 message; the `{ raw }` form is already-serialized bytes
+	// (possibly a pre-computed digest). hashMessage handles both natively, so
+	// forward the message as-is rather than force-casting it to a string.
+	const payload = hashMessage(message);
 	// The original message is passed to the stamp and sign function.
 	// The stamp and sign function creates the EIP-191 digest hash using its hashMessage function
 	// The result of the hashMessage(message) will be the `payload` used as a challenge
@@ -284,20 +288,17 @@ export const _signMessage = async (message: SignableMessage, credentialId: strin
 export const _signTypedData = async <
     const typedData extends TypedData | Record<string, unknown>,
     primaryType extends keyof typedData | "EIP712Domain" = keyof typedData
-> (typedData: TypedDataDefinition<typedData, primaryType>, organiationId: string, signWith: Address): Promise<Hex> => {
+> (typedData: TypedDataDefinition<typedData, primaryType>, credentialId: string, rpId: string): Promise<Hex> => {
 
 	// signature valid until, UNIX timestamp in seconds
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
-	// TODO: Implement stamping for Typed Data
-	let webAuthnSignature = {
-		authenticatorData: `0x` as `0x${string}`,
-		clientDataJSON: "",
-		challengeIndex: BigInt(0),
-		typeIndex: BigInt(0),
-		r: BigInt(0),
-		s: BigInt(0)
-	}
+	// EIP-712 digest is the WebAuthn challenge, mirroring _signMessage's use of
+	// the EIP-191 digest. The contract's isValidSignature receives this same
+	// hashTypedData result and verifies the passkey signature against it.
+	const payload = hashTypedData(typedData);
+
+	const webAuthnSignature = await _stamp(credentialId, rpId, payload);
 
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
@@ -334,7 +335,6 @@ export const _getSmartWallet = async (
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
 	if (!client.account) throw new Error ('Error: No signer account found with WalletClient')
-	const signWith = client.account.address;
 
 	return toSmartContractAccount({
 		/// REQUIRED PARAMS ///
@@ -358,7 +358,7 @@ export const _getSmartWallet = async (
 		
 		signMessage: async ({ message}): Promise<Hash> => _signMessage(message, credentialId, rpId),
 
-		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, organiationId, signWith),
+		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, credentialId, rpId),
 		
 		/// OPTIONAL PARAMS ///
 		// if you already know your account's address, pass that in here to avoid generating a new counterfactual
