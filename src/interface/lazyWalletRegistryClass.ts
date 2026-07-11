@@ -5,7 +5,7 @@ import {
     _isLazyWalletDeployed,
     _switchESIMIdentifierToNewDeviceIdentifier
 } from "../logic/lazyWalletRegistry.js"
-import { DataBundleDetails } from "../types";
+import { DataBundleDetails, P256Key } from "../types";
 import { SmartAccountClient } from "@aa-sdk/core";
 
 export class LazyWalletRegistrySubPackage {
@@ -20,7 +20,7 @@ export class LazyWalletRegistrySubPackage {
         return _batchPopulateHistory(this.client, deviceUniqueIdentifiers, eSIMUniqueIdentifiers, dataBundleDetails);
     }
 
-    _deployLazyWalletAndSetESIMIdentifier (deviceOwnerPublicKey: Hex[2], deviceUniqueIdentifier: string, salt: bigint, depositAmount: bigint) {
+    _deployLazyWalletAndSetESIMIdentifier (deviceOwnerPublicKey: P256Key, deviceUniqueIdentifier: string, salt: bigint, depositAmount: bigint) {
         return _deployLazyWalletAndSetESIMIdentifier(this.client, deviceOwnerPublicKey, deviceUniqueIdentifier, salt, depositAmount);
     }
 

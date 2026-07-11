@@ -49,7 +49,7 @@ export class ESIMWalletSubPackage {
         return _setESIMUniqueIdentifier(this.client, this.address, eSIMUniqueIdentifier);
     }
 
-    _transferOwnership (amount: bigint) {
-        return _transferOwnership(this.client, this.address, amount);
+    _transferOwnership (newOwner: Address) {
+        return _transferOwnership(this.client, this.address, newOwner);
     }
 }

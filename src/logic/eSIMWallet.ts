@@ -34,7 +34,7 @@ export const _buyDataBundle = async (client: SmartAccountClient, address: Addres
             target: address,
             data: encodeFunctionData({
                 abi: ESIMWallet,
-                functionName: "payETHForDataBundles",
+                functionName: "buyDataBundle",
                 args: [dataBundleDetails]
             })
         }
@@ -130,11 +130,12 @@ export const _sendETHToDeviceWallet = async (client: SmartAccountClient, address
     });
 }
 
-export const _transferOwnership = async (client: SmartAccountClient, address: Address, amount: bigint) => {
+export const _transferOwnership = async (client: SmartAccountClient, address: Address, newOwner: Address) => {
 
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
-    
-    // UserOp
+
+    // UserOp — transferOwnership(address newOwner); the arg is the new owner's
+    // address, not an amount.
     return client.sendUserOperation({
         account: client.account,
         uo:{
@@ -142,7 +143,7 @@ export const _transferOwnership = async (client: SmartAccountClient, address: Ad
             data: encodeFunctionData({
                 abi: ESIMWallet,
                 functionName: "transferOwnership",
-                args: [amount]
+                args: [newOwner]
             })
         }
     });

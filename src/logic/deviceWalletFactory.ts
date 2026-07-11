@@ -2,11 +2,12 @@ import { encodeFunctionData, WalletClient } from "viem";
 import { SmartAccountClient } from "@aa-sdk/core";
 import { _extractChainID, _getChainSpecificConstants, customErrors } from "./constants.js";
 import { DeviceWalletFactory } from "../abis/index.js";
+import { P256Key } from "../types.js";
 
 export const _createAccountWithEOA = async (
     client: WalletClient,
     deviceUniqueIdentifier: string,
-    deviceWalletOwnerKey: string,
+    deviceWalletOwnerKey: P256Key,
     salt: bigint,
     depositAmount: bigint
 ) => {
@@ -17,20 +18,23 @@ export const _createAccountWithEOA = async (
 
     if (!client.account) throw new Error(customErrors.MISSING_EOA_WALLET);
 
+    // createAccount(string uid, bytes32[2] ownerKey, uint256 salt) is payable —
+    // the deposit is the msg.value, not a 4th positional argument.
     return client.writeContract({
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
         account: client.account.address,
         abi: DeviceWalletFactory,
         functionName: 'createAccount',
-        args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount]
+        args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt],
+        value: depositAmount
     });
 }
 
 export const _getAddress = async (
     client: SmartAccountClient,
     deviceUniqueIdentifier: string,
-    deviceWalletOwnerKey: string,
+    deviceWalletOwnerKey: P256Key,
     salt: bigint,
 ) => {
 
@@ -39,16 +43,17 @@ export const _getAddress = async (
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
     if(!client.account) throw new Error(customErrors.MISSING_SMART_WALLET)
-    
-    // UserOp
+
+    // UserOp — the on-chain view is `getCounterFactualAddress(bytes32[2] ownerKey,
+    // string uid, uint256 salt)`; note the arg order differs from createAccount.
     return client.sendUserOperation({
         account: client.account,
         uo:{
             target: values.factoryAddresses.DEVICE_WALLET_FACTORY,
             data: encodeFunctionData({
                 abi: DeviceWalletFactory,
-                functionName: "getAddress",
-                args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt]
+                functionName: "getCounterFactualAddress",
+                args: [deviceWalletOwnerKey, deviceUniqueIdentifier, salt]
             })
         }
     });

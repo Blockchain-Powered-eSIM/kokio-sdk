@@ -30,10 +30,9 @@ const OWNER_KEY: [Hex, Hex] = [
   "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F1",
 ];
 const BUNDLE: DataBundleDetails = {
-  // NOTE: the on-chain struct fields are dataBundleID / dataBundlePrice.
-  dataBundleId: "bundle-1",
+  dataBundleID: "bundle-1",
   dataBundlePrice: 1000n,
-} as DataBundleDetails;
+};
 const WEBAUTHN_SIG: WebAuthnSignature = {
   authenticatorData: "0x1122",
   clientDataJSON: '{"type":"webauthn.get","challenge":"abc"}',
@@ -142,7 +141,28 @@ const userOpCases: Array<{
     target: ESIM,
     data: encodeFunctionData({ abi: ESIMWallet, functionName: "sendETHToDeviceWallet", args: [3n] }),
   },
+  {
+    // Phase 2 fix: ESIMWallet ABI exposes buyDataBundle (not payETHForDataBundles).
+    label: "eSIMWallet._buyDataBundle",
+    run: (c) => eSIMWallet._buyDataBundle(c, ESIM, BUNDLE),
+    target: ESIM,
+    data: encodeFunctionData({ abi: ESIMWallet, functionName: "buyDataBundle", args: [BUNDLE] }),
+  },
+  {
+    // Phase 2 fix: transferOwnership takes an address, not an amount.
+    label: "eSIMWallet._transferOwnership",
+    run: (c) => eSIMWallet._transferOwnership(c, ESIM, NEW_OWNER),
+    target: ESIM,
+    data: encodeFunctionData({ abi: ESIMWallet, functionName: "transferOwnership", args: [NEW_OWNER] }),
+  },
   // deviceWalletFactory.ts (target = DEVICE_WALLET_FACTORY)
+  {
+    // Phase 2 fix: on-chain view is getCounterFactualAddress(ownerKey, uid, salt).
+    label: "deviceWalletFactory._getAddress",
+    run: (c) => deviceWalletFactory._getAddress(c, "Device_11", OWNER_KEY, 1n),
+    target: F.DEVICE_WALLET_FACTORY,
+    data: encodeFunctionData({ abi: DeviceWalletFactory, functionName: "getCounterFactualAddress", args: [OWNER_KEY, "Device_11", 1n] }),
+  },
   {
     label: "deviceWalletFactory._getCurrentDeviceWalletImplementation",
     run: (c) => deviceWalletFactory._getCurrentDeviceWalletImplementation(c),
@@ -221,44 +241,22 @@ describe("sub-package UserOp calldata", () => {
   });
 });
 
-// --- Known drift bugs (documented current behavior; fixed in Phase 2) -------
-describe("sub-package ABI function-name drift (currently broken)", () => {
-  it("deviceWalletFactory._getAddress throws: ABI has getCounterFactualAddress, not getAddress", async () => {
-    const client = makeMockSmartAccountClient();
-    await expect(
-      deviceWalletFactory._getAddress(client, "Device_11", OWNER_KEY as unknown as string, 1n),
-    ).rejects.toThrow();
-    expect(client.sendUserOperation).not.toHaveBeenCalled();
-  });
-
-  it("eSIMWallet._buyDataBundle throws: ESIMWallet ABI has buyDataBundle, not payETHForDataBundles", async () => {
-    const client = makeMockSmartAccountClient();
-    await expect(eSIMWallet._buyDataBundle(client, ESIM, BUNDLE)).rejects.toThrow();
-    expect(client.sendUserOperation).not.toHaveBeenCalled();
-  });
-
-  it("eSIMWallet._transferOwnership throws: signature takes `amount: bigint` but transferOwnership expects an address", async () => {
-    const client = makeMockSmartAccountClient();
-    // 3n is passed to an `address` param -> viem InvalidAddressError
-    await expect(eSIMWallet._transferOwnership(client, ESIM, 3n)).rejects.toThrow();
-    expect(client.sendUserOperation).not.toHaveBeenCalled();
-  });
-});
-
 // --- EOA writeContract paths ------------------------------------------------
 describe("EOA writeContract paths", () => {
   it("deviceWalletFactory._createAccountWithEOA calls writeContract on the factory", async () => {
     const { makeMockWalletClient } = await import("../test-utils/mockClient.js");
     const client = makeMockWalletClient({ chainId: 11155111, account: "0x00000000000000000000000000000000000e0a01" });
 
-    await deviceWalletFactory._createAccountWithEOA(client, "Device_11", OWNER_KEY as unknown as string, 1n, 100n);
+    await deviceWalletFactory._createAccountWithEOA(client, "Device_11", OWNER_KEY, 1n, 100n);
 
     const write = client.writeContract as ReturnType<typeof vi.fn>;
     expect(write).toHaveBeenCalledTimes(1);
     const arg = write.mock.calls[0][0];
     expect(arg.address).toBe(F.DEVICE_WALLET_FACTORY);
     expect(arg.functionName).toBe("createAccount");
-    expect(arg.args).toEqual(["Device_11", OWNER_KEY, 1n, 100n]);
+    // createAccount is payable: 3 positional args + the deposit as msg.value.
+    expect(arg.args).toEqual(["Device_11", OWNER_KEY, 1n]);
+    expect(arg.value).toBe(100n);
   });
 
   it("eSIMWalletFactory._deployESIMWalletWithEOA calls writeContract on the factory", async () => {
@@ -278,7 +276,7 @@ describe("EOA writeContract paths", () => {
     const { makeMockWalletClient } = await import("../test-utils/mockClient.js");
     const client = makeMockWalletClient({ chainId: 11155111 });
     await expect(
-      deviceWalletFactory._createAccountWithEOA(client, "Device_11", OWNER_KEY as unknown as string, 1n, 100n),
+      deviceWalletFactory._createAccountWithEOA(client, "Device_11", OWNER_KEY, 1n, 100n),
     ).rejects.toThrow(/EOA/i);
   });
 });
@@ -296,7 +294,7 @@ describe("deviceWallet._getOwner", () => {
         ...actual,
         getContract: vi.fn(() => ({
           read: {
-            owner: async ([i]: [number]) => (i === 0 ? OWNER_KEY[0] : OWNER_KEY[1]),
+            owner: async ([i]: [bigint]) => (i === 0n ? OWNER_KEY[0] : OWNER_KEY[1]),
           },
         })),
       };

@@ -22,12 +22,19 @@ import type { P256Key, WebAuthnSignature } from "../../types.js";
 // --- Mock the on-chain beacon read (getContract(...).read.beacon()) ---------
 const FIXED_BEACON = "0x00000000000000000000000000000000000beac0" as const;
 
+// The on-chain getCounterFactualAddress view is configurable per-test so the
+// drift-guard tests can force a match / mismatch.
+const onChainCounterfactual = vi.fn<() => Promise<`0x${string}`>>();
+
 vi.mock("viem", async (importOriginal) => {
   const actual = await importOriginal<typeof import("viem")>();
   return {
     ...actual,
     getContract: vi.fn(() => ({
-      read: { beacon: async () => FIXED_BEACON },
+      read: {
+        beacon: async () => FIXED_BEACON,
+        getCounterFactualAddress: async () => onChainCounterfactual(),
+      },
     })),
   };
 });
@@ -40,11 +47,13 @@ vi.mock("react-native-passkey", () => ({
 
 // Imported AFTER the mocks above are registered.
 import {
+  _assertCounterfactualMatchesOnChain,
   _encodeSignature,
   _signMessage,
   _signTypedData,
   _signUserOperationHash,
   _stamp,
+  BEACON_PROXY_CREATION_CODE,
   getCounterFactualAddress,
   getInitCodeHash,
 } from "./createSmartAccount.js";
@@ -90,6 +99,37 @@ describe("CREATE2 counterfactual address (invariant vs compute-initCode.js)", ()
     const a = await getCounterFactualAddress(client, UID, OWNER_KEY, SALT);
     const b = await getCounterFactualAddress(client, UID, OWNER_KEY, SALT + 1n);
     expect(a).not.toBe(b);
+  });
+});
+
+describe("pinned BeaconProxy creation code", () => {
+  it("locks the pinned bytecode (guards against silent edits to the literal)", () => {
+    // keccak of the pinned creation code — matches OZ v5.0.0 BeaconProxy,
+    // Hardhat solc 0.8.25 runs=200 viaIR. A diff here means the pin moved.
+    expect(keccak256(BEACON_PROXY_CREATION_CODE)).toMatchInlineSnapshot(
+      `"0x348656e4245d47e0c40e3e66cde81188e1bda03fe6a23a8e7ea83937817bca96"`,
+    );
+  });
+});
+
+describe("_assertCounterfactualMatchesOnChain (drift guard)", () => {
+  it("returns the off-chain address when the on-chain view agrees", async () => {
+    const expected = await getCounterFactualAddress(client, UID, OWNER_KEY, SALT);
+    onChainCounterfactual.mockResolvedValueOnce(expected);
+
+    await expect(
+      _assertCounterfactualMatchesOnChain(client, UID, OWNER_KEY, SALT),
+    ).resolves.toBe(expected);
+  });
+
+  it("throws when the on-chain view disagrees (proxy bytecode drift)", async () => {
+    onChainCounterfactual.mockResolvedValueOnce(
+      "0x000000000000000000000000000000000000dead",
+    );
+
+    await expect(
+      _assertCounterfactualMatchesOnChain(client, UID, OWNER_KEY, SALT),
+    ).rejects.toThrow(/Counterfactual address mismatch/);
   });
 });
 

@@ -1,5 +1,5 @@
 import { encodeFunctionData, Hex, WalletClient } from "viem";
-import { DataBundleDetails } from "../types.js";
+import { DataBundleDetails, P256Key } from "../types.js";
 import { _getChainSpecificConstants, customErrors } from "./constants.js";
 import { SmartAccountClient } from "@aa-sdk/core";
 import { LazyWalletRegistry } from "../abis/index.js";
@@ -56,7 +56,7 @@ export const _batchPopulateHistory = async (
 
 export const _deployLazyWalletAndSetESIMIdentifier = async (
     client: SmartAccountClient,
-    deviceOwnerPublicKey: Hex[2],
+    deviceOwnerPublicKey: P256Key,
     deviceUniqueIdentifier: string,
     salt: bigint,
     depositAmount: bigint

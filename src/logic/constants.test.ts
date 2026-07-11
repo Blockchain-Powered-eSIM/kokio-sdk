@@ -1,14 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { sepolia, optimismSepolia, baseSepolia, arbitrumSepolia } from "viem/chains";
+import { sepolia, optimismSepolia, baseSepolia } from "viem/chains";
 import {
   _getChainSpecificConstants,
   CHAIN_ID,
   sepoliaFactoryAddresses,
   optimismSepoliaFactoryAddresses,
   baseSepoliaFactoryAddresses,
-  mainnetFactoryAddresses,
-  arbitrumOneFactoryAddresses,
-  arbitrumSepoliaFactoryAddresses,
 } from "./constants.js";
 
 const RPC = "https://rpc.test.invalid";
@@ -42,26 +39,30 @@ describe("_getChainSpecificConstants — configured testnets", () => {
   });
 });
 
-describe("_getChainSpecificConstants — unconfigured chains (current behavior)", () => {
-  // These document CURRENT behavior: unconfigured chains silently return '0x'
-  // placeholder factory addresses instead of throwing. Phase 2.1 adds a guard
-  // that will flip these expectations to assert a thrown error.
-  it("returns '0x' placeholders for mainnet", () => {
-    const v = _getChainSpecificConstants(CHAIN_ID.MAINNET, RPC);
-    expect(v.factoryAddresses).toBe(mainnetFactoryAddresses);
-    expect(v.factoryAddresses.DEVICE_WALLET_FACTORY).toBe("0x");
+describe("_getChainSpecificConstants — unconfigured chains (P1 guard)", () => {
+  // The guard now throws for chains whose factory addresses are still '0x'
+  // placeholders, instead of silently leaking '0x' into viem calls.
+  it("throws for mainnet (placeholder addresses)", () => {
+    expect(() => _getChainSpecificConstants(CHAIN_ID.MAINNET, RPC)).toThrow(
+      /not yet configured/,
+    );
   });
 
-  it("returns '0x' placeholders for arbitrum-one", () => {
-    const v = _getChainSpecificConstants(CHAIN_ID.ARBITRUM_ONE, RPC);
-    expect(v.factoryAddresses).toBe(arbitrumOneFactoryAddresses);
-    expect(v.factoryAddresses.DEVICE_WALLET_FACTORY).toBe("0x");
+  it("throws for arbitrum-one (placeholder addresses)", () => {
+    expect(() => _getChainSpecificConstants(CHAIN_ID.ARBITRUM_ONE, RPC)).toThrow(
+      /not yet configured/,
+    );
   });
 
-  it("falls through unknown chain ids to arbitrum-sepolia '0x' placeholders", () => {
-    const v = _getChainSpecificConstants(999999 as CHAIN_ID, RPC);
-    expect(v.factoryAddresses).toBe(arbitrumSepoliaFactoryAddresses);
-    expect(v.chain).toBe(arbitrumSepolia);
-    expect(v.factoryAddresses.DEVICE_WALLET_FACTORY).toBe("0x");
+  it("throws for arbitrum-sepolia (placeholder addresses)", () => {
+    expect(() => _getChainSpecificConstants(CHAIN_ID.ARBITRUM_SEPOLIA, RPC)).toThrow(
+      /not yet configured/,
+    );
+  });
+
+  it("throws for an unknown chain id (no config)", () => {
+    expect(() => _getChainSpecificConstants(999999 as CHAIN_ID, RPC)).toThrow(
+      /Unsupported chain id/,
+    );
   });
 });

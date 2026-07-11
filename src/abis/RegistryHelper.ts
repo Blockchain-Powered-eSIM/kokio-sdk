@@ -1,6 +1,4 @@
-import type { Abi } from "viem";
-
-const RegistryHelper: Abi = [
+const RegistryHelper = [
     {
         "type": "function",
         "name": "deployLazyWallet",
@@ -381,6 +379,6 @@ const RegistryHelper: Abi = [
         "name": "OnlyLazyWalletRegistry",
         "inputs": []
     }
-];
+] as const;
 
 export default RegistryHelper;

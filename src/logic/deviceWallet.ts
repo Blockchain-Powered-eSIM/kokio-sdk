@@ -164,8 +164,8 @@ export const _getOwner = async (client: WalletClient, address: Address) => {
         client
     })
 
-    const x = await contract.read.owner([0]);
-    const y = await contract.read.owner([1]);
+    const x = await contract.read.owner([0n]);
+    const y = await contract.read.owner([1n]);
 
     const owner = [x,y]; 
     return owner as P256Key;

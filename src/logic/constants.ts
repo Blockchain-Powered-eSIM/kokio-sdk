@@ -143,13 +143,33 @@ export const _extractChainID = async (client: WalletClient) => {
     return client.getChainId();
 }
 
+// Maps each supported chain id to its factory-address book + viem chain. Chains
+// whose addresses are still '0x' placeholders are intentionally listed so the
+// guard below can reject them with a clear message rather than leaking '0x'
+// into viem calls.
+const CHAIN_CONFIG: Record<number, { factoryAddresses: Record<string, Address>; chain: chainSpecifcConstants["chain"] }> = {
+    [CHAIN_ID.SEPOLIA]: { factoryAddresses: sepoliaFactoryAddresses, chain: sepolia },
+    [CHAIN_ID.MAINNET]: { factoryAddresses: mainnetFactoryAddresses, chain: mainnet },
+    [CHAIN_ID.OPTIMISM_MAINNET]: { factoryAddresses: optimismMainnetFactoryAddresses, chain: optimism },
+    [CHAIN_ID.OPTIMISM_SEPOLIA]: { factoryAddresses: optimismSepoliaFactoryAddresses, chain: optimismSepolia },
+    [CHAIN_ID.BASE_MAINNET]: { factoryAddresses: baseMainnetFactoryAddresses, chain: base },
+    [CHAIN_ID.BASE_SEPOLIA]: { factoryAddresses: baseSepoliaFactoryAddresses, chain: baseSepolia },
+    [CHAIN_ID.ARBITRUM_ONE]: { factoryAddresses: arbitrumOneFactoryAddresses, chain: arbitrum },
+    [CHAIN_ID.ARBITRUM_SEPOLIA]: { factoryAddresses: arbitrumSepoliaFactoryAddresses, chain: arbitrumSepolia },
+};
+
+// A factory address book is only usable if every entry is a real 20-byte
+// address — an unconfigured chain leaves '0x' placeholders behind.
+const _hasUnconfiguredAddresses = (addresses: Record<string, Address>): boolean =>
+    Object.values(addresses).some((a) => !a || a === '0x' || a.length !== 42);
+
 export const _getChainSpecificConstants = (
-    chainID: 
-        CHAIN_ID.SEPOLIA | 
-        CHAIN_ID.MAINNET | 
-        CHAIN_ID.OPTIMISM_MAINNET | 
+    chainID:
+        CHAIN_ID.SEPOLIA |
+        CHAIN_ID.MAINNET |
+        CHAIN_ID.OPTIMISM_MAINNET |
         CHAIN_ID.OPTIMISM_SEPOLIA |
-        CHAIN_ID.BASE_MAINNET | 
+        CHAIN_ID.BASE_MAINNET |
         CHAIN_ID.BASE_SEPOLIA |
         CHAIN_ID.ARBITRUM_ONE |
         CHAIN_ID.ARBITRUM_SEPOLIA,
@@ -157,76 +177,26 @@ export const _getChainSpecificConstants = (
     pimlicoAPIKey?: string
     ): chainSpecifcConstants => {
 
-    if (chainID == CHAIN_ID.SEPOLIA) {
-        return {
-            factoryAddresses: sepoliaFactoryAddresses,
-            chain: sepolia,
-            rpcURL: rpcURL,
-            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
-            customErrors: customErrors
-        }
+    const config = CHAIN_CONFIG[chainID];
+
+    if (!config) {
+        throw new Error(
+            `Error: Unsupported chain id ${chainID}. Kokio SDK has no configuration for this chain.`,
+        );
     }
-    else if (chainID == CHAIN_ID.MAINNET) {
-        return {
-            factoryAddresses: mainnetFactoryAddresses,
-            chain: mainnet,
-            rpcURL: rpcURL,
-            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
-            customErrors: customErrors
-        }
+
+    if (_hasUnconfiguredAddresses(config.factoryAddresses)) {
+        throw new Error(
+            `Error: Chain id ${chainID} is not yet configured (factory addresses are '0x' placeholders). ` +
+            `Deploy the contracts and populate its address book before using this chain.`,
+        );
     }
-    else if (chainID == CHAIN_ID.OPTIMISM_MAINNET) {
-        return {
-            factoryAddresses: optimismMainnetFactoryAddresses,
-            chain: optimism,
-            rpcURL: rpcURL,
-            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
-            customErrors: customErrors
-        }
-    }
-    else if (chainID == CHAIN_ID.OPTIMISM_SEPOLIA) {
-        return {
-            factoryAddresses: optimismSepoliaFactoryAddresses,
-            chain: optimismSepolia,
-            rpcURL: rpcURL,
-            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
-            customErrors: customErrors
-        }
-    }
-    else if (chainID == CHAIN_ID.BASE_MAINNET) {
-        return {
-            factoryAddresses: baseMainnetFactoryAddresses,
-            chain: base,
-            rpcURL: rpcURL,
-            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
-            customErrors: customErrors
-        }
-    }
-    else if (chainID == CHAIN_ID.BASE_SEPOLIA) {
-        return {
-            factoryAddresses: baseSepoliaFactoryAddresses,
-            chain: baseSepolia,
-            rpcURL: rpcURL,
-            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
-            customErrors: customErrors
-        }
-    }
-    else if (chainID == CHAIN_ID.ARBITRUM_ONE) {
-        return {
-            factoryAddresses: arbitrumOneFactoryAddresses,
-            chain: arbitrum,
-            rpcURL: rpcURL,
-            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
-            customErrors: customErrors
-        }
-    }
-    else {
-        return {
-            factoryAddresses: arbitrumSepoliaFactoryAddresses,
-            chain: arbitrumSepolia,
-            rpcURL: rpcURL,
-            pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
-            customErrors: customErrors
-        }
-    }
+
+    return {
+        factoryAddresses: config.factoryAddresses,
+        chain: config.chain,
+        rpcURL: rpcURL,
+        pimlicoRpcURL: pimlicoAPIKey ? `https://api.pimlico.io/v2/${chainID}/rpc?apikey=${pimlicoAPIKey}` : "",
+        customErrors: customErrors,
+    };
 }
