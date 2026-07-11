@@ -42,5 +42,7 @@ export const makeMockSmartAccountClient = (opts?: {
       ? { address: "0x000000000000000000000000000000000000acc7" }
       : undefined,
     sendUserOperation: vi.fn(async () => SENT_USER_OP),
+    // `view` calls are issued via readContract (PublicActions), not userOps.
+    readContract: vi.fn(async () => "0xreadresult"),
   } as unknown as SmartAccountClient;
 };
