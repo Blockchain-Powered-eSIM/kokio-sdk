@@ -1,4 +1,4 @@
-import { Address, WalletClient } from "viem";
+import { Address, Hex, WalletClient } from "viem";
 import {
     _verifySignature
 } from "../logic/P256Verifier.js"
@@ -13,7 +13,7 @@ export class P256VerifierSubPackage {
         this.client = client;
     }
 
-    verifySignature (message: string, requireMessageVerification: boolean, webAuthnSignature: WebAuthnSignature, x: bigint, y: bigint) {
+    verifySignature (message: Hex, requireMessageVerification: boolean, webAuthnSignature: WebAuthnSignature, x: bigint, y: bigint) {
         return _verifySignature(this.client, message, requireMessageVerification, webAuthnSignature, x, y);
     }
 }

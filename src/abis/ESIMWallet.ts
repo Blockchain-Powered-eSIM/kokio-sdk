@@ -1,6 +1,4 @@
-import type { Abi } from "viem";
-
-const ESIMWallet: Abi = [
+const ESIMWallet = [
     {
         "inputs": [],
         "stateMutability": "nonpayable",
@@ -485,6 +483,6 @@ const ESIMWallet: Abi = [
         "stateMutability": "payable",
         "type": "receive"
     }
-];
+] as const;
 
 export default ESIMWallet;

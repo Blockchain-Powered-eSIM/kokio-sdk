@@ -6,9 +6,10 @@ import {
 	http, type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData,
 	Address, encodePacked, encodeAbiParameters, parseAbiParameters, getContract,
 	concat, keccak256, getContractAddress, getAddress,
-	TypedDataDefinition, TypedData, hashMessage, stringToBytes, toHex, hashTypedData, hexToBytes, bytesToHex
+	TypedDataDefinition, TypedData, hashMessage, toHex, hashTypedData, hexToBytes, bytesToHex
 } from "viem";
 import { _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS } from "../constants.js";
+import { CounterfactualMismatchError } from "../errors.js";
 import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils.js";
 import { P256Key, WebAuthnSignature } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
@@ -28,6 +29,23 @@ enum AuthenticatorTransport {
 	internal = "internal"
 }
 
+/**
+ * BeaconProxy creation bytecode, used to compute the CREATE2 counterfactual
+ * DeviceWallet address off-chain (initCode = creationCode ++ abi.encode(beacon, initData)).
+ *
+ * PINNED - this MUST byte-for-byte match the BeaconProxy the on-chain
+ * DeviceWalletFactory deploys, or the computed address will diverge from the
+ * deployed one. Source of truth:
+ *   OpenZeppelin Contracts v5.0.0 - proxy/beacon/BeaconProxy.sol
+ *   compiled by Hardhat (smart-contract-suite `artifacts/@openzeppelin/contracts/
+ *   proxy/beacon/BeaconProxy.sol/BeaconProxy.json`), solc 0.8.25+commit.b61c2a91,
+ *   optimizer { enabled: true, runs: 200 }, viaIR: true.
+ * NOTE: the Foundry `out/` artifact (different optimizer settings) produces a
+ * DIFFERENT bytecode - do not swap it in without re-verifying the counterfactual.
+ * `_assertCounterfactualMatchesOnChain` guards against drift at runtime.
+ */
+export const BEACON_PROXY_CREATION_CODE: Hex = "0x60a06040908082526104a8803803809161001982856102ae565b8339810182828203126101e95761002f826102e7565b60208084015191939091906001600160401b0382116101e9570182601f820112156101e957805190610060826102fb565b9361006d875195866102ae565b8285528383830101116101e957829060005b83811061029a57505060009184010152823b1561027a577fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d5080546001600160a01b0319166001600160a01b038581169182179092558551635c60da1b60e01b8082529194928482600481895afa91821561026f57600092610238575b50813b1561021f5750508551847f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e600080a282511561020057508290600487518096819382525afa9283156101f5576000936101b3575b5091600080848461019096519101845af4903d156101aa573d610174816102fb565b90610181885192836102ae565b8152600081943d92013e610316565b505b6080525161012e908161037a82396080518160180152f35b60609250610316565b92508183813d83116101ee575b6101ca81836102ae565b810103126101e9576000806101e1610190956102e7565b945050610152565b600080fd5b503d6101c0565b85513d6000823e3d90fd5b9350505050346102105750610192565b63b398979f60e01b8152600490fd5b8751634c9c8ce360e01b81529116600482015260249150fd5b9091508481813d8311610268575b61025081836102ae565b810103126101e957610261906102e7565b90386100fb565b503d610246565b88513d6000823e3d90fd5b8351631933b43b60e21b81526001600160a01b0384166004820152602490fd5b81810183015186820184015284920161007f565b601f909101601f19168101906001600160401b038211908210176102d157604052565b634e487b7160e01b600052604160045260246000fd5b51906001600160a01b03821682036101e957565b6001600160401b0381116102d157601f01601f191660200190565b9061033d575080511561032b57805190602001fd5b604051630a12f52160e11b8152600490fd5b81511580610370575b61034e575090565b604051639996b31560e01b81526001600160a01b039091166004820152602490fd5b50803b1561034656fe60806040819052635c60da1b60e01b81526020816004817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa90811560a9576000916054575b5060da565b905060203d60201160a3575b601f8101601f191682019167ffffffffffffffff831181841017608d576088926040520160b5565b38604f565b634e487b7160e01b600052604160045260246000fd5b503d6060565b6040513d6000823e3d90fd5b602090607f19011260d5576080516001600160a01b038116810360d55790565b600080fd5b6000808092368280378136915af43d82803e1560f4573d90f35b3d90fdfea264697066735822122099ba460fd62b3e22c737d15959887e6cae3498f3495d31e43e2bcf1283aec7d264736f6c63430008190033";
+
 /*
 ** Stamp is client-side authentication. Since the passkeys are one the user's mobile device
 ** react-native-passkey helps fetch passkey for the user (provided credentialId, rpId).
@@ -35,9 +53,10 @@ enum AuthenticatorTransport {
 */
 export const _stamp = async (credentialId: string, rpId: string, payload: Hex): Promise<WebAuthnSignature> => {
 	const signingOptions: PasskeyGetRequest = {
-		challenge: isoBase64URL.fromBuffer(
-			(hexToBytes(payload) as unknown) as Uint8Array<ArrayBuffer>
-		),
+		// `Uint8Array.from` gives a fresh ArrayBuffer-backed view, matching the
+		// `Uint8Array<ArrayBuffer>` that `fromBuffer` expects (viem's `hexToBytes`
+		// is typed over the wider `ArrayBufferLike`).
+		challenge: isoBase64URL.fromBuffer(Uint8Array.from(hexToBytes(payload))),
 		allowCredentials: [{
 			id: credentialId,
 			type: "public-key",
@@ -157,7 +176,7 @@ const _encodeBatchExecute = async (txs: AccountOp[]) => {
 	});
 }
 
-const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint): Promise<Hex> => {
+export const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint): Promise<Hex> => {
 
 	// To send with user operations
 	const chainID = await client.getChainId();
@@ -173,7 +192,7 @@ const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier:
 	return values.factoryAddresses.DEVICE_WALLET_FACTORY.concat(_remove0x(callData)) as Hex;
 }
 
-const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<Hex> => {
+export const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<Hex> => {
   
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -190,7 +209,7 @@ const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: str
 		client
 	});
 
-	const beacon = await deviceWalletFactory.read.beacon([]);
+	const beacon = await deviceWalletFactory.read.beacon();
 
 	// Encode the DeviceWallet.init with the init params
 	const deviceWalletInitData = encodeFunctionData({
@@ -204,21 +223,19 @@ const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: str
 		]
 	});
 
-	const beaconProxyBytecode = "0x60a06040908082526104a8803803809161001982856102ae565b8339810182828203126101e95761002f826102e7565b60208084015191939091906001600160401b0382116101e9570182601f820112156101e957805190610060826102fb565b9361006d875195866102ae565b8285528383830101116101e957829060005b83811061029a57505060009184010152823b1561027a577fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d5080546001600160a01b0319166001600160a01b038581169182179092558551635c60da1b60e01b8082529194928482600481895afa91821561026f57600092610238575b50813b1561021f5750508551847f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e600080a282511561020057508290600487518096819382525afa9283156101f5576000936101b3575b5091600080848461019096519101845af4903d156101aa573d610174816102fb565b90610181885192836102ae565b8152600081943d92013e610316565b505b6080525161012e908161037a82396080518160180152f35b60609250610316565b92508183813d83116101ee575b6101ca81836102ae565b810103126101e9576000806101e1610190956102e7565b945050610152565b600080fd5b503d6101c0565b85513d6000823e3d90fd5b9350505050346102105750610192565b63b398979f60e01b8152600490fd5b8751634c9c8ce360e01b81529116600482015260249150fd5b9091508481813d8311610268575b61025081836102ae565b810103126101e957610261906102e7565b90386100fb565b503d610246565b88513d6000823e3d90fd5b8351631933b43b60e21b81526001600160a01b0384166004820152602490fd5b81810183015186820184015284920161007f565b601f909101601f19168101906001600160401b038211908210176102d157604052565b634e487b7160e01b600052604160045260246000fd5b51906001600160a01b03821682036101e957565b6001600160401b0381116102d157601f01601f191660200190565b9061033d575080511561032b57805190602001fd5b604051630a12f52160e11b8152600490fd5b81511580610370575b61034e575090565b604051639996b31560e01b81526001600160a01b039091166004820152602490fd5b50803b1561034656fe60806040819052635c60da1b60e01b81526020816004817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa90811560a9576000916054575b5060da565b905060203d60201160a3575b601f8101601f191682019167ffffffffffffffff831181841017608d576088926040520160b5565b38604f565b634e487b7160e01b600052604160045260246000fd5b503d6060565b6040513d6000823e3d90fd5b602090607f19011260d5576080516001600160a01b038116810360d55790565b600080fd5b6000808092368280378136915af43d82803e1560f4573d90f35b3d90fdfea264697066735822122099ba460fd62b3e22c737d15959887e6cae3498f3495d31e43e2bcf1283aec7d264736f6c63430008190033";
-
 	// Encode BeaconProxy constructor args
 	const beaconProxyConstructorArgs = encodeAbiParameters(
 		parseAbiParameters("address, bytes"),
 		[beacon as `0x${string}`, deviceWalletInitData]
 	);
-	
+
 	// Compute initCode
-  const initCode: Hex = concat([beaconProxyBytecode as Hex, beaconProxyConstructorArgs]);
+  const initCode: Hex = concat([BEACON_PROXY_CREATION_CODE, beaconProxyConstructorArgs]);
 
 	return keccak256(initCode);
 }
 
-const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint):Promise<Hex> => {
+export const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint):Promise<Hex> => {
 
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -239,7 +256,54 @@ const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdenti
 	return getAddress(create2Address) as Address;
 }
 
-const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil: number): Promise<Hex> => {
+/**
+ * Optional drift guard. Recomputes the counterfactual address off-chain (using
+ * the pinned {@link BEACON_PROXY_CREATION_CODE}) and compares it against the
+ * on-chain `DeviceWalletFactory.getCounterFactualAddress` view - which derives
+ * the address from the BeaconProxy the factory ACTUALLY deploys. A mismatch
+ * means the pinned proxy bytecode (or init encoding) has drifted from the
+ * deployed contract, so this throws early instead of letting a UserOp deploy to,
+ * or fund, the wrong address.
+ *
+ * Not wired into the default account-creation path (it costs one extra RPC);
+ * call it explicitly in environments where you want the extra safety, e.g.
+ * after a contract redeploy or on first use against a new chain.
+ */
+export const _assertCounterfactualMatchesOnChain = async (
+	client: WalletClient,
+	deviceUniqueIdentifier: string,
+	deviceWalletOwnerKey: P256Key,
+	salt: bigint,
+): Promise<Hex> => {
+	const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+	const offChain = await getCounterFactualAddress(
+		client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt,
+	);
+
+	const deviceWalletFactory = getContract({
+		abi: DeviceWalletFactory,
+		address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
+		client,
+	});
+
+	// on-chain view arg order is (ownerKey, uid, salt) - differs from createAccount
+	const onChain = await deviceWalletFactory.read.getCounterFactualAddress([
+		deviceWalletOwnerKey,
+		deviceUniqueIdentifier,
+		salt,
+	]) as Hex;
+
+	if (getAddress(offChain) !== getAddress(onChain)) {
+		throw new CounterfactualMismatchError(getAddress(offChain), getAddress(onChain));
+	}
+
+	return offChain;
+}
+
+export const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil: number): Promise<Hex> => {
 
 	const encodedWebAuthnSignatureBytes = encodeAbiParameters([
 		{
@@ -268,11 +332,15 @@ const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, validUntil
 };
 
 // message here is the original message data (string or Uint8Array) directly from the app
-const _signMessage = async (message: SignableMessage, credentialId: string, rpId: string): Promise<Hex> => {
+export const _signMessage = async (message: SignableMessage, credentialId: string, rpId: string): Promise<Hex> => {
 
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
-	const payload = hashMessage({raw: stringToBytes(message as string)});
+	// viem's SignableMessage is `string | { raw: Hex | ByteArray }`. A plain
+	// string is a UTF-8 message; the `{ raw }` form is already-serialized bytes
+	// (possibly a pre-computed digest). hashMessage handles both natively, so
+	// forward the message as-is rather than force-casting it to a string.
+	const payload = hashMessage(message);
 	// The original message is passed to the stamp and sign function.
 	// The stamp and sign function creates the EIP-191 digest hash using its hashMessage function
 	// The result of the hashMessage(message) will be the `payload` used as a challenge
@@ -281,28 +349,25 @@ const _signMessage = async (message: SignableMessage, credentialId: string, rpId
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
-const _signTypedData = async <
+export const _signTypedData = async <
     const typedData extends TypedData | Record<string, unknown>,
     primaryType extends keyof typedData | "EIP712Domain" = keyof typedData
-> (typedData: TypedDataDefinition<typedData, primaryType>, organiationId: string, signWith: Address): Promise<Hex> => {
+> (typedData: TypedDataDefinition<typedData, primaryType>, credentialId: string, rpId: string): Promise<Hex> => {
 
 	// signature valid until, UNIX timestamp in seconds
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
-	// TODO: Implement stamping for Typed Data
-	let webAuthnSignature = {
-		authenticatorData: `0x` as `0x${string}`,
-		clientDataJSON: "",
-		challengeIndex: BigInt(0),
-		typeIndex: BigInt(0),
-		r: BigInt(0),
-		s: BigInt(0)
-	}
+	// EIP-712 digest is the WebAuthn challenge, mirroring _signMessage's use of
+	// the EIP-191 digest. The contract's isValidSignature receives this same
+	// hashTypedData result and verifies the passkey signature against it.
+	const payload = hashTypedData(typedData);
+
+	const webAuthnSignature = await _stamp(credentialId, rpId, payload);
 
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
-const _signUserOperationHash = async (credentialId: string, rpId: string, userOpHash: Hex): Promise<Hex> => {
+export const _signUserOperationHash = async (credentialId: string, rpId: string, userOpHash: Hex): Promise<Hex> => {
 
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
@@ -334,7 +399,6 @@ export const _getSmartWallet = async (
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
 	if (!client.account) throw new Error ('Error: No signer account found with WalletClient')
-	const signWith = client.account.address;
 
 	return toSmartContractAccount({
 		/// REQUIRED PARAMS ///
@@ -358,7 +422,7 @@ export const _getSmartWallet = async (
 		
 		signMessage: async ({ message}): Promise<Hash> => _signMessage(message, credentialId, rpId),
 
-		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, organiationId, signWith),
+		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, credentialId, rpId),
 		
 		/// OPTIONAL PARAMS ///
 		// if you already know your account's address, pass that in here to avoid generating a new counterfactual

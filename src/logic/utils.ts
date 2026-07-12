@@ -1,11 +1,11 @@
 import { Hex, isHex, toHex } from "viem";
 import { AsnParser } from "@peculiar/asn1-schema";
 import { ECDSASigValue } from "@peculiar/asn1-ecc";
-import { customErrors } from "./constants.js"
+import { NullOrUndefinedValueError } from "./errors.js"
 
 export const _add0x = (data: Hex | string): Hex => {
     if(!data) {
-        throw customErrors.NULL_OR_UNDEFINED_VALUE;
+        throw new NullOrUndefinedValueError();
     }
 
     return (data.indexOf('0x') !== -1) ? isHex(data)? data : `0x${data}` : `0x${data}`;
@@ -13,7 +13,7 @@ export const _add0x = (data: Hex | string): Hex => {
 
 export const _remove0x = (data: Hex | string): string => {
     if(!data) {
-        throw customErrors.NULL_OR_UNDEFINED_VALUE;
+        throw new NullOrUndefinedValueError();
     }
 
     return (data.indexOf('0x') !== -1) ? data.slice(2) : data;
@@ -45,13 +45,23 @@ export function base64UrlToBuffer(base64url: string): Buffer {
     return Buffer.from(base64, "base64");
 }
 
-export function decodeClientDataJSON(base64url: string): any {
+// The WebAuthn CollectedClientData object (WebAuthn Level 2, §5.8.1). Optional
+// fields appear only in some authenticator/browser combinations.
+export interface ClientDataJSON {
+    type: string;
+    challenge: string;
+    origin: string;
+    crossOrigin?: boolean;
+    [key: string]: unknown;
+}
+
+export function decodeClientDataJSON(base64url: string): ClientDataJSON {
     const base64 = base64url
       .replace(/-/g, "+")
       .replace(/_/g, "/")
       .padEnd((base64url.length + 3) & ~3, "=");
     const jsonString = Buffer.from(base64, "base64").toString("utf-8");
-    return JSON.parse(jsonString);
+    return JSON.parse(jsonString) as ClientDataJSON;
 }
 
 export function hexToArrayBuffer(hexString: string): ArrayBuffer {

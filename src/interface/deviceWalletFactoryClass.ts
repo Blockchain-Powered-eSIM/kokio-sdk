@@ -5,6 +5,7 @@ import {
     _getCurrentDeviceWalletImplementation
 } from "../logic/deviceWalletFactory.js"
 import { SmartAccountClient } from "@aa-sdk/core";
+import { P256Key } from "../types.js";
 
 export class DeviceWalletFactorySubPackage {
 
@@ -18,14 +19,14 @@ export class DeviceWalletFactorySubPackage {
 
     createAccountWithEOA (
         deviceUniqueIdentifier: string,
-        deviceWalletOwnerKey: string,
+        deviceWalletOwnerKey: P256Key,
         salt: bigint,
         depositAmount: bigint
     ) {
         return _createAccountWithEOA(this.walletClient, deviceUniqueIdentifier, deviceWalletOwnerKey, salt, depositAmount);
     }
 
-    getAddress (deviceUniqueIdentifier: string, deviceWalletOwnerKey: string, salt: bigint) {
+    getAddress (deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint) {
         return _getAddress(this.smartAccountClient, deviceUniqueIdentifier, deviceWalletOwnerKey, salt);
     }
 

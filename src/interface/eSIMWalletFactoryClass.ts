@@ -1,7 +1,5 @@
 import { Address, WalletClient } from "viem";
 import {
-    _addRegistryAddress,
-    _deployESIMWalletWithEOA,
     _deployESIMWalletWithUserOp,
     _getCurrentESIMWalletImplementation
 } from "../logic/eSIMWalletFactory.js"
@@ -17,20 +15,11 @@ export class ESIMWalletFactorySubPackage {
         this.walletClient = walletClient
     }
 
-    deployESIMWalletWithEOA (deviceWalletAddress: Address, salt: bigint) {
-        return _deployESIMWalletWithEOA (this.walletClient, deviceWalletAddress, salt);
-    }
-
-
     deployESIMWalletWithUserOp (deviceWalletAddress: Address, salt: bigint) {
         return _deployESIMWalletWithUserOp (this.smartAccountClient, deviceWalletAddress, salt);
     }
 
-    addRegistryAddress (registryContractAddress: Address) {
-        return _addRegistryAddress(this.smartAccountClient, registryContractAddress);
-    }
-
-    _getCurrentESIMWalletImplementation () {
+    getCurrentESIMWalletImplementation () {
         return _getCurrentESIMWalletImplementation(this.smartAccountClient);
     }
 }
