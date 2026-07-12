@@ -104,7 +104,7 @@ describe("CREATE2 counterfactual address (invariant vs compute-initCode.js)", ()
 
 describe("pinned BeaconProxy creation code", () => {
   it("locks the pinned bytecode (guards against silent edits to the literal)", () => {
-    // keccak of the pinned creation code — matches OZ v5.0.0 BeaconProxy,
+    // keccak of the pinned creation code - matches OZ v5.0.0 BeaconProxy,
     // Hardhat solc 0.8.25 runs=200 viaIR. A diff here means the pin moved.
     expect(keccak256(BEACON_PROXY_CREATION_CODE)).toMatchInlineSnapshot(
       `"0x348656e4245d47e0c40e3e66cde81188e1bda03fe6a23a8e7ea83937817bca96"`,
@@ -152,7 +152,7 @@ describe("signature envelope (_encodeSignature)", () => {
     // validUntil as 6-byte (uint48) big-endian
     expect(sliceHex(sig, 1, 7)).toBe(toHex(validUntil, { size: 6 }));
 
-    // remaining bytes are abi.encode(WebAuthnSignature) — decode & assert field order
+    // remaining bytes are abi.encode(WebAuthnSignature) - decode & assert field order
     const encodedTuple = sliceHex(sig, 7);
     const [decoded] = decodeAbiParameters(
       [
@@ -275,7 +275,7 @@ describe("_signMessage / _signUserOperationHash envelope shape", () => {
   it("_signMessage forwards a string message to hashMessage as the challenge", async () => {
     await _signMessage("hello", "cred-id", "kokio.test");
     const req = passkeyGet.mock.calls[0][0];
-    // EIP-191 digest of the UTF-8 string — NOT the raw-bytes force-cast path.
+    // EIP-191 digest of the UTF-8 string - NOT the raw-bytes force-cast path.
     expect(isoBase64URL.toBuffer(req.challenge)).toEqual(
       new Uint8Array(Buffer.from(hashMessage("hello").slice(2), "hex")),
     );

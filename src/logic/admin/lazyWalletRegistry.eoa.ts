@@ -6,7 +6,7 @@ import { DataBundleDetails, P256Key } from "../../types.js";
 
 /**
  * Admin-EOA logic for `LazyWalletRegistry`. All three functions are
- * `onlyESIMWalletAdmin` on chain, so they can only succeed from the admin EOA —
+ * `onlyESIMWalletAdmin` on chain, so they can only succeed from the admin EOA -
  * a device-wallet userOp (whose sender is the smart account) always reverts.
  * This is why they belong on the EOA surface rather than the mobile userOp one.
  */

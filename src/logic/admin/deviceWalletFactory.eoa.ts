@@ -9,7 +9,7 @@ import { P256Key } from "../../types.js";
  *
  * Every function here is `onlyAdmin` / `onlyAdminOrRegistry` / `onlyOwner` on
  * chain, i.e. the caller must be the `eSIMWalletAdmin` (or `upgradeManager`)
- * EOA — never a device-wallet userOp. They therefore live on the EOA surface
+ * EOA - never a device-wallet userOp. They therefore live on the EOA surface
  * (`KokioAdmin`) and use `writeContract`, mirroring `_createAccountWithEOA`
  * (which is reused as-is from `../deviceWalletFactory.js`).
  */

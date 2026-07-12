@@ -5,7 +5,7 @@ import { DeviceWallet } from "../../abis/index.js";
 
 /**
  * Admin-EOA logic targeting a specific `DeviceWallet` instance (its address is
- * passed in — there is no single factory address). Both functions are admin
+ * passed in - there is no single factory address). Both functions are admin
  * gated on chain (`deployESIMWallet` is `onlyESIMWalletAdmin`,
  * `setESIMUniqueIdentifierForAnESIMWallet` is `onlyESIMWalletAdminOrRegistry`),
  * so they cannot be driven from a device-wallet userOp and live on the EOA surface.

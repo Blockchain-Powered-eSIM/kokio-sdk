@@ -78,7 +78,7 @@ export class UnconfiguredChainError extends KokioError {
 
 /**
  * The off-chain counterfactual address diverged from the factory's on-chain
- * `getCounterFactualAddress` view — a signal that the pinned BeaconProxy
+ * `getCounterFactualAddress` view - a signal that the pinned BeaconProxy
  * bytecode or CREATE2 encoding has drifted from the deployed contracts.
  */
 export class CounterfactualMismatchError extends KokioError {
@@ -129,7 +129,7 @@ export const decodeContractRevert = (data: Hex): DecodedRevert | null => {
             const decoded = decodeErrorResult({ abi, data });
             return { errorName: decoded.errorName, args: (decoded.args ?? []) as readonly unknown[] };
         } catch {
-            // Selector not present in this ABI — try the next one.
+            // Selector not present in this ABI - try the next one.
         }
     }
     return null;

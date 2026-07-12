@@ -1,10 +1,10 @@
 import { Address, WalletClient, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
-import { DeviceWalletFactory } from "../../abis/index.js";
-import { P256Key } from "../../types.js";
+import { _getChainSpecificConstants } from "../../constants.js";
+import { DeviceWalletFactory } from "../../../abis/index.js";
+import { P256Key } from "../../../types.js";
 
 /**
- * Read-only admin logic for `DeviceWalletFactory` — the contract's public
+ * Read-only admin logic for `DeviceWalletFactory` - the contract's public
  * storage getters and `view` functions, surfaced for the backend.
  *
  * A viem `WalletClient` carries no public actions, so each read extends it with
@@ -90,7 +90,7 @@ export const _getCurrentDeviceWalletImplementation = async (client: WalletClient
 
 /**
  * The counterfactual (CREATE2) device-wallet address for an owner key. On-chain
- * arg order is `(ownerKey, uid, salt)` — note this differs from `createAccount`.
+ * arg order is `(ownerKey, uid, salt)` - note this differs from `createAccount`.
  */
 export const _getCounterFactualAddress = async (
     client: WalletClient,

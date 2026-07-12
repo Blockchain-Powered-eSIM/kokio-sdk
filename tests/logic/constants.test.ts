@@ -10,7 +10,7 @@ import {
 
 const RPC = "https://rpc.test.invalid";
 
-describe("_getChainSpecificConstants — configured testnets", () => {
+describe("_getChainSpecificConstants - configured testnets", () => {
   it("maps sepolia to its factory addresses + chain", () => {
     const v = _getChainSpecificConstants(CHAIN_ID.SEPOLIA, RPC);
     expect(v.factoryAddresses).toBe(sepoliaFactoryAddresses);
@@ -39,7 +39,7 @@ describe("_getChainSpecificConstants — configured testnets", () => {
   });
 });
 
-describe("_getChainSpecificConstants — unconfigured chains (P1 guard)", () => {
+describe("_getChainSpecificConstants - unconfigured chains (P1 guard)", () => {
   // The guard now throws for chains whose factory addresses are still '0x'
   // placeholders, instead of silently leaking '0x' into viem calls.
   it("throws for mainnet (placeholder addresses)", () => {

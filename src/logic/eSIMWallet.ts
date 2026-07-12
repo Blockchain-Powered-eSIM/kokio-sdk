@@ -5,7 +5,7 @@ import { MissingSmartWalletError } from "./errors.js";
 import { ESIMWallet } from "../abis/index.js";
 
 // Not exposed on this surface:
-//   - populateHistory is `onlyRegistry` — callable only by the registry contract.
+//   - populateHistory is `onlyRegistry` - callable only by the registry contract.
 //   - transferOwnership is a `pure` override that always reverts
 //     ("Use acceptOwnershipTransfer instead."); use requestTransferOwnership /
 //     acceptOwnershipTransfer instead.
@@ -16,7 +16,7 @@ export const _setESIMUniqueIdentifier = async (client: SmartAccountClient, addre
 
     if(!client.account) throw new MissingSmartWalletError()
 
-    // UserOp — `onlyDeviceWallet`.
+    // UserOp - `onlyDeviceWallet`.
     return client.sendUserOperation({
         account: client.account,
         uo:{
@@ -34,7 +34,7 @@ export const _buyDataBundle = async (client: SmartAccountClient, address: Addres
 
     if(!client.account) throw new MissingSmartWalletError()
 
-    // UserOp — `onlyDeviceWalletOrESIMWalletAdmin`; the owning device wallet may buy.
+    // UserOp - `onlyDeviceWalletOrESIMWalletAdmin`; the owning device wallet may buy.
     return client.sendUserOperation({
         account: client.account,
         uo:{
@@ -48,7 +48,7 @@ export const _buyDataBundle = async (client: SmartAccountClient, address: Addres
     });
 }
 
-// `owner()` is a `view` — read it directly instead of spending a userOp.
+// `owner()` is a `view` - read it directly instead of spending a userOp.
 export const _owner = async (client: SmartAccountClient, address: Address): Promise<Address> => {
     return client.readContract({
         address,
@@ -62,7 +62,7 @@ export const _requestTransferOwnership = async (client: SmartAccountClient, addr
 
     if(!client.account) throw new MissingSmartWalletError()
 
-    // UserOp — `onlyDeviceWallet`; the owning device wallet requests the transfer.
+    // UserOp - `onlyDeviceWallet`; the owning device wallet requests the transfer.
     return client.sendUserOperation({
         account: client.account,
         uo:{
@@ -79,7 +79,7 @@ export const _requestTransferOwnership = async (client: SmartAccountClient, addr
 export const _acceptOwnershipTransfer = async (client: SmartAccountClient, address: Address) => {
     if(!client.account) throw new MissingSmartWalletError()
 
-    // UserOp — the caller must be the pending `newRequestedOwner` (the new device wallet).
+    // UserOp - the caller must be the pending `newRequestedOwner` (the new device wallet).
     return client.sendUserOperation({
         account: client.account,
         uo:{
@@ -97,7 +97,7 @@ export const _sendETHToDeviceWallet = async (client: SmartAccountClient, address
 
     if(!client.account) throw new MissingSmartWalletError()
 
-    // UserOp — `onlyDeviceWallet`.
+    // UserOp - `onlyDeviceWallet`.
     return client.sendUserOperation({
         account: client.account,
         uo:{

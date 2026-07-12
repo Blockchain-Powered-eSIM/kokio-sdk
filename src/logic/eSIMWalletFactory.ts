@@ -20,7 +20,7 @@ export const _deployESIMWalletWithUserOp = async (client: SmartAccountClient, de
 
     if(!client.account) throw new MissingSmartWalletError()
 
-    // UserOp — the device-wallet sender is a valid device wallet per the registry.
+    // UserOp - the device-wallet sender is a valid device wallet per the registry.
     return client.sendUserOperation({
         account: client.account,
         uo:{
@@ -40,7 +40,7 @@ export const _getCurrentESIMWalletImplementation = async (client: SmartAccountCl
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    // `getCurrentESIMWalletImplementation` is a `view` — read it directly instead of a userOp.
+    // `getCurrentESIMWalletImplementation` is a `view` - read it directly instead of a userOp.
     return client.readContract({
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
         abi: ESIMWalletFactory,

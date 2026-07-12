@@ -6,7 +6,7 @@ import {
 import {
     _isESIMWalletDeployed,
     _getCurrentESIMWalletImplementation,
-} from "../../logic/admin/eSIMWalletFactory.reads.js";
+} from "../../logic/admin/reads/eSIMWalletFactory.reads.js";
 
 /** Thin EOA (owner) wrapper around `ESIMWalletFactory`. */
 export class AdminESIMWalletFactorySubPackage {
@@ -25,7 +25,7 @@ export class AdminESIMWalletFactorySubPackage {
         return _updateESIMWalletImplementation(this.walletClient, eSIMWalletImpl);
     }
 
-    // --- Reads (public storage getters + views) ---
+    // Reads: public storage getters and views
 
     isESIMWalletDeployed(eSIMWallet: Address) {
         return _isESIMWalletDeployed(this.walletClient, eSIMWallet);

@@ -11,7 +11,7 @@ import {
     _isDeviceWalletValid,
     _isESIMWalletValid,
     _isESIMWalletOnStandby,
-} from "../../logic/admin/registry.reads.js";
+} from "../../logic/admin/reads/registry.reads.js";
 
 /** Thin EOA (owner) wrapper around `Registry`. */
 export class AdminRegistrySubPackage {
@@ -26,7 +26,7 @@ export class AdminRegistrySubPackage {
         return _addOrUpdateLazyWalletRegistryAddress(this.walletClient, lazyWalletRegistry);
     }
 
-    // --- Reads (public storage getters, incl. inherited RegistryHelper mappings) ---
+    // Reads: public storage getters, including the inherited RegistryHelper mappings
 
     eSIMWalletAdmin() {
         return _eSIMWalletAdmin(this.walletClient);

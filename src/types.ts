@@ -25,7 +25,7 @@ export type P256Credential = {
 
 export type DataBundleDetails = {
     // Field name must match the on-chain `DataBundleDetails` struct
-    // (ESIMWallet.sol) — viem's `as const` ABIs encode by exact key.
+    // (ESIMWallet.sol) - viem's `as const` ABIs encode by exact key.
     dataBundleID: string;
     dataBundlePrice: bigint;
 }

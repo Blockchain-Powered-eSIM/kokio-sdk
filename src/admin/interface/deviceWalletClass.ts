@@ -8,7 +8,7 @@ import {
     _isValidESIMWallet,
     _canPullETH,
     _getVaultAddress,
-} from "../../logic/admin/deviceWallet.reads.js";
+} from "../../logic/admin/reads/deviceWallet.reads.js";
 
 /**
  * Thin EOA wrapper around a specific `DeviceWallet` instance. The instance
@@ -33,7 +33,7 @@ export class AdminDeviceWalletSubPackage {
         return _setESIMUniqueIdentifierForAnESIMWallet(this.walletClient, this.deviceWalletAddress, eSIMWalletAddress, eSIMUniqueIdentifier);
     }
 
-    // --- Reads (public storage getters + views) ---
+    // Reads: public storage getters and views
 
     deviceUniqueIdentifier() {
         return _deviceUniqueIdentifier(this.walletClient, this.deviceWalletAddress);

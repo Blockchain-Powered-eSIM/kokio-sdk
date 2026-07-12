@@ -1,6 +1,6 @@
 import { Address, Hex, WalletClient, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
-import { Registry } from "../../abis/index.js";
+import { _getChainSpecificConstants } from "../../constants.js";
+import { Registry } from "../../../abis/index.js";
 
 /**
  * Read-only admin logic for `Registry` (which inherits `RegistryHelper`, so its

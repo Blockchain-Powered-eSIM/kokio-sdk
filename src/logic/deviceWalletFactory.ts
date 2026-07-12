@@ -19,7 +19,7 @@ export const _createAccountWithEOA = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    // createAccount(string uid, bytes32[2] ownerKey, uint256 salt) is payable —
+    // createAccount(string uid, bytes32[2] ownerKey, uint256 salt) is payable -
     // the deposit is the msg.value, not a 4th positional argument.
     return client.writeContract({
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
@@ -32,7 +32,7 @@ export const _createAccountWithEOA = async (
     });
 }
 
-// `getCounterFactualAddress` is a `view` — read it directly instead of spending a userOp.
+// `getCounterFactualAddress` is a `view` - read it directly instead of spending a userOp.
 // On-chain arg order is (bytes32[2] ownerKey, string uid, uint256 salt); note this
 // differs from `createAccount`.
 export const _getAddress = async (
@@ -54,7 +54,7 @@ export const _getAddress = async (
     }) as Promise<Address>;
 }
 
-// `getCurrentDeviceWalletImplementation` is a `view` — read it directly instead of a userOp.
+// `getCurrentDeviceWalletImplementation` is a `view` - read it directly instead of a userOp.
 export const _getCurrentDeviceWalletImplementation = async (client: SmartAccountClient): Promise<Address> => {
 
     const chainID = await client.getChainId();

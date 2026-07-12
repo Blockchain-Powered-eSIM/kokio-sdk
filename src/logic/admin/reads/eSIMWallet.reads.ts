@@ -1,5 +1,5 @@
 import { Address, WalletClient, publicActions } from "viem";
-import { ESIMWallet } from "../../abis/index.js";
+import { ESIMWallet } from "../../../abis/index.js";
 
 /**
  * Read-only admin logic targeting a specific `ESIMWallet` instance (its address

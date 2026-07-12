@@ -65,7 +65,7 @@ const account = await kokio.smartAccount.getSmartWallet(deviceUniqueIdentifier, 
 const smartAccountClient = await kokio.smartAccount.getSmartWalletClient(account);
 
 // 3. Re-create Kokio with the smart account client (and any known instance
-//    addresses) to unlock the contract surfaces.
+//    addresses) so the contract surfaces become available.
 const session = new Kokio(
   walletClient,
   credentialId,

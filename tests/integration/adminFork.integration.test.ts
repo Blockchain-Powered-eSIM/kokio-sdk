@@ -14,7 +14,7 @@ import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import type { P256Key } from "../../src/types.js";
 import { forkAvailable, impersonateAdmin, startFork, type Fork } from "../utils/forkChain.js";
 
-// Well-formed P256 key fixture (NIST P-256 base point) — createAccount only
+// Well-formed P256 key fixture (NIST P-256 base point) - createAccount only
 // requires a well-formed key, not a registered one.
 const OWNER_KEY: P256Key = [
   "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C291",
@@ -42,7 +42,7 @@ const readCounterfactual = (fork: Fork, uid: string, ownerKey: P256Key, salt: bi
  * access-controlled writes actually land on the forked deployment. Skips cleanly
  * unless INTEGRATION=1 and Foundry (`anvil`) is installed.
  */
-describe.skipIf(!forkAvailable())("KokioAdmin — EOA writes on a Base Sepolia fork", () => {
+describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia fork", () => {
   let fork: Fork;
   let admin: Address;
   let adminSdk: KokioAdmin;
@@ -132,7 +132,7 @@ describe.skipIf(!forkAvailable())("KokioAdmin — EOA writes on a Base Sepolia f
 
       // The EOA logic sends via a bare-address account (`eth_sendTransaction`),
       // so anvil mines the tx and returns a hash even though `onlyAdmin` reverts
-      // it — the access-control failure surfaces as a reverted receipt, not a
+      // it - the access-control failure surfaces as a reverted receipt, not a
       // thrown promise.
       const hash = (await nonAdminSdk.deviceWalletFactory.requestAdminUpdate(
         "0x000000000000000000000000000000000000beef" as Address,

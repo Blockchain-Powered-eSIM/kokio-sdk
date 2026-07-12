@@ -1,9 +1,9 @@
 import { Address, WalletClient, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
-import { ESIMWalletFactory } from "../../abis/index.js";
+import { _getChainSpecificConstants } from "../../constants.js";
+import { ESIMWalletFactory } from "../../../abis/index.js";
 
 /**
- * Read-only admin logic for `ESIMWalletFactory` — its public storage getter and
+ * Read-only admin logic for `ESIMWalletFactory` - its public storage getter and
  * `view` function, surfaced for the backend. Each read extends the `WalletClient`
  * with `publicActions` (no EOA account required).
  */

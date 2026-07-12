@@ -17,7 +17,7 @@ import {
     _deviceWalletInfoAdded,
     _getCurrentDeviceWalletImplementation,
     _getCounterFactualAddress,
-} from "../../logic/admin/deviceWalletFactory.reads.js";
+} from "../../logic/admin/reads/deviceWalletFactory.reads.js";
 
 /**
  * Thin EOA wrapper around `DeviceWalletFactory`. Holds only the wallet client;
@@ -70,7 +70,7 @@ export class AdminDeviceWalletFactorySubPackage {
         return _updateDeviceWalletImplementation(this.walletClient, newDeviceImpl);
     }
 
-    // --- Reads (public storage getters + views) ---
+    // Reads: public storage getters and views
 
     eSIMWalletAdmin() {
         return _eSIMWalletAdmin(this.walletClient);

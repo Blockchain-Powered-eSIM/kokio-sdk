@@ -56,7 +56,7 @@ const userOpCases: Array<{
   target: Address;
   data: Hex;
 }> = [
-  // deviceWallet.ts — self-callable via `execute` (msg.sender == the device wallet)
+  // deviceWallet.ts - self-callable via `execute` (msg.sender == the device wallet)
   {
     label: "deviceWallet._toggleAccessToETH",
     run: (c) => deviceWallet._toggleAccessToETH(c, WALLET, ESIM, true),
@@ -75,7 +75,7 @@ const userOpCases: Array<{
     target: WALLET,
     data: encodeFunctionData({ abi: DeviceWallet, functionName: "removeESIMWallet", args: [ESIM, false] }),
   },
-  // eSIMWallet.ts — the eSIM wallet's owner IS the device-wallet sender (onlyDeviceWallet)
+  // eSIMWallet.ts - the eSIM wallet's owner IS the device-wallet sender (onlyDeviceWallet)
   {
     label: "eSIMWallet._setESIMUniqueIdentifier",
     run: (c) => eSIMWallet._setESIMUniqueIdentifier(c, ESIM, "eid-9"),
@@ -106,7 +106,7 @@ const userOpCases: Array<{
     target: ESIM,
     data: encodeFunctionData({ abi: ESIMWallet, functionName: "sendETHToDeviceWallet", args: [3n] }),
   },
-  // eSIMWalletFactory.ts — a registered device wallet passes isDeviceWalletValid(msg.sender)
+  // eSIMWalletFactory.ts - a registered device wallet passes isDeviceWalletValid(msg.sender)
   {
     label: "eSIMWalletFactory._deployESIMWalletWithUserOp",
     run: (c) => eSIMWalletFactory._deployESIMWalletWithUserOp(c, WALLET, 1n),

@@ -11,8 +11,8 @@ import type { P256Key, WebAuthnSignature } from "../../src/types.js";
  * WebAuthn assertion (`authenticatorData`, `clientDataJSON`, `r`, `s`). That
  * native call can't run in Node, so this signer holds a software P-256 keypair
  * and produces an assertion with the *exact* shape the SDK's `_encodeSignature`
- * and the deployed `WebAuthn.sol` verifier expect. Everything downstream — the
- * `_encodeSignature` envelope, low-s handling, on-chain `P256Verifier` — is the
+ * and the deployed `WebAuthn.sol` verifier expect. Everything downstream - the
+ * `_encodeSignature` envelope, low-s handling, on-chain `P256Verifier` - is the
  * real path; only the key custody is software instead of a secure enclave.
  *
  * NEVER import this from `src/`. It exists purely to drive fork-based userOp
@@ -29,7 +29,7 @@ export interface SoftSigner {
   /** Owner public key (uncompressed X/Y) to register as the device wallet's `owner`. */
   ownerKey: P256Key;
   /**
-   * Produce a `WebAuthnSignature` over `payload` (the raw challenge bytes — i.e.
+   * Produce a `WebAuthnSignature` over `payload` (the raw challenge bytes - i.e.
    * the EIP-191 digest the account reconstructs on-chain), mirroring `_stamp`.
    */
   stamp: (payload: Hex) => WebAuthnSignature;
@@ -69,7 +69,7 @@ export const createSoftSigner = (rpId = "kokio.test"): SoftSigner => {
     // WebAuthn/ES256 signs the message `authenticatorData ‖ sha256(clientDataJSON)`;
     // ECDSA-with-SHA256 hashes that message, so the digest the verifier checks is
     // sha256(authenticatorData ‖ sha256(clientDataJSON)). `p256.sign` applies the
-    // curve hash itself, so sign the *message* here — do not pre-hash it, or the
+    // curve hash itself, so sign the *message* here - do not pre-hash it, or the
     // signature would be over a double hash and fail on-chain.
     const clientDataHash = sha256(new TextEncoder().encode(clientDataJSON), "bytes");
     const signedMessage = new Uint8Array(authData.length + clientDataHash.length);

@@ -44,7 +44,7 @@ const forkTransport = (rpcUrl: string) => http(rpcUrl, { timeout: FORK_HTTP_TIME
 
 /**
  * The `anvil` binary to run. Defaults to whatever is on PATH, overridable via
- * `ANVIL_BIN` — useful when a newer Foundry lives outside PATH (a recent anvil
+ * `ANVIL_BIN` - useful when a newer Foundry lives outside PATH (a recent anvil
  * is required so the fork serves the RIP-7212 P256 precompile at 0x100).
  */
 export const getAnvilBin = (): string => process.env.ANVIL_BIN ?? "anvil";
@@ -136,7 +136,7 @@ export const startFork = async (port = 8545): Promise<Fork> => {
 /**
  * Impersonate the factory's real on-chain `eSIMWalletAdmin` and return a wallet
  * client that acts as it. The admin address is read from the deployed factory,
- * funded, and impersonated — so admin-gated writes succeed with no private key.
+ * funded, and impersonated - so admin-gated writes succeed with no private key.
  * The returned client's `account` is a bare JSON-RPC address, so the SDK's
  * `writeContract` routes through `eth_sendTransaction` (anvil signs it).
  */

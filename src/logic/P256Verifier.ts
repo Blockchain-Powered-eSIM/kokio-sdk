@@ -4,7 +4,7 @@ import { SmartAccountClient } from "@aa-sdk/core";
 import { _getChainSpecificConstants } from "./constants.js";
 import { P256Verifier } from "../abis/index.js";
 
-// `verifySignature` is a `view` — read it directly instead of spending a userOp
+// `verifySignature` is a `view` - read it directly instead of spending a userOp
 // (the previous userOp form returned a userOp hash, never the boolean result).
 export const _verifySignature = async (
     client: SmartAccountClient,

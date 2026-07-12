@@ -4,12 +4,12 @@ import { type Address, type Hex } from "viem";
 import { makeMockWalletClient } from "../../utils/mockClient.js";
 import { sepoliaFactoryAddresses } from "../../../src/logic/constants.js";
 
-import * as deviceWalletFactory from "../../../src/logic/admin/deviceWalletFactory.reads.js";
-import * as eSIMWalletFactory from "../../../src/logic/admin/eSIMWalletFactory.reads.js";
-import * as registry from "../../../src/logic/admin/registry.reads.js";
-import * as lazyWalletRegistry from "../../../src/logic/admin/lazyWalletRegistry.reads.js";
-import * as deviceWallet from "../../../src/logic/admin/deviceWallet.reads.js";
-import * as eSIMWallet from "../../../src/logic/admin/eSIMWallet.reads.js";
+import * as deviceWalletFactory from "../../../src/logic/admin/reads/deviceWalletFactory.reads.js";
+import * as eSIMWalletFactory from "../../../src/logic/admin/reads/eSIMWalletFactory.reads.js";
+import * as registry from "../../../src/logic/admin/reads/registry.reads.js";
+import * as lazyWalletRegistry from "../../../src/logic/admin/reads/lazyWalletRegistry.reads.js";
+import * as deviceWallet from "../../../src/logic/admin/reads/deviceWallet.reads.js";
+import * as eSIMWallet from "../../../src/logic/admin/reads/eSIMWallet.reads.js";
 
 // --- Fixtures ---------------------------------------------------------------
 const WALLET = "0x00000000000000000000000000000000000dead1" as Address;
@@ -88,7 +88,7 @@ describe("admin readContract calls", () => {
     expect(arg.address).toBe(address);
     expect(arg.functionName).toBe(functionName);
     expect(arg.args).toEqual(args);
-    // Reads never thread an account/value through — only the read shape matters.
+    // Reads never thread an account/value through - only the read shape matters.
     expect(arg.value).toBeUndefined();
   });
 

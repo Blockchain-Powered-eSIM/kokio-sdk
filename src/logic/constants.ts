@@ -164,7 +164,7 @@ const CHAIN_CONFIG: Record<number, { factoryAddresses: Record<string, Address>; 
 };
 
 // A factory address book is only usable if every entry is a real 20-byte
-// address — an unconfigured chain leaves '0x' placeholders behind.
+// address - an unconfigured chain leaves '0x' placeholders behind.
 const _hasUnconfiguredAddresses = (addresses: Record<string, Address>): boolean =>
     Object.values(addresses).some((a) => !a || a === '0x' || a.length !== 42);
 

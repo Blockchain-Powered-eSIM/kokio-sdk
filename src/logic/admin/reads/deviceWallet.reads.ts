@@ -1,5 +1,5 @@
 import { Address, WalletClient, publicActions } from "viem";
-import { DeviceWallet } from "../../abis/index.js";
+import { DeviceWallet } from "../../../abis/index.js";
 
 /**
  * Read-only admin logic targeting a specific `DeviceWallet` instance (its address

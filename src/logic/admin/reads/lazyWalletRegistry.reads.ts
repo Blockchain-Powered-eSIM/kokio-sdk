@@ -1,16 +1,16 @@
 import { WalletClient, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
-import { LazyWalletRegistry } from "../../abis/index.js";
-import { DataBundleDetails } from "../../types.js";
+import { _getChainSpecificConstants } from "../../constants.js";
+import { LazyWalletRegistry } from "../../../abis/index.js";
+import { DataBundleDetails } from "../../../types.js";
 
 /**
- * Read-only admin logic for `LazyWalletRegistry` — its public storage getters,
+ * Read-only admin logic for `LazyWalletRegistry` - its public storage getters,
  * surfaced for the backend's fiat/lazy provisioning flows. Each read extends the
  * `WalletClient` with `publicActions`; no EOA account is required.
  *
  * Note: `deviceIdentifierToESIMDetails` and
  * `eSIMIdentifiersAssociatedWithDeviceIdentifier` back dynamic arrays on chain,
- * so their auto-generated getters take an element `index` and return one entry —
+ * so their auto-generated getters take an element `index` and return one entry -
  * callers iterate indices to read the whole list (there is no full-array getter).
  */
 

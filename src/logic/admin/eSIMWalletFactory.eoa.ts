@@ -8,7 +8,7 @@ import { ESIMWalletFactory } from "../../abis/index.js";
  * (`addRegistryAddress` requires `msg.sender == owner()`, `updateESIMWalletImplementation`
  * is `onlyOwner`), so the `client` must carry the `upgradeManager` EOA.
  *
- * Note: `ESIMWalletFactory.deployESIMWallet` is intentionally NOT exposed — it is
+ * Note: `ESIMWalletFactory.deployESIMWallet` is intentionally NOT exposed - it is
  * `onlyRegistryOrDeviceWalletFactoryOrDeviceWallet`, so a bare EOA always reverts.
  */
 

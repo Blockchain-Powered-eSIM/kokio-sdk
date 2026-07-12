@@ -5,7 +5,7 @@ import type { SmartAccountClient } from "@aa-sdk/core";
 /**
  * Builds a minimal stand-in for a viem `WalletClient` sufficient for the SDK's
  * off-chain code paths (chain-id lookup, transport URL, signer address).
- * No network is touched — `getChainId` resolves a fixed value.
+ * No network is touched - `getChainId` resolves a fixed value.
  */
 export const makeMockWalletClient = (opts: {
   chainId: number;

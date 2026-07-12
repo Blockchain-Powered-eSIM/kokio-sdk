@@ -10,7 +10,7 @@ import {
     _eSIMIdentifierToDeviceIdentifier,
     _deviceIdentifierToESIMDetails,
     _eSIMIdentifiersAssociatedWithDeviceIdentifier,
-} from "../../logic/admin/lazyWalletRegistry.reads.js";
+} from "../../logic/admin/reads/lazyWalletRegistry.reads.js";
 
 /** Thin EOA (eSIMWalletAdmin) wrapper around `LazyWalletRegistry`. */
 export class AdminLazyWalletRegistrySubPackage {
@@ -46,7 +46,7 @@ export class AdminLazyWalletRegistrySubPackage {
         return _switchESIMIdentifierToNewDeviceIdentifier(this.walletClient, eSIMIdentifier, oldDeviceIdentifier, newDeviceIdentifier);
     }
 
-    // --- Reads (public storage getters) ---
+    // Reads: public storage getters
 
     upgradeManager() {
         return _upgradeManager(this.walletClient);
@@ -56,7 +56,7 @@ export class AdminLazyWalletRegistrySubPackage {
         return _eSIMIdentifierToDeviceIdentifier(this.walletClient, eSIMIdentifier);
     }
 
-    // Array-backed getters take an element index and return one entry — iterate
+    // Array-backed getters take an element index and return one entry - iterate
     // indices to read the full list (there is no on-chain full-array getter).
     deviceIdentifierToESIMDetails(deviceIdentifier: string, eSIMIdentifier: string, index: bigint) {
         return _deviceIdentifierToESIMDetails(this.walletClient, deviceIdentifier, eSIMIdentifier, index);

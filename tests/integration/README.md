@@ -3,19 +3,19 @@
 Two opt-in tiers that never run under `npm test` (the default suite stays fully
 offline and green). Both are skipped unless explicitly enabled.
 
-## Read-only parity tier — `baseSepolia.integration.test.ts`
+## Read-only parity tier - `baseSepolia.integration.test.ts`
 
 Reads the live Base Sepolia deployment and checks the SDK's resolved constants,
 counterfactual addresses, and view calls against the real contracts. Gated by
-`hasRpc()` — runs only when `BASE_SEPOLIA_RPC_URL` is set.
+`hasRpc()` - runs only when `BASE_SEPOLIA_RPC_URL` is set.
 
 ```sh
 BASE_SEPOLIA_RPC_URL=https://sepolia.base.org npm run test:integration
 ```
 
-No keys or funds — read access only.
+No keys or funds - read access only.
 
-## Write / UserOp scenario tier — local Base Sepolia fork
+## Write / UserOp scenario tier - local Base Sepolia fork
 
 `adminFork.integration.test.ts` and `userOpFork.integration.test.ts` drive real
 state-changing flows against a local [`anvil`](https://book.getfoundry.sh/anvil/)
@@ -26,7 +26,7 @@ fork of Base Sepolia. **No private keys and no bundler** are required:
 - Admin-gated writes work by **impersonating** the real on-chain
   `eSIMWalletAdmin` (anvil `impersonateAccount` + `setBalance`).
 - UserOps are submitted by a funded anvil account calling
-  `EntryPoint.handleOps` directly — no Pimlico, no gas policy.
+  `EntryPoint.handleOps` directly - no Pimlico, no gas policy.
 - The passkey signature is produced by a **software** P-256 signer
   (`tests/utils/softP256Signer.ts`, test-only) that assembles the same
   `WebAuthnSignature` envelope the native passkey path produces and feeds it

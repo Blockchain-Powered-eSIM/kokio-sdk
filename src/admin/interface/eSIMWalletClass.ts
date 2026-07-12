@@ -6,7 +6,7 @@ import {
     _eSIMUniqueIdentifier,
     _newRequestedOwner,
     _owner,
-} from "../../logic/admin/eSIMWallet.reads.js";
+} from "../../logic/admin/reads/eSIMWallet.reads.js";
 
 /**
  * Thin EOA wrapper around a specific `ESIMWallet` instance. The instance address
@@ -27,7 +27,7 @@ export class AdminESIMWalletSubPackage {
         return _buyDataBundle(this.walletClient, this.eSIMWalletAddress, dataBundleDetails, value);
     }
 
-    // --- Reads (public storage getters + views) ---
+    // Reads: public storage getters and views
 
     eSIMWalletFactory() {
         return _eSIMWalletFactory(this.walletClient, this.eSIMWalletAddress);

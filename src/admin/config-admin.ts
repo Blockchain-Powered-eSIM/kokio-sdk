@@ -8,7 +8,7 @@ import { AdminESIMWalletSubPackage } from "./interface/eSIMWalletClass.js";
 
 // Re-export the typed error surface so backend consumers can `instanceof
 // KokioError` (or a subclass) and decode reverts without reaching into internal
-// module paths — mirroring `config.ts`.
+// module paths - mirroring `config.ts`.
 export {
     KokioError,
     NullOrUndefinedValueError,
@@ -27,14 +27,14 @@ export type { DecodedRevert } from "../logic/errors.js";
  * EOA-only entry point for the NodeJS backend.
  *
  * Unlike {@link Kokio} (the mobile/passkey surface), `KokioAdmin` needs no
- * bundler, paymaster, or WebAuthn params — only a viem `WalletClient` carrying
+ * bundler, paymaster, or WebAuthn params - only a viem `WalletClient` carrying
  * the admin/owner EOA. It exposes exactly the contract functions that are
  * `onlyAdmin`/`onlyOwner`/`onlyESIMWalletAdmin(OrRegistry)` on chain and thus
  * callable directly by an EOA (never via a device-wallet userOp).
  *
  * Contract-instance surfaces (`deviceWallet`, `eSIMWallet`) target a specific
  * deployed address. The backend often does not know that address at construction
- * time — e.g. it deploys a device wallet, then acts on it — so those addresses
+ * time - e.g. it deploys a device wallet, then acts on it - so those addresses
  * can be supplied later via {@link setDeviceWalletAddress}/{@link setESIMWalletAddress}
  * on the *same* instance, without re-constructing. The accessors stay `undefined`
  * until their address is set.
@@ -45,13 +45,13 @@ export class KokioAdmin {
     deviceWalletAddress?: Address;
     eSIMWalletAddress?: Address;
 
-    // Chain-wide surfaces — available as soon as a wallet client exists.
+    // Chain-wide surfaces - available as soon as a wallet client exists.
     deviceWalletFactory: AdminDeviceWalletFactorySubPackage;
     eSIMWalletFactory: AdminESIMWalletFactorySubPackage;
     registry: AdminRegistrySubPackage;
     lazyWalletRegistry: AdminLazyWalletRegistrySubPackage;
 
-    // Instance-scoped surfaces — undefined until their address is known.
+    // Instance-scoped surfaces - undefined until their address is known.
     deviceWallet?: AdminDeviceWalletSubPackage;
     eSIMWallet?: AdminESIMWalletSubPackage;
 

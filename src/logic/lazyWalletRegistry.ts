@@ -14,7 +14,7 @@ export const _isLazyWalletDeployed = async (client: SmartAccountClient, deviceUn
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    // `isLazyWalletDeployed` is a `view` — read it directly instead of spending a userOp.
+    // `isLazyWalletDeployed` is a `view` - read it directly instead of spending a userOp.
     return client.readContract({
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         abi: LazyWalletRegistry,

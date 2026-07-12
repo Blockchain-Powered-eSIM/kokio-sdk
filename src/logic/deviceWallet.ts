@@ -8,9 +8,9 @@ import { P256Key } from "../types.js";
 // msg.sender is the device-wallet account itself. That constrains which DeviceWallet
 // functions this surface can expose:
 //   - deployESIMWallet / setESIMUniqueIdentifierForAnESIMWallet are `onlyESIMWalletAdmin`
-//     / `onlyESIMWalletAdminOrRegistry` — only the admin EOA (or registry) may call, so a
+//     / `onlyESIMWalletAdminOrRegistry` - only the admin EOA (or registry) may call, so a
 //     device-wallet userOp always reverts. They are exposed on `KokioAdmin.deviceWallet`.
-//   - payETHForDataBundles / pullETH are `onlyAssociatedESIMWallets` — callable only by an
+//   - payETHForDataBundles / pullETH are `onlyAssociatedESIMWallets` - callable only by an
 //     associated eSIM wallet contract, never by the device wallet or an EOA.
 // The functions below are self-callable (target = the device wallet's own address, so
 // msg.sender == self), so they succeed via a userOp.
@@ -19,7 +19,7 @@ export const _toggleAccessToETH = async (client: SmartAccountClient, address: Ad
 
     if(!client.account) throw new MissingSmartWalletError();
 
-    // UserOp — `onlySelf`; the device wallet toggles ETH access for an eSIM wallet it owns.
+    // UserOp - `onlySelf`; the device wallet toggles ETH access for an eSIM wallet it owns.
     return client.sendUserOperation({
         account: client.account,
         uo:{
@@ -37,7 +37,7 @@ export const _addESIMWallet = async (client: SmartAccountClient, address: Addres
 
     if(!client.account) throw new MissingSmartWalletError();
 
-    // UserOp — `onlyRegistryOrDeviceWalletFactoryOrOwner`; self is permitted.
+    // UserOp - `onlyRegistryOrDeviceWalletFactoryOrOwner`; self is permitted.
     return client.sendUserOperation({
         account: client.account,
         uo:{
@@ -55,7 +55,7 @@ export const _removeESIMWallet = async (client: SmartAccountClient, address: Add
 
     if(!client.account) throw new MissingSmartWalletError();
 
-    // UserOp — `onlySelfOrAssociatedESIMWallet`; self is permitted.
+    // UserOp - `onlySelfOrAssociatedESIMWallet`; self is permitted.
     return client.sendUserOperation({
         account: client.account,
         uo:{
@@ -69,7 +69,7 @@ export const _removeESIMWallet = async (client: SmartAccountClient, address: Add
     });
 }
 
-// `getVaultAddress` is a `view` — read it directly instead of spending a userOp.
+// `getVaultAddress` is a `view` - read it directly instead of spending a userOp.
 export const _getVaultAddress = async (client: SmartAccountClient, address: Address): Promise<Address> => {
     return client.readContract({
         address,
