@@ -3,6 +3,7 @@ import { type Address } from "viem";
 
 import { makeMockWalletClient } from "../utils/mockClient.js";
 import { KokioAdmin, MissingEOAWalletError } from "../../src/admin/config-admin.js";
+import { sepoliaFactoryAddresses } from "../../src/logic/constants.js";
 
 const EOA = "0x00000000000000000000000000000000000e0a01" as Address;
 const DEVICE_A = "0x0000000000000000000000000000000000000a11" as Address;
@@ -114,5 +115,37 @@ describe("KokioAdmin setters", () => {
       .setESIMWalletAddress(ESIM_A);
     expect(admin.deviceWallet).toBeDefined();
     expect(admin.eSIMWallet).toBeDefined();
+  });
+});
+
+describe("KokioAdmin constants", () => {
+  it("resolves chain-specific constants for the connected chain, with no Pimlico key", async () => {
+    const admin = new KokioAdmin(makeMockWalletClient({ chainId: CHAIN_ID, account: EOA }));
+    const constants = await admin.constants;
+
+    expect(constants.factoryAddresses).toBe(sepoliaFactoryAddresses);
+    expect(constants.pimlicoRpcURL).toBe("");
+  });
+
+  it("memoizes: repeated awaits resolve to the same cached object", async () => {
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
+    const admin = new KokioAdmin(client);
+
+    const a = await admin.constants;
+    const b = await admin.constants;
+
+    expect(a).toBe(b); // same resolved object, not a re-computed copy
+  });
+
+  it("re-instantiates constants against the new client after setWalletClient", async () => {
+    const first = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
+    const admin = new KokioAdmin(first);
+    await admin.constants;
+
+    const second = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
+    admin.setWalletClient(second);
+    const constants = await admin.constants;
+
+    expect(constants.factoryAddresses).toBe(sepoliaFactoryAddresses);
   });
 });

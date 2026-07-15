@@ -39,10 +39,10 @@ export interface KokioConstants {
  */
 export class ConstantsSubPackage {
     private client: WalletClient;
-    private pimlicoAPIKey: string;
+    private pimlicoAPIKey?: string;
     private cache?: Promise<KokioConstants>;
 
-    constructor(client: WalletClient, pimlicoAPIKey: string) {
+    constructor(client: WalletClient, pimlicoAPIKey?: string) {
         this.client = client;
         this.pimlicoAPIKey = pimlicoAPIKey;
     }
