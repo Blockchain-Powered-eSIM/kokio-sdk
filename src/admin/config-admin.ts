@@ -1,4 +1,5 @@
 import { Address, WalletClient } from "viem";
+import { ConstantsSubPackage, KokioConstants } from "../interface/constantsClass.js";
 import { AdminDeviceWalletFactorySubPackage } from "./interface/deviceWalletFactoryClass.js";
 import { AdminESIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass.js";
 import { AdminRegistrySubPackage } from "./interface/registryClass.js";
@@ -45,6 +46,8 @@ export class KokioAdmin {
     deviceWalletAddress?: Address;
     eSIMWalletAddress?: Address;
 
+    private _constants: ConstantsSubPackage;
+
     // Chain-wide surfaces - available as soon as a wallet client exists.
     deviceWalletFactory: AdminDeviceWalletFactorySubPackage;
     eSIMWalletFactory: AdminESIMWalletFactorySubPackage;
@@ -60,6 +63,8 @@ export class KokioAdmin {
         this.deviceWalletAddress = deviceWalletAddress;
         this.eSIMWalletAddress = eSIMWalletAddress;
 
+        this._constants = new ConstantsSubPackage(walletClient);
+
         this.deviceWalletFactory = new AdminDeviceWalletFactorySubPackage(walletClient);
         this.eSIMWalletFactory = new AdminESIMWalletFactorySubPackage(walletClient);
         this.registry = new AdminRegistrySubPackage(walletClient);
@@ -67,6 +72,20 @@ export class KokioAdmin {
 
         this.deviceWallet = deviceWalletAddress ? new AdminDeviceWalletSubPackage(walletClient, deviceWalletAddress) : undefined;
         this.eSIMWallet = eSIMWalletAddress ? new AdminESIMWalletSubPackage(walletClient, eSIMWalletAddress) : undefined;
+    }
+
+    /**
+     * Chain-specific constants (factory addresses, chain, RPC URLs, custom errors)
+     * for the wallet client's connected chain. Resolution is asynchronous because
+     * the chain id is read from the client, so this getter returns a promise:
+     *
+     *   const { factoryAddresses } = await admin.constants;
+     *
+     * The underlying value is memoized, so repeated awaits do not re-fetch.
+     * There is no Pimlico key on this surface, so `pimlicoRpcURL` is always `""`.
+     */
+    get constants(): Promise<KokioConstants> {
+        return this._constants.load();
     }
 
     /**
@@ -98,6 +117,8 @@ export class KokioAdmin {
      */
     setWalletClient(walletClient: WalletClient): this {
         this.walletClient = walletClient;
+
+        this._constants = new ConstantsSubPackage(walletClient);
 
         this.deviceWalletFactory = new AdminDeviceWalletFactorySubPackage(walletClient);
         this.eSIMWalletFactory = new AdminESIMWalletFactorySubPackage(walletClient);
