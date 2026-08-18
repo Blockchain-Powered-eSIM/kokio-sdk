@@ -14,11 +14,11 @@ import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import type { P256Key } from "../../src/types.js";
 import { forkAvailable, impersonateAdmin, startFork, type Fork } from "../utils/forkChain.js";
 
-// Well-formed P256 key fixture (NIST P-256 base point) - createAccount only
-// requires a well-formed key, not a registered one.
+// The NIST P-256 base point. It has to be a real curve point: the factory runs
+// every deploy path through an on-curve check and rejects anything else.
 const OWNER_KEY: P256Key = [
-  "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C291",
-  "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F1",
+  "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296",
+  "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5",
 ];
 
 // A fresh, unique P256 public key (uncompressed X/Y). The factory registers each
