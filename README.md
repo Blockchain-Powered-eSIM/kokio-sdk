@@ -156,7 +156,7 @@ on-chain reverts without reaching into internal module paths:
 import { KokioError, ContractRevertError } from "kokio-sdk";        // or "kokio-sdk/admin"
 
 try {
-  await admin.deviceWalletFactory.requestAdminUpdate(newAdmin);
+  await admin.registry.requestAdminUpdate(newAdmin);
 } catch (err) {
   if (err instanceof ContractRevertError) {
     console.error("reverted:", err.message);

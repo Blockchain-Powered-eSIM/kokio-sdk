@@ -113,57 +113,6 @@ const DeviceWalletFactory = [
             {
                 "indexed": true,
                 "internalType": "address",
-                "name": "eSIMWalletAdmin",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_newAdmin",
-                "type": "address"
-            }
-        ],
-        "name": "AdminUpdateRequested",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_currentAdmin",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_revokedAddress",
-                "type": "address"
-            }
-        ],
-        "name": "AdminUpdateRevoked",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_newAdmin",
-                "type": "address"
-            }
-        ],
-        "name": "AdminUpdated",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
                 "name": "_deviceWalletAddress",
                 "type": "address"
             },
@@ -321,19 +270,6 @@ const DeviceWalletFactory = [
             }
         ],
         "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "acceptAdminUpdate",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -595,19 +531,6 @@ const DeviceWalletFactory = [
     },
     {
         "inputs": [],
-        "name": "newRequestedAdmin",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
         "name": "owner",
         "outputs": [
             {
@@ -708,19 +631,6 @@ const DeviceWalletFactory = [
     {
         "inputs": [],
         "name": "renounceOwnership",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_newAdmin",
-                "type": "address"
-            }
-        ],
-        "name": "requestAdminUpdate",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"

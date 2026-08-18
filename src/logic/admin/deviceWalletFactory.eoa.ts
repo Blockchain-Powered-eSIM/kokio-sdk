@@ -107,48 +107,6 @@ export const _updateVaultAddress = async (client: WalletClient, newVaultAddress:
     });
 }
 
-/** Step 1 of the 2-step admin handover: propose a new admin. `onlyAdmin`. */
-export const _requestAdminUpdate = async (client: WalletClient, newAdmin: Address) => {
-
-    const chainID = await client.getChainId();
-	const rpcURL = client.transport.url;
-	const values = _getChainSpecificConstants(chainID, rpcURL);
-
-    if (!client.account) throw new MissingEOAWalletError();
-
-    return client.writeContract({
-        address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
-        chain: values.chain,
-        account: client.account.address,
-        abi: DeviceWalletFactory,
-        functionName: 'requestAdminUpdate',
-        args: [newAdmin]
-    });
-}
-
-/**
- * Step 2 of the 2-step admin handover: the proposed admin accepts. The chain
- * requires `msg.sender` to equal the pending admin, so the `client` here must
- * be the newly proposed admin EOA.
- */
-export const _acceptAdminUpdate = async (client: WalletClient) => {
-
-    const chainID = await client.getChainId();
-	const rpcURL = client.transport.url;
-	const values = _getChainSpecificConstants(chainID, rpcURL);
-
-    if (!client.account) throw new MissingEOAWalletError();
-
-    return client.writeContract({
-        address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
-        chain: values.chain,
-        account: client.account.address,
-        abi: DeviceWalletFactory,
-        functionName: 'acceptAdminUpdate',
-        args: []
-    });
-}
-
 /** Point the device-wallet beacon at a new implementation. `onlyOwner` (upgradeManager). */
 export const _updateDeviceWalletImplementation = async (client: WalletClient, newDeviceImpl: Address) => {
 

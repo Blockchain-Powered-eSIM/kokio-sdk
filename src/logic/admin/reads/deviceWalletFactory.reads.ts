@@ -43,21 +43,6 @@ export const _vault = async (client: WalletClient): Promise<Address> => {
     }) as Promise<Address>;
 }
 
-/** The pending admin proposed via `requestAdminUpdate` (zero address if none). */
-export const _newRequestedAdmin = async (client: WalletClient): Promise<Address> => {
-
-    const chainID = await client.getChainId();
-    const rpcURL = client.transport.url;
-    const values = _getChainSpecificConstants(chainID, rpcURL);
-
-    return client.extend(publicActions).readContract({
-        address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
-        abi: DeviceWalletFactory,
-        functionName: "newRequestedAdmin",
-        args: []
-    }) as Promise<Address>;
-}
-
 /** Whether a device wallet has been registered with the factory. */
 export const _deviceWalletInfoAdded = async (client: WalletClient, deviceWallet: Address): Promise<boolean> => {
 

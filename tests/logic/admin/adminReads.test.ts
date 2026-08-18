@@ -38,7 +38,6 @@ const readCases: Array<{
   // deviceWalletFactory.reads (target = DEVICE_WALLET_FACTORY)
   { label: "deviceWalletFactory._eSIMWalletAdmin", run: (c) => deviceWalletFactory._eSIMWalletAdmin(c), address: F.DEVICE_WALLET_FACTORY, functionName: "eSIMWalletAdmin", args: [] },
   { label: "deviceWalletFactory._vault", run: (c) => deviceWalletFactory._vault(c), address: F.DEVICE_WALLET_FACTORY, functionName: "vault", args: [] },
-  { label: "deviceWalletFactory._newRequestedAdmin", run: (c) => deviceWalletFactory._newRequestedAdmin(c), address: F.DEVICE_WALLET_FACTORY, functionName: "newRequestedAdmin", args: [] },
   { label: "deviceWalletFactory._deviceWalletInfoAdded", run: (c) => deviceWalletFactory._deviceWalletInfoAdded(c, WALLET), address: F.DEVICE_WALLET_FACTORY, functionName: "deviceWalletInfoAdded", args: [WALLET] },
   { label: "deviceWalletFactory._getCurrentDeviceWalletImplementation", run: (c) => deviceWalletFactory._getCurrentDeviceWalletImplementation(c), address: F.DEVICE_WALLET_FACTORY, functionName: "getCurrentDeviceWalletImplementation", args: [] },
   { label: "deviceWalletFactory._getCounterFactualAddress", run: (c) => deviceWalletFactory._getCounterFactualAddress(c, OWNER_KEY, "Device_11", 1n), address: F.DEVICE_WALLET_FACTORY, functionName: "getCounterFactualAddress", args: [OWNER_KEY, "Device_11", 1n] },
@@ -49,6 +48,7 @@ const readCases: Array<{
 
   // registry.reads (target = REGISTRY)
   { label: "registry._eSIMWalletAdmin", run: (c) => registry._eSIMWalletAdmin(c), address: F.REGISTRY, functionName: "eSIMWalletAdmin", args: [] },
+  { label: "registry._newRequestedAdmin", run: (c) => registry._newRequestedAdmin(c), address: F.REGISTRY, functionName: "newRequestedAdmin", args: [] },
   { label: "registry._vault", run: (c) => registry._vault(c), address: F.REGISTRY, functionName: "vault", args: [] },
   { label: "registry._upgradeManager", run: (c) => registry._upgradeManager(c), address: F.REGISTRY, functionName: "upgradeManager", args: [] },
   { label: "registry._lazyWalletRegistry", run: (c) => registry._lazyWalletRegistry(c), address: F.REGISTRY, functionName: "lazyWalletRegistry", args: [] },

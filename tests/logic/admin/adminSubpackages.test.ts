@@ -75,20 +75,6 @@ const eoaCases: Array<{
     args: [VAULT],
   },
   {
-    label: "deviceWalletFactory._requestAdminUpdate",
-    run: (c) => deviceWalletFactory._requestAdminUpdate(c, NEW_ADMIN),
-    address: F.DEVICE_WALLET_FACTORY,
-    functionName: "requestAdminUpdate",
-    args: [NEW_ADMIN],
-  },
-  {
-    label: "deviceWalletFactory._acceptAdminUpdate",
-    run: (c) => deviceWalletFactory._acceptAdminUpdate(c),
-    address: F.DEVICE_WALLET_FACTORY,
-    functionName: "acceptAdminUpdate",
-    args: [],
-  },
-  {
     label: "deviceWalletFactory._updateDeviceWalletImplementation",
     run: (c) => deviceWalletFactory._updateDeviceWalletImplementation(c, IMPL),
     address: F.DEVICE_WALLET_FACTORY,
@@ -117,6 +103,20 @@ const eoaCases: Array<{
     address: F.REGISTRY,
     functionName: "addOrUpdateLazyWalletRegistryAddress",
     args: [LAZY],
+  },
+  {
+    label: "registry._requestAdminUpdate",
+    run: (c) => registry._requestAdminUpdate(c, NEW_ADMIN),
+    address: F.REGISTRY,
+    functionName: "requestAdminUpdate",
+    args: [NEW_ADMIN],
+  },
+  {
+    label: "registry._acceptAdminUpdate",
+    run: (c) => registry._acceptAdminUpdate(c),
+    address: F.REGISTRY,
+    functionName: "acceptAdminUpdate",
+    args: [],
   },
   // lazyWalletRegistry.eoa (target = LAZY_WALLET_REGISTRY)
   {

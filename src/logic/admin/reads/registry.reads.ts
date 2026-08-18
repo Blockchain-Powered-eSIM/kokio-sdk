@@ -9,7 +9,11 @@ import { Registry } from "../../../abis/index.js";
  * account is required.
  */
 
-/** The admin EOA (`eSIMWalletAdmin`) recorded in the registry. */
+/**
+ * The admin EOA (`eSIMWalletAdmin`) recorded in the registry. Reads zero while a
+ * nomination is pending or the admin is suspended, which means the role is
+ * dormant rather than unset.
+ */
 export const _eSIMWalletAdmin = async (client: WalletClient): Promise<Address> => {
 
     const chainID = await client.getChainId();
@@ -35,6 +39,21 @@ export const _vault = async (client: WalletClient): Promise<Address> => {
         address: values.factoryAddresses.REGISTRY,
         abi: Registry,
         functionName: "vault",
+        args: []
+    }) as Promise<Address>;
+}
+
+/** The pending admin nominated via `requestAdminUpdate` (zero address if none). */
+export const _newRequestedAdmin = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "newRequestedAdmin",
         args: []
     }) as Promise<Address>;
 }

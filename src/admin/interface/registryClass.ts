@@ -1,7 +1,12 @@
 import { Address, Hex, WalletClient } from "viem";
-import { _addOrUpdateLazyWalletRegistryAddress } from "../../logic/admin/registry.eoa.js";
+import {
+    _addOrUpdateLazyWalletRegistryAddress,
+    _requestAdminUpdate,
+    _acceptAdminUpdate,
+} from "../../logic/admin/registry.eoa.js";
 import {
     _eSIMWalletAdmin,
+    _newRequestedAdmin,
     _vault,
     _upgradeManager,
     _lazyWalletRegistry,
@@ -26,10 +31,22 @@ export class AdminRegistrySubPackage {
         return _addOrUpdateLazyWalletRegistryAddress(this.walletClient, lazyWalletRegistry);
     }
 
+    requestAdminUpdate(newAdmin: Address) {
+        return _requestAdminUpdate(this.walletClient, newAdmin);
+    }
+
+    acceptAdminUpdate() {
+        return _acceptAdminUpdate(this.walletClient);
+    }
+
     // Reads: public storage getters, including the inherited RegistryHelper mappings
 
     eSIMWalletAdmin() {
         return _eSIMWalletAdmin(this.walletClient);
+    }
+
+    newRequestedAdmin() {
+        return _newRequestedAdmin(this.walletClient);
     }
 
     vault() {
