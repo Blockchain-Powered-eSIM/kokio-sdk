@@ -7,7 +7,7 @@ import { LazyWalletRegistrySubPackage } from "./interface/lazyWalletRegistryClas
 import { DeviceWalletSubPackage } from "./interface/deviceWalletClass.js";
 import { ESIMWalletSubPackage } from "./interface/eSIMWalletClass.js";
 import { ESIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass.js";
-import { SmartAccountClient } from "@aa-sdk/core";
+import { KokioSmartAccountClient } from "./types.js";
 
 // Re-export the typed error surface so consumers can `instanceof KokioError`
 // (or a specific subclass) and decode on-chain reverts without reaching into
@@ -51,7 +51,7 @@ export class Kokio {
         organizationId: string,
         pimlicoAPIKey: string,
         gasPolicyId: string,
-        smartAccountClient?: SmartAccountClient,
+        smartAccountClient?: KokioSmartAccountClient,
         deviceWalletAddress?: Address,
         eSIMWalletAddress?: Address
     ) {

@@ -1,7 +1,7 @@
 import { Address, encodeFunctionData } from "viem"
 import { _getChainSpecificConstants } from "./constants.js";
 import { MissingSmartWalletError } from "./errors.js";
-import { SmartAccountClient } from "@aa-sdk/core";
+import { KokioSmartAccountClient } from "../types.js";
 import { ESIMWalletFactory } from "../abis/index.js";
 
 // Not exposed on this surface:
@@ -12,7 +12,7 @@ import { ESIMWalletFactory } from "../abis/index.js";
 // `deployESIMWalletWithUserOp` works because a registered device wallet passes
 // `registry.isDeviceWalletValid(msg.sender)`, so the userOp sender satisfies the modifier.
 
-export const _deployESIMWalletWithUserOp = async (client: SmartAccountClient, deviceWalletAddress: Address, salt: bigint) => {
+export const _deployESIMWalletWithUserOp = async (client: KokioSmartAccountClient, deviceWalletAddress: Address, salt: bigint) => {
 
     const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -23,18 +23,18 @@ export const _deployESIMWalletWithUserOp = async (client: SmartAccountClient, de
     // UserOp - the device-wallet sender is a valid device wallet per the registry.
     return client.sendUserOperation({
         account: client.account,
-        uo:{
-            target: values.factoryAddresses.ESIM_WALLET_FACTORY,
+        calls: [{
+            to: values.factoryAddresses.ESIM_WALLET_FACTORY,
             data: encodeFunctionData({
                 abi: ESIMWalletFactory,
                 functionName: "deployESIMWallet",
                 args: [deviceWalletAddress, salt]
             })
-        }
+        }]
     });
 }
 
-export const _getCurrentESIMWalletImplementation = async (client: SmartAccountClient): Promise<Address> => {
+export const _getCurrentESIMWalletImplementation = async (client: KokioSmartAccountClient): Promise<Address> => {
 
     const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;

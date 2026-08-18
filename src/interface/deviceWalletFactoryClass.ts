@@ -4,15 +4,15 @@ import {
     _getAddress,
     _getCurrentDeviceWalletImplementation
 } from "../logic/deviceWalletFactory.js"
-import { SmartAccountClient } from "@aa-sdk/core";
+import { KokioSmartAccountClient } from "../types.js";
 import { P256Key } from "../types.js";
 
 export class DeviceWalletFactorySubPackage {
 
-    smartAccountClient: SmartAccountClient;
+    smartAccountClient: KokioSmartAccountClient;
     walletClient;
 
-    constructor(walletClient: WalletClient, smartAccountClient: SmartAccountClient) {
+    constructor(walletClient: WalletClient, smartAccountClient: KokioSmartAccountClient) {
         this.smartAccountClient = smartAccountClient;
         this.walletClient = walletClient
     }

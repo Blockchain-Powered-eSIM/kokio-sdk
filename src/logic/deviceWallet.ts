@@ -1,5 +1,5 @@
 import { Address, encodeFunctionData, getContract, WalletClient } from "viem";
-import { SmartAccountClient } from "@aa-sdk/core";
+import { KokioSmartAccountClient } from "../types.js";
 import { DeviceWallet } from "../abis/index.js";
 import { MissingSmartWalletError } from "./errors.js";
 import { P256Key } from "../types.js";
@@ -15,62 +15,62 @@ import { P256Key } from "../types.js";
 // The functions below are self-callable (target = the device wallet's own address, so
 // msg.sender == self), so they succeed via a userOp.
 
-export const _toggleAccessToETH = async (client: SmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
+export const _toggleAccessToETH = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
 
     if(!client.account) throw new MissingSmartWalletError();
 
     // UserOp - `onlySelf`; the device wallet toggles ETH access for an eSIM wallet it owns.
     return client.sendUserOperation({
         account: client.account,
-        uo:{
-            target: address,
+        calls: [{
+            to: address,
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "toggleAccessToETH",
                 args: [eSIMWalletAddress, hasAccessToETH]
             })
-        }
+        }]
     });
 }
 
-export const _addESIMWallet = async (client: SmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
+export const _addESIMWallet = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
 
     if(!client.account) throw new MissingSmartWalletError();
 
     // UserOp - `onlyRegistryOrDeviceWalletFactoryOrOwner`; self is permitted.
     return client.sendUserOperation({
         account: client.account,
-        uo:{
-            target: address,
+        calls: [{
+            to: address,
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "addESIMWallet",
                 args: [eSIMWalletAddress, hasAccessToETH]
             })
-        }
+        }]
     });
 }
 
-export const _removeESIMWallet = async (client: SmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
+export const _removeESIMWallet = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
 
     if(!client.account) throw new MissingSmartWalletError();
 
     // UserOp - `onlySelfOrAssociatedESIMWallet`; self is permitted.
     return client.sendUserOperation({
         account: client.account,
-        uo:{
-            target: address,
+        calls: [{
+            to: address,
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "removeESIMWallet",
                 args: [eSIMWalletAddress, hasAccessToETH]
             })
-        }
+        }]
     });
 }
 
 // `getVaultAddress` is a `view` - read it directly instead of spending a userOp.
-export const _getVaultAddress = async (client: SmartAccountClient, address: Address): Promise<Address> => {
+export const _getVaultAddress = async (client: KokioSmartAccountClient, address: Address): Promise<Address> => {
     return client.readContract({
         address,
         abi: DeviceWallet,

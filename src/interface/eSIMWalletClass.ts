@@ -8,14 +8,14 @@ import {
     _setESIMUniqueIdentifier
 } from "../logic/eSIMWallet.js"
 import { DataBundleDetails } from "../types";
-import { SmartAccountClient } from "@aa-sdk/core";
+import { KokioSmartAccountClient } from "../types.js";
 
 export class ESIMWalletSubPackage {
 
-    client: SmartAccountClient;
+    client: KokioSmartAccountClient;
     address;
 
-    constructor(client: SmartAccountClient, address: Address) {
+    constructor(client: KokioSmartAccountClient, address: Address) {
         this.client = client;
         this.address = address;
     }

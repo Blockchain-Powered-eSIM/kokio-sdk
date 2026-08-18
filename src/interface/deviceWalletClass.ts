@@ -6,15 +6,15 @@ import {
     _removeESIMWallet,
     _toggleAccessToETH
 } from "../logic/deviceWallet.js"
-import { SmartAccountClient } from "@aa-sdk/core";
+import { KokioSmartAccountClient } from "../types.js";
 
 export class DeviceWalletSubPackage {
 
-    smartAccountClient: SmartAccountClient;
+    smartAccountClient: KokioSmartAccountClient;
     walletClient;
     address;
 
-    constructor(walletClient: WalletClient, smartAccountClient: SmartAccountClient, address: Address) {
+    constructor(walletClient: WalletClient, smartAccountClient: KokioSmartAccountClient, address: Address) {
         this.smartAccountClient = smartAccountClient;
         this.walletClient = walletClient;
         this.address = address;

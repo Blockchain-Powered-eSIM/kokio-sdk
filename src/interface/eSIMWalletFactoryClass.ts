@@ -3,14 +3,14 @@ import {
     _deployESIMWalletWithUserOp,
     _getCurrentESIMWalletImplementation
 } from "../logic/eSIMWalletFactory.js"
-import { SmartAccountClient } from "@aa-sdk/core";
+import { KokioSmartAccountClient } from "../types.js";
 
 export class ESIMWalletFactorySubPackage {
 
-    smartAccountClient: SmartAccountClient;
+    smartAccountClient: KokioSmartAccountClient;
     walletClient;
 
-    constructor(walletClient: WalletClient, smartAccountClient: SmartAccountClient) {
+    constructor(walletClient: WalletClient, smartAccountClient: KokioSmartAccountClient) {
         this.smartAccountClient = smartAccountClient;
         this.walletClient = walletClient
     }

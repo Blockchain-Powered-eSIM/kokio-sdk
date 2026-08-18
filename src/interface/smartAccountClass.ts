@@ -1,7 +1,7 @@
 import { Address, WalletClient } from "viem";
 import { _getSmartWallet, _getSmartWalletClient } from "../logic/account-kit/createSmartAccount.js";
 import { P256Key, SignedRequest } from "../types";
-import { SmartAccountClient, SmartContractAccount } from "@aa-sdk/core";
+import { KokioSmartAccountClient, KokioSmartAccount } from "../types.js";
 
 export class SmartAccountSubPackage {
 
@@ -25,7 +25,7 @@ export class SmartAccountSubPackage {
         return _getSmartWallet(this.client, this.credentialId, this.rpId, this.organizationId, deviceUniqueIdentifier, deviceWalletOwnerKey, salt);
     }
 
-    getSmartWalletClient (account: SmartContractAccount): Promise<SmartAccountClient> {
+    getSmartWalletClient (account: KokioSmartAccount): Promise<KokioSmartAccountClient> {
         return _getSmartWalletClient(this.client, this.pimlicoAPIKey, this.gasPolicyId, account);
     }
 }

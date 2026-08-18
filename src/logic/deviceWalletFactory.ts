@@ -1,5 +1,5 @@
 import { Address, WalletClient } from "viem";
-import { SmartAccountClient } from "@aa-sdk/core";
+import { KokioSmartAccountClient } from "../types.js";
 import { _getChainSpecificConstants } from "./constants.js";
 import { MissingEOAWalletError } from "./errors.js";
 import { DeviceWalletFactory } from "../abis/index.js";
@@ -36,7 +36,7 @@ export const _createAccountWithEOA = async (
 // On-chain arg order is (bytes32[2] ownerKey, string uid, uint256 salt); note this
 // differs from `createAccount`.
 export const _getAddress = async (
-    client: SmartAccountClient,
+    client: KokioSmartAccountClient,
     deviceUniqueIdentifier: string,
     deviceWalletOwnerKey: P256Key,
     salt: bigint,
@@ -55,7 +55,7 @@ export const _getAddress = async (
 }
 
 // `getCurrentDeviceWalletImplementation` is a `view` - read it directly instead of a userOp.
-export const _getCurrentDeviceWalletImplementation = async (client: SmartAccountClient): Promise<Address> => {
+export const _getCurrentDeviceWalletImplementation = async (client: KokioSmartAccountClient): Promise<Address> => {
 
     const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;

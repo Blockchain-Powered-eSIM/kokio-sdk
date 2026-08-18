@@ -1,13 +1,13 @@
 import {
     _isLazyWalletDeployed
 } from "../logic/lazyWalletRegistry.js"
-import { SmartAccountClient } from "@aa-sdk/core";
+import { KokioSmartAccountClient } from "../types.js";
 
 export class LazyWalletRegistrySubPackage {
 
-    client: SmartAccountClient;
+    client: KokioSmartAccountClient;
 
-    constructor(client: SmartAccountClient) {
+    constructor(client: KokioSmartAccountClient) {
         this.client = client;
     }
 
