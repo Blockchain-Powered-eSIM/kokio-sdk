@@ -66,8 +66,8 @@ describe("decodeContractRevert", () => {
     });
 
     it("decodes a parameterless custom error", () => {
-        const data = encodeErrorResult({ abi: DeviceWalletFactory, errorName: "FailedInnerCall" });
-        expect(decodeContractRevert(data)?.errorName).toBe("FailedInnerCall");
+        const data = encodeErrorResult({ abi: DeviceWalletFactory, errorName: "FailedCall" });
+        expect(decodeContractRevert(data)?.errorName).toBe("FailedCall");
     });
 
     it("returns null for an unrecognised selector", () => {
@@ -82,13 +82,13 @@ describe("decodeContractRevert", () => {
 
 describe("ContractRevertError", () => {
     it("decodes recognised revert data into a readable message", () => {
-        const data = encodeErrorResult({ abi: DeviceWalletFactory, errorName: "FailedInnerCall" });
+        const data = encodeErrorResult({ abi: DeviceWalletFactory, errorName: "FailedCall" });
         const err = new ContractRevertError(data);
         expect(err).toBeInstanceOf(KokioError);
         expect(err.code).toBe("CONTRACT_REVERT");
         expect(err.data).toBe(data);
-        expect(err.decoded?.errorName).toBe("FailedInnerCall");
-        expect(err.message).toMatch(/FailedInnerCall/);
+        expect(err.decoded?.errorName).toBe("FailedCall");
+        expect(err.message).toMatch(/FailedCall/);
     });
 
     it("falls back to raw data when the selector is unrecognised", () => {

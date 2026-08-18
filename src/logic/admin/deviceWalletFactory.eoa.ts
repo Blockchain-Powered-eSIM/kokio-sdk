@@ -45,12 +45,17 @@ export const _deployDeviceWalletForUsers = async (
     });
 }
 
-/** Register a freshly created device wallet with the factory. `onlyAdminOrRegistry`. */
+/**
+ * Register a freshly created device wallet with the factory. `onlyAdminOrRegistry`.
+ * The salt has to be the one the deploying `createAccount` used, since the
+ * factory rederives the counterfactual address from it to check the wallet.
+ */
 export const _postCreateAccount = async (
     client: WalletClient,
     deviceWallet: Address,
     deviceUniqueIdentifier: string,
-    deviceWalletOwnerKey: P256Key
+    deviceWalletOwnerKey: P256Key,
+    salt: bigint
 ) => {
 
     const chainID = await client.getChainId();
@@ -65,7 +70,7 @@ export const _postCreateAccount = async (
         account: client.account.address,
         abi: DeviceWalletFactory,
         functionName: 'postCreateAccount',
-        args: [deviceWallet, deviceUniqueIdentifier, deviceWalletOwnerKey]
+        args: [deviceWallet, deviceUniqueIdentifier, deviceWalletOwnerKey, salt]
     });
 }
 

@@ -41,8 +41,8 @@ export class AdminDeviceWalletFactorySubPackage {
         return _deployDeviceWalletForUsers(this.walletClient, deviceUniqueIdentifiers, deviceWalletOwnersKey, salts, depositAmounts, value);
     }
 
-    postCreateAccount(deviceWallet: Address, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key) {
-        return _postCreateAccount(this.walletClient, deviceWallet, deviceUniqueIdentifier, deviceWalletOwnerKey);
+    postCreateAccount(deviceWallet: Address, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint) {
+        return _postCreateAccount(this.walletClient, deviceWallet, deviceUniqueIdentifier, deviceWalletOwnerKey, salt);
     }
 
     addRegistryAddress(registryContractAddress: Address) {

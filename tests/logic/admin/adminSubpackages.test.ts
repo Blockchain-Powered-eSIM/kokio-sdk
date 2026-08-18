@@ -55,10 +55,10 @@ const eoaCases: Array<{
   },
   {
     label: "deviceWalletFactory._postCreateAccount",
-    run: (c) => deviceWalletFactory._postCreateAccount(c, WALLET, "Device_11", OWNER_KEY),
+    run: (c) => deviceWalletFactory._postCreateAccount(c, WALLET, "Device_11", OWNER_KEY, 1n),
     address: F.DEVICE_WALLET_FACTORY,
     functionName: "postCreateAccount",
-    args: [WALLET, "Device_11", OWNER_KEY],
+    args: [WALLET, "Device_11", OWNER_KEY, 1n],
   },
   {
     label: "deviceWalletFactory._addRegistryAddress",
