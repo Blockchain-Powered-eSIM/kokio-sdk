@@ -1,6 +1,25 @@
 const RegistryHelper = [
     {
         "type": "function",
+        "name": "claimedESIMIdentifiers",
+        "inputs": [
+            {
+                "name": "hashOfESIMIdentifier",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "eSIMWallet",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "deployLazyWallet",
         "inputs": [
             {
@@ -24,23 +43,6 @@ const RegistryHelper = [
                 "internalType": "string[]"
             },
             {
-                "name": "_dataBundleDetails",
-                "type": "tuple[][]",
-                "internalType": "struct DataBundleDetails[][]",
-                "components": [
-                    {
-                        "name": "dataBundleID",
-                        "type": "string",
-                        "internalType": "string"
-                    },
-                    {
-                        "name": "dataBundlePrice",
-                        "type": "uint256",
-                        "internalType": "uint256"
-                    }
-                ]
-            },
-            {
                 "name": "_depositAmount",
                 "type": "uint256",
                 "internalType": "uint256"
@@ -59,6 +61,45 @@ const RegistryHelper = [
             }
         ],
         "stateMutability": "payable"
+    },
+    {
+        "type": "function",
+        "name": "deployMoreLazyESIMWallets",
+        "inputs": [
+            {
+                "name": "_deviceWallet",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "_deviceUniqueIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "_baseSalt",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "_startIndex",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "_eSIMUniqueIdentifiers",
+                "type": "string[]",
+                "internalType": "string[]"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address[]",
+                "internalType": "address[]"
+            }
+        ],
+        "stateMutability": "nonpayable"
     },
     {
         "type": "function",
@@ -112,6 +153,44 @@ const RegistryHelper = [
     },
     {
         "type": "function",
+        "name": "eSIMWalletForIdentifier",
+        "inputs": [
+            {
+                "name": "_eSIMUniqueIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "isDeviceIdentifierAlreadyUsed",
+        "inputs": [
+            {
+                "name": "_deviceUniqueIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool",
+                "internalType": "bool"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "isDeviceWalletValid",
         "inputs": [
             {
@@ -123,6 +202,25 @@ const RegistryHelper = [
         "outputs": [
             {
                 "name": "valid",
+                "type": "bool",
+                "internalType": "bool"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "isESIMIdentifierClaimed",
+        "inputs": [
+            {
+                "name": "_eSIMUniqueIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
                 "type": "bool",
                 "internalType": "bool"
             }
@@ -182,6 +280,36 @@ const RegistryHelper = [
     },
     {
         "type": "function",
+        "name": "populateLazyHistory",
+        "inputs": [
+            {
+                "name": "_eSIMWallet",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "_dataBundleDetails",
+                "type": "tuple[]",
+                "internalType": "struct DataBundleDetails[]",
+                "components": [
+                    {
+                        "name": "dataBundleID",
+                        "type": "string",
+                        "internalType": "string"
+                    },
+                    {
+                        "name": "dataBundlePrice",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
         "name": "registeredP256Keys",
         "inputs": [
             {
@@ -220,6 +348,108 @@ const RegistryHelper = [
     },
     {
         "type": "event",
+        "name": "AdminDisabled",
+        "inputs": [
+            {
+                "name": "_adminOfRecord",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_caller",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "AdminEnabled",
+        "inputs": [
+            {
+                "name": "_adminOfRecord",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_caller",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "AdminUpdateRequested",
+        "inputs": [
+            {
+                "name": "eSIMWalletAdmin",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_newAdmin",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "AdminUpdateRevoked",
+        "inputs": [
+            {
+                "name": "_caller",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_revokedAddress",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "AdminUpdated",
+        "inputs": [
+            {
+                "name": "_newAdmin",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "DefaultDataBundlePriceCapUpdated",
+        "inputs": [
+            {
+                "name": "_cap",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
         "name": "DeviceWalletInfoUpdated",
         "inputs": [
             {
@@ -239,6 +469,56 @@ const RegistryHelper = [
                 "type": "bytes32[2]",
                 "indexed": false,
                 "internalType": "bytes32[2]"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "DeviceWalletOwnerKeyUpdated",
+        "inputs": [
+            {
+                "name": "_deviceWallet",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_oldOwnerKey",
+                "type": "bytes32[2]",
+                "indexed": false,
+                "internalType": "bytes32[2]"
+            },
+            {
+                "name": "_newOwnerKey",
+                "type": "bytes32[2]",
+                "indexed": false,
+                "internalType": "bytes32[2]"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "ESIMIdentifierClaimed",
+        "inputs": [
+            {
+                "name": "_hashOfESIMIdentifier",
+                "type": "bytes32",
+                "indexed": true,
+                "internalType": "bytes32"
+            },
+            {
+                "name": "_eSIMUniqueIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_eSIMWallet",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
             }
         ],
         "anonymous": false
@@ -301,6 +581,19 @@ const RegistryHelper = [
     },
     {
         "type": "event",
+        "name": "Paused",
+        "inputs": [
+            {
+                "name": "_admin",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
         "name": "RegistryInitialized",
         "inputs": [
             {
@@ -332,11 +625,18 @@ const RegistryHelper = [
                 "type": "address",
                 "indexed": true,
                 "internalType": "address"
-            },
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "Unpaused",
+        "inputs": [
             {
-                "name": "_verifier",
+                "name": "_owner",
                 "type": "address",
-                "indexed": false,
+                "indexed": true,
                 "internalType": "address"
             }
         ],
@@ -375,9 +675,103 @@ const RegistryHelper = [
         "anonymous": false
     },
     {
+        "type": "event",
+        "name": "VaultAddressUpdated",
+        "inputs": [
+            {
+                "name": "_updatedVaultAddress",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "error",
+        "name": "DeviceWalletAlreadyExists",
+        "inputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "deviceWallet",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ESIMIdentifierAlreadyClaimed",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "eSIMWallet",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ESIMIdentifierReservedForLazyWallet",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "EmptyESIMIdentifier",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "NotADeviceWallet",
+        "inputs": [
+            {
+                "name": "account",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "NotAProtocolESIMWallet",
+        "inputs": [
+            {
+                "name": "eSIMWallet",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
         "type": "error",
         "name": "OnlyLazyWalletRegistry",
         "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "UnknownESIMWallet",
+        "inputs": [
+            {
+                "name": "eSIMWallet",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
     }
 ] as const;
 
