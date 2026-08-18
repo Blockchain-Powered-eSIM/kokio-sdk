@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { encodeFunctionData, type Address, type Hex } from "viem";
 
 import { makeMockSmartAccountClient } from "../utils/mockClient.js";
-import { sepoliaFactoryAddresses } from "../../src/logic/constants.js";
+import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import {
   DeviceWallet,
   DeviceWalletFactory,
@@ -41,7 +41,7 @@ const WEBAUTHN_SIG: WebAuthnSignature = {
   s: 2n,
 };
 
-const F = sepoliaFactoryAddresses;
+const F = baseSepoliaFactoryAddresses;
 
 /**
  * Only functions that can genuinely succeed via a device-wallet userOp belong on
@@ -220,7 +220,7 @@ describe("sub-package view reads", () => {
 describe("EOA writeContract paths", () => {
   it("deviceWalletFactory._createAccountWithEOA calls writeContract on the factory", async () => {
     const { makeMockWalletClient } = await import("../utils/mockClient.js");
-    const client = makeMockWalletClient({ chainId: 11155111, account: "0x00000000000000000000000000000000000e0a01" });
+    const client = makeMockWalletClient({ chainId: 84532, account: "0x00000000000000000000000000000000000e0a01" });
 
     await deviceWalletFactory._createAccountWithEOA(client, "Device_11", OWNER_KEY, 1n, 100n);
 
@@ -236,7 +236,7 @@ describe("EOA writeContract paths", () => {
 
   it("_createAccountWithEOA throws MISSING_EOA_WALLET without an account", async () => {
     const { makeMockWalletClient } = await import("../utils/mockClient.js");
-    const client = makeMockWalletClient({ chainId: 11155111 });
+    const client = makeMockWalletClient({ chainId: 84532 });
     await expect(
       deviceWalletFactory._createAccountWithEOA(client, "Device_11", OWNER_KEY, 1n, 100n),
     ).rejects.toThrow(/EOA/i);
@@ -263,7 +263,7 @@ describe("deviceWallet._getOwner", () => {
     });
     const { _getOwner } = await import("../../src/logic/deviceWallet.js");
     const { makeMockWalletClient } = await import("../utils/mockClient.js");
-    const client = makeMockWalletClient({ chainId: 11155111 });
+    const client = makeMockWalletClient({ chainId: 84532 });
 
     const owner = await _getOwner(client, WALLET);
     expect(owner).toEqual(OWNER_KEY);

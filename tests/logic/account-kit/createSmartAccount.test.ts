@@ -24,7 +24,6 @@ import { makeMockWalletClient } from "../../utils/mockClient.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../../src/abis/index.js";
 import {
   baseSepoliaFactoryAddresses,
-  sepoliaFactoryAddresses,
   CHAIN_ID,
 } from "../../../src/logic/constants.js";
 import type { P256Key, WebAuthnSignature } from "../../../src/types.js";
@@ -78,19 +77,19 @@ const OWNER_KEY: P256Key = [
 const UID = "Device_11";
 const SALT = 111n;
 
-const client = makeMockWalletClient({ chainId: CHAIN_ID.SEPOLIA });
+const client = makeMockWalletClient({ chainId: CHAIN_ID.BASE_SEPOLIA });
 
 describe("CREATE2 counterfactual address (invariant vs compute-initCode.js)", () => {
   it("locks the init-code hash for the fixed fixture", async () => {
     const hash = await getInitCodeHash(client, UID, OWNER_KEY);
     // Golden value captured from current SDK behavior; must match the
     // contract-side BeaconProxy.creationCode ++ abi.encode(beacon, init(...)).
-    expect(hash).toMatchInlineSnapshot(`"0xbb8beacc6dcd7f18938dffbac98b556969e3aa8e8554e4578bdb75b3d61b6a55"`);
+    expect(hash).toMatchInlineSnapshot(`"0x5889afcff15d87c5b2477f47d6b48c79c05441d43a850039003d42dea62a5e81"`);
   });
 
   it("locks the counterfactual address for the fixed fixture", async () => {
     const address = await getCounterFactualAddress(client, UID, OWNER_KEY, SALT);
-    expect(address).toMatchInlineSnapshot(`"0x8C539848e530Ba1f0999Aac7ad4cE7d7fe62CFdb"`);
+    expect(address).toMatchInlineSnapshot(`"0x15b5045C823D503974F9a1cEC120525F4302cFC0"`);
   });
 
   it("composes CREATE2 from (factory, salt(size:32), initCodeHash)", async () => {
@@ -98,7 +97,7 @@ describe("CREATE2 counterfactual address (invariant vs compute-initCode.js)", ()
     const initCodeHash = await getInitCodeHash(client, UID, OWNER_KEY);
 
     const independent = getContractAddress({
-      from: sepoliaFactoryAddresses.DEVICE_WALLET_FACTORY,
+      from: baseSepoliaFactoryAddresses.DEVICE_WALLET_FACTORY,
       salt: toHex(SALT, { size: 32 }),
       bytecodeHash: initCodeHash,
       opcode: "CREATE2",
@@ -392,7 +391,7 @@ describe("_getFactoryArgs", () => {
   it("splits the factory address from the createAccount calldata", async () => {
     const { factory, factoryData } = await _getFactoryArgs(client, UID, OWNER_KEY, SALT);
 
-    expect(factory).toBe(sepoliaFactoryAddresses.DEVICE_WALLET_FACTORY);
+    expect(factory).toBe(baseSepoliaFactoryAddresses.DEVICE_WALLET_FACTORY);
     expect(factoryData).toBe(
       encodeFunctionData({
         abi: DeviceWalletFactory,

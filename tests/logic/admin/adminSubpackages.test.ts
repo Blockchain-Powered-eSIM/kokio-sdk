@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { type Address, type Hex } from "viem";
 
 import { makeMockWalletClient } from "../../utils/mockClient.js";
-import { sepoliaFactoryAddresses } from "../../../src/logic/constants.js";
+import { baseSepoliaFactoryAddresses } from "../../../src/logic/constants.js";
 import type { DataBundleDetails } from "../../../src/types.js";
 
 import * as deviceWalletFactory from "../../../src/logic/admin/deviceWalletFactory.eoa.js";
@@ -27,8 +27,8 @@ const OWNER_KEY: [Hex, Hex] = [
 ];
 const BUNDLE: DataBundleDetails = { dataBundleID: "bundle-1", dataBundlePrice: 1000n };
 
-const F = sepoliaFactoryAddresses;
-const CHAIN_ID = 11155111;
+const F = baseSepoliaFactoryAddresses;
+const CHAIN_ID = 84532;
 
 /**
  * Every admin-EOA logic call. Each row asserts the SDK issues a `writeContract`

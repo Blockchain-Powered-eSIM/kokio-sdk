@@ -42,7 +42,8 @@ export const makeMockSmartAccountClient = (opts?: {
   chainId?: number;
   withAccount?: boolean;
 }): KokioSmartAccountClient => {
-  const { chainId = 11155111, withAccount = true } = opts ?? {};
+  // Base Sepolia: the only chain with a configured address book.
+  const { chainId = 84532, withAccount = true } = opts ?? {};
 
   return {
     getChainId: async () => chainId,

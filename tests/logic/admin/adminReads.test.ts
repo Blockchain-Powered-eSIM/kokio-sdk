@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { type Address, type Hex } from "viem";
 
 import { makeMockWalletClient } from "../../utils/mockClient.js";
-import { sepoliaFactoryAddresses } from "../../../src/logic/constants.js";
+import { baseSepoliaFactoryAddresses } from "../../../src/logic/constants.js";
 
 import * as deviceWalletFactory from "../../../src/logic/admin/reads/deviceWalletFactory.reads.js";
 import * as eSIMWalletFactory from "../../../src/logic/admin/reads/eSIMWalletFactory.reads.js";
@@ -20,8 +20,8 @@ const OWNER_KEY: [Hex, Hex] = [
   "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F1",
 ];
 
-const F = sepoliaFactoryAddresses;
-const CHAIN_ID = 11155111;
+const F = baseSepoliaFactoryAddresses;
+const CHAIN_ID = 84532;
 
 /**
  * Every admin read. Each row asserts the SDK issues a `readContract` (via the

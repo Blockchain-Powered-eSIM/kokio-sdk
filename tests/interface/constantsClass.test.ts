@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { WalletClient } from "viem";
 import { ConstantsSubPackage } from "../../src/interface/constantsClass.js";
-import { sepoliaFactoryAddresses, CHAIN_ID } from "../../src/logic/constants.js";
+import { baseSepoliaFactoryAddresses, CHAIN_ID } from "../../src/logic/constants.js";
 
 const makeClient = (chainId: number) => {
   const getChainId = vi.fn(async () => chainId);
@@ -14,15 +14,15 @@ const makeClient = (chainId: number) => {
 
 describe("ConstantsSubPackage.load()", () => {
   it("resolves chain-specific constants for the connected chain", async () => {
-    const { client } = makeClient(CHAIN_ID.SEPOLIA);
+    const { client } = makeClient(CHAIN_ID.BASE_SEPOLIA);
     const constants = await new ConstantsSubPackage(client, "KEY").load();
 
-    expect(constants.factoryAddresses).toBe(sepoliaFactoryAddresses);
+    expect(constants.factoryAddresses).toBe(baseSepoliaFactoryAddresses);
     expect(constants.pimlicoRpcURL).toContain("apikey=KEY");
   });
 
   it("memoizes: the chain id is fetched only once across repeated loads", async () => {
-    const { client, getChainId } = makeClient(CHAIN_ID.SEPOLIA);
+    const { client, getChainId } = makeClient(CHAIN_ID.BASE_SEPOLIA);
     const pkg = new ConstantsSubPackage(client, "KEY");
 
     const a = await pkg.load();

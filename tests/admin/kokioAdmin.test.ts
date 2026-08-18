@@ -3,14 +3,14 @@ import { type Address } from "viem";
 
 import { makeMockWalletClient } from "../utils/mockClient.js";
 import { KokioAdmin, MissingEOAWalletError } from "../../src/admin/config-admin.js";
-import { sepoliaFactoryAddresses } from "../../src/logic/constants.js";
+import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 
 const EOA = "0x00000000000000000000000000000000000e0a01" as Address;
 const DEVICE_A = "0x0000000000000000000000000000000000000a11" as Address;
 const DEVICE_B = "0x0000000000000000000000000000000000000b22" as Address;
 const ESIM_A = "0x0000000000000000000000000000000000005111" as Address;
 
-const CHAIN_ID = 11155111;
+const CHAIN_ID = 84532;
 const lastWrite = (client: ReturnType<typeof makeMockWalletClient>) =>
   (client.writeContract as ReturnType<typeof vi.fn>).mock.calls.at(-1)![0];
 const lastRead = (client: ReturnType<typeof makeMockWalletClient>) =>
@@ -123,7 +123,7 @@ describe("KokioAdmin constants", () => {
     const admin = new KokioAdmin(makeMockWalletClient({ chainId: CHAIN_ID, account: EOA }));
     const constants = await admin.constants;
 
-    expect(constants.factoryAddresses).toBe(sepoliaFactoryAddresses);
+    expect(constants.factoryAddresses).toBe(baseSepoliaFactoryAddresses);
     expect(constants.pimlicoRpcURL).toBe("");
   });
 
@@ -146,6 +146,6 @@ describe("KokioAdmin constants", () => {
     admin.setWalletClient(second);
     const constants = await admin.constants;
 
-    expect(constants.factoryAddresses).toBe(sepoliaFactoryAddresses);
+    expect(constants.factoryAddresses).toBe(baseSepoliaFactoryAddresses);
   });
 });
