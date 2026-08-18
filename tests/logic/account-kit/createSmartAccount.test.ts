@@ -73,12 +73,12 @@ describe("CREATE2 counterfactual address (invariant vs compute-initCode.js)", ()
     const hash = await getInitCodeHash(client, UID, OWNER_KEY);
     // Golden value captured from current SDK behavior; must match the
     // contract-side BeaconProxy.creationCode ++ abi.encode(beacon, init(...)).
-    expect(hash).toMatchInlineSnapshot(`"0xdeca1d90da20ff74ac52065ebc49127a5e458f7e2425bf46ec5df729729d30a1"`);
+    expect(hash).toMatchInlineSnapshot(`"0xbb8beacc6dcd7f18938dffbac98b556969e3aa8e8554e4578bdb75b3d61b6a55"`);
   });
 
   it("locks the counterfactual address for the fixed fixture", async () => {
     const address = await getCounterFactualAddress(client, UID, OWNER_KEY, SALT);
-    expect(address).toMatchInlineSnapshot(`"0x75bFa2C4f6D4b67299f4F3a60092e0A30Fd1863b"`);
+    expect(address).toMatchInlineSnapshot(`"0x8C539848e530Ba1f0999Aac7ad4cE7d7fe62CFdb"`);
   });
 
   it("composes CREATE2 from (factory, salt(size:32), initCodeHash)", async () => {
@@ -104,10 +104,11 @@ describe("CREATE2 counterfactual address (invariant vs compute-initCode.js)", ()
 
 describe("pinned BeaconProxy creation code", () => {
   it("locks the pinned bytecode (guards against silent edits to the literal)", () => {
-    // keccak of the pinned creation code - matches OZ v5.0.0 BeaconProxy,
-    // Hardhat solc 0.8.25 runs=200 viaIR. A diff here means the pin moved.
+    // keccak of the pinned creation code - matches the BeaconProxy in
+    // deployments/base-sepolia-84532-entrypoint-v8.json, solc 0.8.36 viaIR.
+    // A diff here means the pin moved.
     expect(keccak256(BEACON_PROXY_CREATION_CODE)).toMatchInlineSnapshot(
-      `"0x348656e4245d47e0c40e3e66cde81188e1bda03fe6a23a8e7ea83937817bca96"`,
+      `"0xc571dd76379a732e12f1973fa9f4cbbaeb1702bb0ace06e5beb7e2b56cd03c6b"`,
     );
   });
 });

@@ -37,14 +37,15 @@ enum AuthenticatorTransport {
  * DeviceWalletFactory deploys, or the computed address will diverge from the
  * deployed one. Source of truth:
  *   OpenZeppelin Contracts v5.0.0 - proxy/beacon/BeaconProxy.sol
- *   compiled by Hardhat (smart-contract-suite `artifacts/@openzeppelin/contracts/
- *   proxy/beacon/BeaconProxy.sol/BeaconProxy.json`), solc 0.8.25+commit.b61c2a91,
- *   optimizer { enabled: true, runs: 200 }, viaIR: true.
- * NOTE: the Foundry `out/` artifact (different optimizer settings) produces a
- * DIFFERENT bytecode - do not swap it in without re-verifying the counterfactual.
- * `_assertCounterfactualMatchesOnChain` guards against drift at runtime.
+ *   smart-contract-suite `deployments/base-sepolia-84532-entrypoint-v8.json`,
+ *   section `create2`, solc 0.8.36, optimizer runs 10000000, viaIR: true,
+ *   evm target osaka. Hash: 0xc571dd76379a732e12f1973fa9f4cbbaeb1702bb0ace06e5beb7e2b56cd03c6b.
+ * NOTE: a different optimizer/compiler setting produces a DIFFERENT bytecode -
+ * do not swap it in without re-verifying the counterfactual.
+ * `_assertCounterfactualMatchesOnChain` guards against drift; `_getSmartWallet`
+ * runs it once per chain per process.
  */
-export const BEACON_PROXY_CREATION_CODE: Hex = "0x60a06040908082526104a8803803809161001982856102ae565b8339810182828203126101e95761002f826102e7565b60208084015191939091906001600160401b0382116101e9570182601f820112156101e957805190610060826102fb565b9361006d875195866102ae565b8285528383830101116101e957829060005b83811061029a57505060009184010152823b1561027a577fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d5080546001600160a01b0319166001600160a01b038581169182179092558551635c60da1b60e01b8082529194928482600481895afa91821561026f57600092610238575b50813b1561021f5750508551847f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e600080a282511561020057508290600487518096819382525afa9283156101f5576000936101b3575b5091600080848461019096519101845af4903d156101aa573d610174816102fb565b90610181885192836102ae565b8152600081943d92013e610316565b505b6080525161012e908161037a82396080518160180152f35b60609250610316565b92508183813d83116101ee575b6101ca81836102ae565b810103126101e9576000806101e1610190956102e7565b945050610152565b600080fd5b503d6101c0565b85513d6000823e3d90fd5b9350505050346102105750610192565b63b398979f60e01b8152600490fd5b8751634c9c8ce360e01b81529116600482015260249150fd5b9091508481813d8311610268575b61025081836102ae565b810103126101e957610261906102e7565b90386100fb565b503d610246565b88513d6000823e3d90fd5b8351631933b43b60e21b81526001600160a01b0384166004820152602490fd5b81810183015186820184015284920161007f565b601f909101601f19168101906001600160401b038211908210176102d157604052565b634e487b7160e01b600052604160045260246000fd5b51906001600160a01b03821682036101e957565b6001600160401b0381116102d157601f01601f191660200190565b9061033d575080511561032b57805190602001fd5b604051630a12f52160e11b8152600490fd5b81511580610370575b61034e575090565b604051639996b31560e01b81526001600160a01b039091166004820152602490fd5b50803b1561034656fe60806040819052635c60da1b60e01b81526020816004817f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03165afa90811560a9576000916054575b5060da565b905060203d60201160a3575b601f8101601f191682019167ffffffffffffffff831181841017608d576088926040520160b5565b38604f565b634e487b7160e01b600052604160045260246000fd5b503d6060565b6040513d6000823e3d90fd5b602090607f19011260d5576080516001600160a01b038116810360d55790565b600080fd5b6000808092368280378136915af43d82803e1560f4573d90f35b3d90fdfea264697066735822122099ba460fd62b3e22c737d15959887e6cae3498f3495d31e43e2bcf1283aec7d264736f6c63430008190033";
+export const BEACON_PROXY_CREATION_CODE: Hex = "0x60a0806040526104e480380380916100178285610292565b833981016040828203126101eb5761002e826102c9565b602083015190926001600160401b0382116101eb57019080601f830112156101eb57815161005b816102dd565b926100696040519485610292565b8184526020840192602083830101116101eb57815f926020809301855e84010152823b15610274577fa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d5080546001600160a01b0319166001600160a01b038516908117909155604051635c60da1b60e01b8152909190602081600481865afa9081156101f7575f9161023a575b50803b1561021a5750817f1cf3b03a6cf19fa2baba4df148e9dcabedea7f8a5c07840e207e5c089be95d3e5f80a282511561020257602060049260405193848092635c60da1b60e01b82525afa9182156101f7575f926101ae575b505f809161018a945190845af43d156101a6573d9161016e836102dd565b9261017c6040519485610292565b83523d5f602085013e6102f8565b505b60805260405161018d908161035782396080518160460152f35b6060916102f8565b9291506020833d6020116101ef575b816101ca60209383610292565b810103126101eb575f80916101e161018a956102c9565b9394509150610150565b5f80fd5b3d91506101bd565b6040513d5f823e3d90fd5b505050341561018c5763b398979f60e01b5f5260045ffd5b634c9c8ce360e01b5f9081526001600160a01b0391909116600452602490fd5b90506020813d60201161026c575b8161025560209383610292565b810103126101eb57610266906102c9565b5f6100f5565b3d9150610248565b631933b43b60e21b5f9081526001600160a01b038416600452602490fd5b601f909101601f19168101906001600160401b038211908210176102b557604052565b634e487b7160e01b5f52604160045260245ffd5b51906001600160a01b03821682036101eb57565b6001600160401b0381116102b557601f01601f191660200190565b9061031c575080511561030d57602081519101fd5b63d6bda27560e01b5f5260045ffd5b8151158061034d575b61032d575090565b639996b31560e01b5f9081526001600160a01b0391909116600452602490fd5b50803b1561032556fe60806040527f5c60da1b000000000000000000000000000000000000000000000000000000006080526020608060048173ffffffffffffffffffffffffffffffffffffffff7f0000000000000000000000000000000000000000000000000000000000000000165afa8015610107575f9015610163575060203d602011610100575b7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f820116608001906080821067ffffffffffffffff8311176100d3576100ce91604052608001610112565b610163565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b503d610081565b6040513d5f823e3d90fd5b7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80602091011261015f5760805173ffffffffffffffffffffffffffffffffffffffff8116810361015f5790565b5f80fd5b5f8091368280378136915af43d5f803e1561017c573d5ff35b3d5ffdfea164736f6c6343000824000a";
 
 /*
 ** Stamp is client-side authentication. Since the passkeys are one the user's mobile device
@@ -257,17 +258,16 @@ export const getCounterFactualAddress = async (client: WalletClient, deviceUniqu
 }
 
 /**
- * Optional drift guard. Recomputes the counterfactual address off-chain (using
- * the pinned {@link BEACON_PROXY_CREATION_CODE}) and compares it against the
+ * Drift guard. Recomputes the counterfactual address off-chain (using the
+ * pinned {@link BEACON_PROXY_CREATION_CODE}) and compares it against the
  * on-chain `DeviceWalletFactory.getCounterFactualAddress` view - which derives
  * the address from the BeaconProxy the factory ACTUALLY deploys. A mismatch
  * means the pinned proxy bytecode (or init encoding) has drifted from the
  * deployed contract, so this throws early instead of letting a UserOp deploy to,
  * or fund, the wrong address.
  *
- * Not wired into the default account-creation path (it costs one extra RPC);
- * call it explicitly in environments where you want the extra safety, e.g.
- * after a contract redeploy or on first use against a new chain.
+ * `_getSmartWallet` runs this once per chain per process; call it directly for
+ * an unconditional check, e.g. right after a contract redeploy.
  */
 export const _assertCounterfactualMatchesOnChain = async (
 	client: WalletClient,
@@ -384,6 +384,11 @@ export const _signUserOperationHash = async (credentialId: string, rpId: string,
 	return _encodeSignature(webAuthnSignature, validUntil);
 }
 
+// Chains whose pinned BeaconProxy bytecode has already been checked against
+// the deployed factory in this process, so repeat wallet creations on the
+// same chain skip the extra RPC the drift guard costs.
+const _counterfactualVerifiedChains = new Set<number>();
+
 export const _getSmartWallet = async (
 	client: WalletClient,
 	credentialId: string,
@@ -399,6 +404,11 @@ export const _getSmartWallet = async (
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
 	if (!client.account) throw new Error ('Error: No signer account found with WalletClient')
+
+	const accountAddress = _counterfactualVerifiedChains.has(chainID)
+		? await getCounterFactualAddress(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt)
+		: await _assertCounterfactualMatchesOnChain(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt);
+	_counterfactualVerifiedChains.add(chainID);
 
 	return toSmartContractAccount({
 		/// REQUIRED PARAMS ///
@@ -426,7 +436,7 @@ export const _getSmartWallet = async (
 		
 		/// OPTIONAL PARAMS ///
 		// if you already know your account's address, pass that in here to avoid generating a new counterfactual
-		accountAddress: await getCounterFactualAddress(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt),
+		accountAddress,
 		// if your account supports batching, this should take an array of UOs and return the calldata for calling your contract's batchExecute method
 		encodeBatchExecute: async (uos): Promise<Hash> => _encodeBatchExecute(uos),
 		// if your contract expects a different signing scheme than the default signMessage scheme, you can override that here
