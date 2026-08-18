@@ -63,7 +63,8 @@ export const sepoliaFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const mainnetFactoryAddresses: Record<string, Address> = {
@@ -73,7 +74,8 @@ export const mainnetFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const optimismMainnetFactoryAddresses: Record<string, Address> = {
@@ -83,7 +85,8 @@ export const optimismMainnetFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 // Cleared for the same reason as Sepolia: a v0.7 deployment this SDK cannot use.
@@ -94,7 +97,8 @@ export const optimismSepoliaFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const baseMainnetFactoryAddresses: Record<string, Address> = {
@@ -104,7 +108,8 @@ export const baseMainnetFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const baseSepoliaFactoryAddresses: Record<string, Address> = {
@@ -114,7 +119,8 @@ export const baseSepoliaFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x89e386E3251692F21a2E9048A46518AdC2A5Cb4A',
     ENTRY_POINT: '0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108',
     SENDER_CREATOR: '0x449ED7C3e6Fee6a97311d4b55475DF59C44AdD33',
-    P256VERIFIER: '0x625561429bD99d647956ccBCA4eBf762aaA142c5'
+    P256VERIFIER: '0x625561429bD99d647956ccBCA4eBf762aaA142c5',
+    PROTOCOL_ADMIN: '0x77A1D6f27462c34BF038832d9Cff6b3E94a9Fe6F'
 }
 
 export const arbitrumOneFactoryAddresses: Record<string, Address> = {
@@ -124,7 +130,8 @@ export const arbitrumOneFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const arbitrumSepoliaFactoryAddresses: Record<string, Address> = {
@@ -134,7 +141,8 @@ export const arbitrumSepoliaFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const customErrors: Record<string, string> = {
