@@ -4,8 +4,14 @@ import { MissingEOAWalletError } from "../errors.js";
 import { Registry } from "../../abis/index.js";
 
 /**
- * Admin-EOA logic for `Registry`. Everything here except `_acceptAdminUpdate` is
- * `onlyOwner`, so the `client` must carry the `upgradeManager` EOA.
+ * Admin-EOA logic for `Registry`. Most of this is `onlyOwner`, so the `client`
+ * must carry the owner EOA. `_acceptAdminUpdate` is the nominee's own call and
+ * `_assignESIMIdentifier` is `onlyESIMWalletAdmin`.
+ *
+ * On the live deployment the owner is the `ProtocolAdmin` timelock, not an EOA,
+ * so an `onlyOwner` call sent directly reverts. Route those through
+ * `protocolAdmin.proposer.schedule` instead. The direct path stays for
+ * deployments whose owner is a plain EOA or multisig.
  */
 
 /** Wire (or rewire) the LazyWalletRegistry into the Registry. `onlyOwner`. */
@@ -70,6 +76,34 @@ export const _requestAdminUpdate = async (client: WalletClient, newAdmin: Addres
         abi: Registry,
         functionName: 'requestAdminUpdate',
         args: [newAdmin]
+    });
+}
+
+/**
+ * Bind an eSIM's unique identifier to its wallet. `onlyESIMWalletAdmin`.
+ *
+ * The identifier is claimed protocol-wide, so a string already bound to another
+ * wallet reverts rather than moving.
+ */
+export const _assignESIMIdentifier = async (
+    client: WalletClient,
+    eSIMWalletAddress: Address,
+    eSIMUniqueIdentifier: string
+) => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return client.writeContract({
+        address: values.factoryAddresses.REGISTRY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: Registry,
+        functionName: 'assignESIMIdentifier',
+        args: [eSIMWalletAddress, eSIMUniqueIdentifier]
     });
 }
 

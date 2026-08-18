@@ -1,8 +1,5 @@
 import { Address, WalletClient } from "viem";
-import {
-    _deployESIMWallet,
-    _setESIMUniqueIdentifierForAnESIMWallet,
-} from "../../logic/admin/deviceWallet.eoa.js";
+import { _deployESIMWallet } from "../../logic/admin/deviceWallet.eoa.js";
 import {
     _deviceUniqueIdentifier,
     _isValidESIMWallet,
@@ -27,10 +24,6 @@ export class AdminDeviceWalletSubPackage {
 
     deployESIMWallet(hasAccessToETH: boolean, salt: bigint) {
         return _deployESIMWallet(this.walletClient, this.deviceWalletAddress, hasAccessToETH, salt);
-    }
-
-    setESIMUniqueIdentifierForAnESIMWallet(eSIMWalletAddress: Address, eSIMUniqueIdentifier: string) {
-        return _setESIMUniqueIdentifierForAnESIMWallet(this.walletClient, this.deviceWalletAddress, eSIMWalletAddress, eSIMUniqueIdentifier);
     }
 
     // Reads: public storage getters and views

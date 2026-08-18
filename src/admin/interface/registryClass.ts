@@ -4,6 +4,7 @@ import {
     _updateVaultAddress,
     _requestAdminUpdate,
     _acceptAdminUpdate,
+    _assignESIMIdentifier,
 } from "../../logic/admin/registry.eoa.js";
 import {
     _eSIMWalletAdmin,
@@ -42,6 +43,10 @@ export class AdminRegistrySubPackage {
 
     acceptAdminUpdate() {
         return _acceptAdminUpdate(this.walletClient);
+    }
+
+    assignESIMIdentifier(eSIMWalletAddress: Address, eSIMUniqueIdentifier: string) {
+        return _assignESIMIdentifier(this.walletClient, eSIMWalletAddress, eSIMUniqueIdentifier);
     }
 
     // Reads: public storage getters, including the inherited RegistryHelper mappings

@@ -118,6 +118,13 @@ const eoaCases: Array<{
     functionName: "acceptAdminUpdate",
     args: [],
   },
+  {
+    label: "registry._assignESIMIdentifier",
+    run: (c) => registry._assignESIMIdentifier(c, ESIM, "eid-1"),
+    address: F.REGISTRY,
+    functionName: "assignESIMIdentifier",
+    args: [ESIM, "eid-1"],
+  },
   // lazyWalletRegistry.eoa (target = LAZY_WALLET_REGISTRY)
   {
     label: "lazyWalletRegistry._batchPopulateHistory",
@@ -149,13 +156,6 @@ const eoaCases: Array<{
     address: WALLET,
     functionName: "deployESIMWallet",
     args: [true, 7n],
-  },
-  {
-    label: "deviceWallet._setESIMUniqueIdentifierForAnESIMWallet",
-    run: (c) => deviceWallet._setESIMUniqueIdentifierForAnESIMWallet(c, WALLET, ESIM, "eid-1"),
-    address: WALLET,
-    functionName: "setESIMUniqueIdentifierForAnESIMWallet",
-    args: [ESIM, "eid-1"],
   },
   // eSIMWallet.eoa (target = eSIM instance address)
   {

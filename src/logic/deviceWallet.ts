@@ -7,11 +7,10 @@ import { P256Key } from "../types.js";
 // A userOp from a device wallet runs through `execute`, so at the target contract
 // msg.sender is the device-wallet account itself. That constrains which DeviceWallet
 // functions this surface can expose:
-//   - deployESIMWallet / setESIMUniqueIdentifierForAnESIMWallet are `onlyESIMWalletAdmin`
-//     / `onlyESIMWalletAdminOrRegistry` - only the admin EOA (or registry) may call, so a
-//     device-wallet userOp always reverts. They are exposed on `KokioAdmin.deviceWallet`.
-//   - payETHForDataBundles / pullETH are `onlyAssociatedESIMWallets` - callable only by an
-//     associated eSIM wallet contract, never by the device wallet or an EOA.
+//   - deployESIMWallet is `onlyESIMWalletAdmin` - only the admin EOA may call, so a
+//     device-wallet userOp always reverts. It is exposed on `KokioAdmin.deviceWallet`.
+//   - pullETH is `onlyAssociatedESIMWallets` - callable only by an associated eSIM
+//     wallet contract, never by the device wallet or an EOA.
 // The functions below are self-callable (target = the device wallet's own address, so
 // msg.sender == self), so they succeed via a userOp.
 
