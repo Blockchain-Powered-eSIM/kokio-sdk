@@ -183,10 +183,10 @@ const readCases: Array<{
     args: [],
   },
   {
-    label: "lazyWalletRegistry._isLazyWalletDeployed",
-    run: (c) => lazyWalletRegistry._isLazyWalletDeployed(c, "Device_11"),
-    address: F.LAZY_WALLET_REGISTRY,
-    functionName: "isLazyWalletDeployed",
+    label: "lazyWalletRegistry._isDeviceIdentifierAlreadyUsed",
+    run: (c) => lazyWalletRegistry._isDeviceIdentifierAlreadyUsed(c, "Device_11"),
+    address: F.REGISTRY,
+    functionName: "isDeviceIdentifierAlreadyUsed",
     args: ["Device_11"],
   },
   {

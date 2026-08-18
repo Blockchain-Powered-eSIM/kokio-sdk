@@ -136,10 +136,10 @@ const eoaCases: Array<{
   {
     // payable: contract requires depositAmount == msg.value, so value mirrors the arg.
     label: "lazyWalletRegistry._deployLazyWalletAndSetESIMIdentifier",
-    run: (c) => lazyWalletRegistry._deployLazyWalletAndSetESIMIdentifier(c, OWNER_KEY, "Device_11", 1n, 2n),
+    run: (c) => lazyWalletRegistry._deployLazyWalletAndSetESIMIdentifier(c, OWNER_KEY, "Device_11", 1n, 2n, 20n),
     address: F.LAZY_WALLET_REGISTRY,
     functionName: "deployLazyWalletAndSetESIMIdentifier",
-    args: [OWNER_KEY, "Device_11", 1n, 2n],
+    args: [OWNER_KEY, "Device_11", 1n, 2n, 20n],
     value: 2n,
   },
   {

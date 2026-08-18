@@ -33,9 +33,10 @@ export class AdminLazyWalletRegistrySubPackage {
         deviceOwnerPublicKey: P256Key,
         deviceUniqueIdentifier: string,
         salt: bigint,
-        depositAmount: bigint
+        depositAmount: bigint,
+        maxWallets: bigint
     ) {
-        return _deployLazyWalletAndSetESIMIdentifier(this.walletClient, deviceOwnerPublicKey, deviceUniqueIdentifier, salt, depositAmount);
+        return _deployLazyWalletAndSetESIMIdentifier(this.walletClient, deviceOwnerPublicKey, deviceUniqueIdentifier, salt, depositAmount, maxWallets);
     }
 
     switchESIMIdentifierToNewDeviceIdentifier(

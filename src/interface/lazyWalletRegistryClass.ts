@@ -1,5 +1,5 @@
 import {
-    _isLazyWalletDeployed
+    _isDeviceIdentifierAlreadyUsed
 } from "../logic/lazyWalletRegistry.js"
 import { KokioSmartAccountClient } from "../types.js";
 
@@ -11,7 +11,7 @@ export class LazyWalletRegistrySubPackage {
         this.client = client;
     }
 
-    isLazyWalletDeployed (deviceUniqueIdentifier: string) {
-        return _isLazyWalletDeployed(this.client, deviceUniqueIdentifier);
+    isDeviceIdentifierAlreadyUsed (deviceUniqueIdentifier: string) {
+        return _isDeviceIdentifierAlreadyUsed(this.client, deviceUniqueIdentifier);
     }
 }

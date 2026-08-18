@@ -36,16 +36,23 @@ export const _batchPopulateHistory = async (
 }
 
 /**
- * Materialise a lazily-provisioned device wallet and its eSIMs on chain.
- * `onlyESIMWalletAdmin`, `payable`: the contract requires `depositAmount == msg.value`,
- * so `value` is set to `depositAmount` here.
+ * Materialise a lazily-provisioned device wallet and the first batch of its eSIMs
+ * on chain. `onlyESIMWalletAdmin`, `payable`: the contract requires
+ * `depositAmount == msg.value`, so `value` is set to `depositAmount` here.
+ *
+ * `maxWallets` caps how many eSIM wallets this call deploys, because a device with
+ * enough identifiers stopped fitting in a block. The device wallet works as soon as
+ * this lands; anything left over is deployed by repeated
+ * `deployMoreESIMWalletsForLazyDevice` calls. The chain clamps the cap to
+ * `MAX_ESIM_WALLETS_PER_CALL`.
  */
 export const _deployLazyWalletAndSetESIMIdentifier = async (
     client: WalletClient,
     deviceOwnerPublicKey: P256Key,
     deviceUniqueIdentifier: string,
     salt: bigint,
-    depositAmount: bigint
+    depositAmount: bigint,
+    maxWallets: bigint
 ) => {
 
     const chainID = await client.getChainId();
@@ -60,7 +67,7 @@ export const _deployLazyWalletAndSetESIMIdentifier = async (
         account: client.account.address,
         abi: LazyWalletRegistry,
         functionName: 'deployLazyWalletAndSetESIMIdentifier',
-        args: [deviceOwnerPublicKey, deviceUniqueIdentifier, salt, depositAmount],
+        args: [deviceOwnerPublicKey, deviceUniqueIdentifier, salt, depositAmount, maxWallets],
         value: depositAmount
     });
 }

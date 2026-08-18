@@ -1,6 +1,6 @@
 import { _getChainSpecificConstants } from "./constants.js";
 import { KokioSmartAccountClient } from "../types.js";
-import { LazyWalletRegistry } from "../abis/index.js";
+import { Registry } from "../abis/index.js";
 
 // batchPopulateHistory, deployLazyWalletAndSetESIMIdentifier and
 // switchESIMIdentifierToNewDeviceIdentifier are all `onlyESIMWalletAdmin`, so a
@@ -8,17 +8,23 @@ import { LazyWalletRegistry } from "../abis/index.js";
 // are exposed on `KokioAdmin.lazyWalletRegistry` instead. Only the `view` lookup
 // belongs on this surface, exposed as a direct read.
 
-export const _isLazyWalletDeployed = async (client: KokioSmartAccountClient, deviceUniqueIdentifier: string): Promise<boolean> => {
+/**
+ * True once the device has a wallet on chain. The registry answers this, not the
+ * lazy registry: `LazyWalletRegistry.isDeviceIdentifierReserved` only says whether
+ * history has been recorded for the device, which is true well before anything is
+ * deployed.
+ */
+export const _isDeviceIdentifierAlreadyUsed = async (client: KokioSmartAccountClient, deviceUniqueIdentifier: string): Promise<boolean> => {
 
     const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    // `isLazyWalletDeployed` is a `view` - read it directly instead of spending a userOp.
+    // A `view` - read it directly instead of spending a userOp.
     return client.readContract({
-        address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
-        abi: LazyWalletRegistry,
-        functionName: "isLazyWalletDeployed",
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "isDeviceIdentifierAlreadyUsed",
         args: [deviceUniqueIdentifier]
     }) as Promise<boolean>;
 }
