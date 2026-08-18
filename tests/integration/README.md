@@ -17,14 +17,17 @@ No keys or funds - read access only.
 
 ## Write / UserOp scenario tier - local Base Sepolia fork
 
-`adminFork.integration.test.ts` and `userOpFork.integration.test.ts` drive real
-state-changing flows against a local [`anvil`](https://book.getfoundry.sh/anvil/)
-fork of Base Sepolia. **No private keys and no bundler** are required:
+`adminFork.integration.test.ts`, `userOpFork.integration.test.ts` and
+`protocolAdminFork.integration.test.ts` drive real state-changing flows against a
+local [`anvil`](https://book.getfoundry.sh/anvil/) fork of Base Sepolia. **No
+private keys and no bundler** are required:
 
 - The fork carries the real deployed contracts and reports chain id `84532`, so
   the SDK resolves the Base Sepolia factory addresses and runs unmodified.
 - Admin-gated writes work by **impersonating** the real on-chain
-  `eSIMWalletAdmin` (anvil `impersonateAccount` + `setBalance`).
+  `eSIMWalletAdmin` (anvil `impersonateAccount` + `setBalance`). The timelock
+  suite impersonates the real proposer and guardian the same way, and moves the
+  clock past the delay with `increaseTime`.
 - UserOps are submitted by a funded anvil account calling
   `EntryPoint.handleOps` directly - no Pimlico, no gas policy.
 - The passkey signature is produced by a **software** P-256 signer
