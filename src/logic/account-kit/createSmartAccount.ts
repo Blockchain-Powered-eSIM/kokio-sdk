@@ -1,17 +1,18 @@
 import {
-	AccountOp, createSmartAccountClient, getEntryPoint, SmartContractAccount,
-	toSmartContractAccount, split, SmartAccountClient, erc7677Middleware
-} from "@aa-sdk/core";
-import { 
-	http, type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData,
+	http, createPublicClient, createTransport, publicActions, type Transport, type EIP1193RequestFn,
+	type SignableMessage, type Hash, WalletClient, Hex, encodeFunctionData,
 	Address, encodePacked, encodeAbiParameters, parseAbiParameters, getContract,
 	concat, keccak256, getContractAddress, getAddress,
 	TypedDataDefinition, TypedData, hashMessage, toHex, hashTypedData, hexToBytes, bytesToHex
 } from "viem";
+import {
+	createBundlerClient, createPaymasterClient, entryPoint08Abi,
+	getUserOperationHash, toSmartAccount, type UserOperation
+} from "viem/account-abstraction";
 import { _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS } from "../constants.js";
 import { CounterfactualMismatchError } from "../errors.js";
-import { _add0x, _concatUint8Arrays, _remove0x, _shouldRemoveLeadingZero } from "../utils.js";
-import { P256Key, WebAuthnSignature } from "../../types.js";
+import { _add0x, _concatUint8Arrays, _shouldRemoveLeadingZero } from "../utils.js";
+import { P256Key, WebAuthnSignature, KokioSmartAccount, KokioSmartAccountClient } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
 
 import { decodeAttestationObject, decodeClientDataJSON, isoBase64URL, parseAuthenticatorData } from "@simplewebauthn/server/helpers";
@@ -145,52 +146,46 @@ export const _stamp = async (credentialId: string, rpId: string, payload: Hex): 
 	return webAuthnSig;
 }
 
-const _encodeExecute = async (tx: AccountOp) => {
+// viem keeps its Call type internal to the account abstraction module.
+type Call = { to: Hex; data?: Hex | undefined; value?: bigint | undefined };
 
-	return encodeFunctionData({
-		abi: DeviceWallet,
-		functionName: "execute",
-		args: [{
-			dest: tx.target,
-			value: tx.value ?? ZERO,
-			data: tx.data
-		}]
-	});
-}
+export const _encodeCalls = async (calls: readonly Call[]): Promise<Hex> => {
 
-const _encodeBatchExecute = async (txs: AccountOp[]) => {
-  
-	const new_txs:{dest:Address, value:bigint, data: Hex | '0x'}[] = [];
-	
-	for (let i=0; i<txs.length; ++i) {
-		new_txs.push({
-		dest: txs[i].target,
-		value: txs[i].value ?? ZERO,
-		data: txs[i].data
-		})
+	const txs: { dest: Address; value: bigint; data: Hex }[] = calls.map((call) => ({
+		dest: call.to as Address,
+		value: call.value ?? ZERO,
+		data: call.data ?? "0x"
+	}));
+
+	// executeBatch costs more calldata, so a lone call goes through execute.
+	if (txs.length === 1) {
+		return encodeFunctionData({
+			abi: DeviceWallet,
+			functionName: "execute",
+			args: [txs[0]]
+		});
 	}
-	
+
 	return encodeFunctionData({
 		abi: DeviceWallet,
 		functionName: "executeBatch",
-		args: [new_txs]
+		args: [txs]
 	});
 }
 
-export const _getAccountInitCode = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint): Promise<Hex> => {
+export const _getFactoryArgs = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint): Promise<{ factory: Address; factoryData: Hex }> => {
 
-	// To send with user operations
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-	const callData =  encodeFunctionData({
-		abi: DeviceWalletFactory, 
+	const factoryData = encodeFunctionData({
+		abi: DeviceWalletFactory,
 		functionName: "createAccount",
 		args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt],
 	})
 
-	return values.factoryAddresses.DEVICE_WALLET_FACTORY.concat(_remove0x(callData)) as Hex;
+	return { factory: values.factoryAddresses.DEVICE_WALLET_FACTORY, factoryData };
 }
 
 export const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<Hex> => {
@@ -397,7 +392,7 @@ export const _getSmartWallet = async (
 	deviceUniqueIdentifier: string,
 	deviceWalletOwnerKey: P256Key,
 	salt: bigint
-): Promise<SmartContractAccount> => {
+): Promise<KokioSmartAccount> => {
 
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -410,71 +405,99 @@ export const _getSmartWallet = async (
 		: await _assertCounterfactualMatchesOnChain(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt);
 	_counterfactualVerifiedChains.add(chainID);
 
-	return toSmartContractAccount({
-		/// REQUIRED PARAMS ///
-		source: "MyAccount",
-		transport: http(values.rpcURL),
-		
-		chain: values.chain,
+	const entryPointAddress = values.factoryAddresses.ENTRY_POINT;
 
-		// The EntryPointDef that your account is compatible with
-        entryPoint: getEntryPoint(values.chain, {version: "0.7.0"}), 
+	return toSmartAccount({
+		// Reads (nonce, deployment check) go to the chain RPC, not the bundler.
+		client: createPublicClient({ chain: values.chain, transport: http(values.rpcURL) }),
 
-		getAccountInitCode: async (): Promise<Hex> => await _getAccountInitCode(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt),
+		entryPoint: {
+			abi: entryPoint08Abi,
+			address: entryPointAddress,
+			version: "0.8",
+		},
 
-		// getAccountInitCodeHash: async (): Promise<BytesLike> => await getInitCodeHash(client, deviceUniqueIdentifier, deviceWalletOwnerKey),
-		
-		// an invalid signature that doesn't cause your account to revert during validation
-		getDummySignature: async (): Promise<Hash> => "0x",
-		
-		// given a UO in the form of {target, data, value} should output the calldata for calling your contract's execution method
-		encodeExecute: async (uo): Promise<Hash> => _encodeExecute(uo),
-		
-		signMessage: async ({ message}): Promise<Hash> => _signMessage(message, credentialId, rpId),
+		getAddress: async (): Promise<Address> => accountAddress as Address,
+
+		getFactoryArgs: async () => _getFactoryArgs(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt),
+
+		encodeCalls: async (calls): Promise<Hex> => _encodeCalls(calls),
+
+		// Placeholder signature for gas estimation. Must not revert validation.
+		getStubSignature: async (): Promise<Hash> => "0x",
+
+		signMessage: async ({ message }): Promise<Hash> => _signMessage(message, credentialId, rpId),
 
 		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, credentialId, rpId),
-		
-		/// OPTIONAL PARAMS ///
-		// if you already know your account's address, pass that in here to avoid generating a new counterfactual
-		accountAddress,
-		// if your account supports batching, this should take an array of UOs and return the calldata for calling your contract's batchExecute method
-		encodeBatchExecute: async (uos): Promise<Hash> => _encodeBatchExecute(uos),
-		// if your contract expects a different signing scheme than the default signMessage scheme, you can override that here
-		signUserOperationHash: async (hash): Promise<Hash> => _signUserOperationHash(credentialId, rpId, hash),
-		// allows you to define the calldata for upgrading your account
-		// encodeUpgradeToAndCall: async (params): Promise<Hash> => "0x...",
+
+		signUserOperation: async ({ chainId = chainID, ...userOperation }): Promise<Hash> => {
+			const userOpHash = getUserOperationHash({
+				chainId,
+				entryPointAddress,
+				entryPointVersion: "0.8",
+				userOperation: {
+					...userOperation,
+					sender: userOperation.sender ?? (accountAddress as Address),
+				} as UserOperation<"0.8">,
+			});
+
+			return _signUserOperationHash(credentialId, rpId, userOpHash);
+		},
 	});
 }
 
-export const _getSmartWalletClient = async (client: WalletClient, pimlicoAPIKey: string, gasPolicyId: string, account: SmartContractAccount): Promise<SmartAccountClient> => {
+const BUNDLER_METHODS = new Set([
+	"eth_sendUserOperation",
+	"eth_estimateUserOperationGas",
+	"eth_getUserOperationReceipt",
+	"eth_getUserOperationByHash",
+	"eth_supportedEntryPoints",
+]);
+
+/**
+ * Routes bundler calls to Pimlico and everything else to the chain RPC. viem
+ * ships no split transport, and the returned client needs both: the SDK reads
+ * contracts through the same client it sends user operations with.
+ */
+const _splitTransport = (pimlicoRpcURL: string, rpcURL: string): Transport => {
+
+	const bundler = http(pimlicoRpcURL)({});
+	const rpc = http(rpcURL)({});
+
+	return ({ retryCount }) => createTransport(
+		{
+			key: "split",
+			name: "Split",
+			type: "split",
+			retryCount,
+			request: (async ({ method, params }: { method: string; params?: unknown }) =>
+				BUNDLER_METHODS.has(method)
+					? bundler.request({ method, params } as never)
+					: rpc.request({ method, params } as never)) as EIP1193RequestFn,
+		},
+		// Chain constants are resolved from client.transport.url, so the chain
+		// RPC has to stay readable here.
+		{ url: rpcURL },
+	);
+}
+
+export const _getSmartWalletClient = async (client: WalletClient, pimlicoAPIKey: string, gasPolicyId: string, account: KokioSmartAccount): Promise<KokioSmartAccountClient> => {
 
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL, pimlicoAPIKey);
 
-	const bundlerMethods = [
-			"eth_sendUserOperation",
-			"eth_estimateUserOperationGas",
-			"eth_getUserOperationReceipt",
-			"eth_getUserOperationByHash",
-			"eth_supportedEntryPoints",
-	];
+	// Pimlico sponsors via ERC-7677, keyed by the gas policy.
+	const paymaster = createPaymasterClient({ transport: http(values.pimlicoRpcURL) });
 
-	// Uses Pimlico paymaster by default for above defined bundler methods and Alchemy as fallback
-	return createSmartAccountClient({
-		// created above
-		account: account,
+	return createBundlerClient({
+		account,
 		chain: values.chain,
-		transport: split({
-			overrides: [
-				{
-					methods: bundlerMethods,
-					transport: http(`${values.pimlicoRpcURL}`),
-				},
-			],
-			fallback: http(values.rpcURL),
-		}),
-		// transport: http(values.rpcURL),
-		...erc7677Middleware({ context: { policyId: gasPolicyId } })
-	});
+		client: createPublicClient({ chain: values.chain, transport: http(values.rpcURL) }),
+		transport: _splitTransport(values.pimlicoRpcURL, values.rpcURL),
+		paymaster,
+		paymasterContext: { policyId: gasPolicyId },
+	// extend() keeps the bundler fields at runtime but drops them from the
+	// inferred type, so the result is re-asserted rather than narrowed.
+	}).extend(publicActions) as unknown as KokioSmartAccountClient;
 }

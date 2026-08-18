@@ -1,6 +1,17 @@
-import { Hex } from "viem";
+import { Chain, Hex, PublicActions, Transport } from "viem";
+import type { BundlerClient, SmartAccount } from "viem/account-abstraction";
 
 export type P256Key = [Hex, Hex];
+
+/** The device wallet, as an ERC-4337 account on EntryPoint v0.8. */
+export type KokioSmartAccount = SmartAccount;
+
+/**
+ * Sends user operations and reads contracts through one client. viem's bundler
+ * client carries no public actions, so the SDK adds them.
+ */
+export type KokioSmartAccountClient =
+    BundlerClient<Transport, Chain, SmartAccount> & PublicActions<Transport, Chain>;
 
 export type WebAuthnSignature = {
     authenticatorData: Hex,

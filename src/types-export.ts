@@ -3,5 +3,7 @@ export type {
     WebAuthnSignature,
     P256Credential,
     DataBundleDetails,
-    SignedRequest
+    SignedRequest,
+    KokioSmartAccount,
+    KokioSmartAccountClient
 } from './types';
