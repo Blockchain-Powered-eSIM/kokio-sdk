@@ -1,14 +1,12 @@
 import { createPublicClient, http, type PublicClient, type WalletClient } from "viem";
 import { baseSepolia } from "viem/chains";
 
-/**
- * Live Base Sepolia client factory for the opt-in integration tier.
- *
- * Unlike the mocked `mockClient.ts` helpers, these touch a REAL RPC and are only
- * exercised by `*.integration.test.ts` under `npm run test:integration`. Reads
- * only - no account, no bundler, no funds - so a plain RPC URL is all that's
- * required (`BASE_SEPOLIA_RPC_URL`).
- */
+// Live Base Sepolia client factory for the opt-in integration tier.
+//
+// Unlike the mocked `mockClient.ts` helpers, these touch a REAL RPC and are only
+// exercised by `*.integration.test.ts` under `npm run test:integration`. Reads
+// only - no account, no bundler, no funds - so a plain RPC URL is all that's
+// required (`BASE_SEPOLIA_RPC_URL`).
 
 /** True when a Base Sepolia RPC URL is configured - gates the integration suite. */
 export const hasRpc = (): boolean => !!process.env.BASE_SEPOLIA_RPC_URL;

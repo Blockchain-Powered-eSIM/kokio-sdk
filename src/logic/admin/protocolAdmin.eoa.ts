@@ -9,18 +9,16 @@ import type {
     ScheduledOperation,
 } from "../../types.js";
 
-/**
- * Admin-EOA logic for `ProtocolAdmin`, the timelock that owns `Registry`,
- * `LazyWalletRegistry`, `DeviceWalletFactory` and `ESIMWalletFactory`.
- *
- * Anything `onlyOwner` on those four contracts goes one way: a proposer schedules
- * it, the delay elapses, and anyone executes it. Only `schedule` and `cancel` need
- * a privileged EOA. Execution is open, so the `client` for `_execute` can be any
- * funded account.
- *
- * The guardian calls and `_acceptOwnershipBatch` are the exceptions: they land
- * straight away with no delay.
- */
+// Admin-EOA logic for `ProtocolAdmin`, the timelock that owns `Registry`,
+// `LazyWalletRegistry`, `DeviceWalletFactory` and `ESIMWalletFactory`.
+//
+// Anything `onlyOwner` on those four contracts goes one way: a proposer schedules
+// it, the delay elapses, and anyone executes it. Only `schedule` and `cancel` need
+// a privileged EOA. Execution is open, so the `client` for `_execute` can be any
+// funded account.
+//
+// The guardian calls and `_acceptOwnershipBatch` are the exceptions: they land
+// straight away with no delay.
 
 const ZERO_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000" as Hex;
 
@@ -30,7 +28,7 @@ const _resolve = async (client: WalletClient) => {
     return _getChainSpecificConstants(chainID, rpcURL);
 }
 
-/** Turns an `OwnerCall` into the (target, value, payload) triple the timelock stores. */
+// Turns an `OwnerCall` into the (target, value, payload) triple the timelock stores.
 const _encode = (call: OwnerCall): { target: Address; value: bigint; payload: Hex } => ({
     target: call.address,
     value: call.value ?? 0n,
@@ -431,11 +429,9 @@ export const _renounceRole = async (client: WalletClient, role: Hex, account: Ad
 // Self-call payloads - only reachable through schedule
 // ---------------------------------------------------------------------------
 
-/**
- * These four are `msg.sender == address(this)` on chain, so they exist only as
- * something to schedule. Each builds the `OwnerCall` to hand to `schedule`, which
- * is why they return a call rather than sending one.
- */
+// These four are `msg.sender == address(this)` on chain, so they exist only as
+// something to schedule. Each builds the `OwnerCall` to hand to `schedule`, which
+// is why they return a call rather than sending one.
 
 /** Grant a role. Pass the result to `schedule`. */
 export const _grantRoleCall = async (client: WalletClient, role: Hex, account: Address): Promise<OwnerCall> => {

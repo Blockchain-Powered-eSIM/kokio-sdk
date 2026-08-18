@@ -26,7 +26,7 @@ import { createSoftSigner } from "../utils/softP256Signer.js";
 
 const ENTRY_POINT = baseSepoliaFactoryAddresses.ENTRY_POINT as Address;
 
-/** Pack two 16-byte gas values into the EntryPoint bytes32 layout (high ‖ low). */
+// Pack two 16-byte gas values into the EntryPoint bytes32 layout (high ‖ low).
 const packGas = (high: bigint, low: bigint): Hex =>
   concat([toHex(high, { size: 16 }), toHex(low, { size: 16 })]);
 
@@ -42,15 +42,13 @@ interface PackedUserOperation {
   signature: Hex;
 }
 
-/**
- * End-to-end userOp scenario on a local Base Sepolia fork, with no bundler and no
- * real keys. A software P-256 signer stands in for the on-device passkey: the
- * device wallet is deployed with that key as its owner, a userOp is signed
- * through the SDK's real `_encodeSignature` envelope, and a funded anvil EOA
- * submits it via `EntryPoint.handleOps`. Success proves the deployed
- * `P256Verifier`/`WebAuthn` validation and the `execute` path accept a signature
- * the SDK produced. Skips unless INTEGRATION=1 and Foundry (`anvil`) is present.
- */
+// End-to-end userOp scenario on a local Base Sepolia fork, with no bundler and no
+// real keys. A software P-256 signer stands in for the on-device passkey: the
+// device wallet is deployed with that key as its owner, a userOp is signed
+// through the SDK's real `_encodeSignature` envelope, and a funded anvil EOA
+// submits it via `EntryPoint.handleOps`. Success proves the deployed
+// `P256Verifier`/`WebAuthn` validation and the `execute` path accept a signature
+// the SDK produced. Skips unless INTEGRATION=1 and Foundry (`anvil`) is present.
 describe.skipIf(!forkAvailable())("Device-wallet userOp on a Base Sepolia fork", () => {
   let fork: Fork;
   let admin: Address;

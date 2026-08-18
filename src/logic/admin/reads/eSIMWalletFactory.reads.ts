@@ -2,11 +2,9 @@ import { Address, WalletClient, publicActions } from "viem";
 import { _getChainSpecificConstants } from "../../constants.js";
 import { ESIMWalletFactory } from "../../../abis/index.js";
 
-/**
- * Read-only admin logic for `ESIMWalletFactory` - its public storage getter and
- * `view` function, surfaced for the backend. Each read extends the `WalletClient`
- * with `publicActions` (no EOA account required).
- */
+// Read-only admin logic for `ESIMWalletFactory` - its public storage getter and
+// `view` function, surfaced for the backend. Each read extends the `WalletClient`
+// with `publicActions` (no EOA account required).
 
 /** Whether an eSIM wallet was deployed by this factory. */
 export const _isESIMWalletDeployed = async (client: WalletClient, eSIMWallet: Address): Promise<boolean> => {

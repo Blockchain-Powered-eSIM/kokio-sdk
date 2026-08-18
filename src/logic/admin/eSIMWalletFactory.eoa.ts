@@ -3,19 +3,17 @@ import { _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError } from "../errors.js";
 import { ESIMWalletFactory } from "../../abis/index.js";
 
-/**
- * Admin-EOA logic for `ESIMWalletFactory`. Both functions are owner-gated
- * (`addRegistryAddress` requires `msg.sender == owner()`, `updateESIMWalletImplementation`
- * is `onlyOwner`), so the `client` must carry the `upgradeManager` EOA.
- *
- * On the live deployment the owner is the `ProtocolAdmin` timelock, not an EOA,
- * so either call sent directly reverts. Route them through
- * `protocolAdmin.proposer.schedule` instead. The direct path stays for
- * deployments whose owner is a plain EOA or multisig.
- *
- * Note: `ESIMWalletFactory.deployESIMWallet` is intentionally NOT exposed - it is
- * `onlyRegistryOrDeviceWalletFactoryOrDeviceWallet`, so a bare EOA always reverts.
- */
+// Admin-EOA logic for `ESIMWalletFactory`. Both functions are owner-gated
+// (`addRegistryAddress` requires `msg.sender == owner()`, `updateESIMWalletImplementation`
+// is `onlyOwner`), so the `client` must carry the `upgradeManager` EOA.
+//
+// On the live deployment the owner is the `ProtocolAdmin` timelock, not an EOA,
+// so either call sent directly reverts. Route them through
+// `protocolAdmin.proposer.schedule` instead. The direct path stays for
+// deployments whose owner is a plain EOA or multisig.
+//
+// Note: `ESIMWalletFactory.deployESIMWallet` is intentionally NOT exposed - it is
+// `onlyRegistryOrDeviceWalletFactoryOrDeviceWallet`, so a bare EOA always reverts.
 
 /** One-time wiring of the registry into the eSIM factory. Owner only. */
 export const _addRegistryAddress = async (client: WalletClient, registryContractAddress: Address) => {

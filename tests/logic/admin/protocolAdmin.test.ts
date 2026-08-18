@@ -24,7 +24,7 @@ const CHAIN_ID = 84532;
 
 const MIN_DELAY = 172_800n;
 
-/** The owner call used throughout: set the registry's vault. */
+// The owner call used throughout: set the registry's vault.
 const VAULT_CALL = {
     address: F.REGISTRY,
     abi: Registry,
@@ -38,7 +38,7 @@ const VAULT_PAYLOAD = encodeFunctionData({
     args: [VAULT],
 });
 
-/** A client whose reads answer the two values `schedule` looks up. */
+// A client whose reads answer the two values `schedule` looks up.
 const scheduleClient = () => makeMockWalletClient({
     chainId: CHAIN_ID,
     account: EOA,
@@ -174,10 +174,8 @@ describe("protocolAdmin execute", () => {
     });
 });
 
-/**
- * Everything that targets the timelock directly. Each row asserts the SDK writes
- * to PROTOCOL_ADMIN with the expected function and args.
- */
+// Everything that targets the timelock directly. Each row asserts the SDK writes
+// to PROTOCOL_ADMIN with the expected function and args.
 const directCases: Array<{
     label: string;
     run: (c: ReturnType<typeof makeMockWalletClient>) => Promise<unknown>;
@@ -261,10 +259,8 @@ describe("protocolAdmin direct writes", () => {
     });
 });
 
-/**
- * The self-call-only functions. These are unreachable from an EOA, so the SDK
- * returns the call to schedule rather than sending one.
- */
+// The self-call-only functions. These are unreachable from an EOA, so the SDK
+// returns the call to schedule rather than sending one.
 describe("protocolAdmin self-call payloads", () => {
     const cases: Array<{ label: string; run: () => Promise<{ functionName: string; args?: readonly unknown[]; address: Address }>; functionName: string; args: readonly unknown[] }> = [
         {

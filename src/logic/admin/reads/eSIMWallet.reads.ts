@@ -1,12 +1,10 @@
 import { Address, WalletClient, publicActions } from "viem";
 import { ESIMWallet } from "../../../abis/index.js";
 
-/**
- * Read-only admin logic targeting a specific `ESIMWallet` instance (its address
- * is passed in). Surfaces the instance's public storage getters + `owner` view
- * for the backend. Each read extends the `WalletClient` with `publicActions`; no
- * EOA account is required.
- */
+// Read-only admin logic targeting a specific `ESIMWallet` instance (its address
+// is passed in). Surfaces the instance's public storage getters + `owner` view
+// for the backend. Each read extends the `WalletClient` with `publicActions`; no
+// EOA account is required.
 
 /** The `ESIMWalletFactory` that deployed this eSIM wallet. */
 export const _eSIMWalletFactory = async (client: WalletClient, eSIMWalletAddress: Address): Promise<Address> => {

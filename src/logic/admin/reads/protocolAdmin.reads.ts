@@ -2,11 +2,9 @@ import { Address, Hex, WalletClient, publicActions } from "viem";
 import { _getChainSpecificConstants } from "../../constants.js";
 import { ProtocolAdmin } from "../../../abis/index.js";
 
-/**
- * Read-only logic for `ProtocolAdmin`, the timelock that owns the four
- * upgradeable contracts. Every read extends the `WalletClient` with
- * `publicActions`; no EOA account is required.
- */
+// Read-only logic for `ProtocolAdmin`, the timelock that owns the four
+// upgradeable contracts. Every read extends the `WalletClient` with
+// `publicActions`; no EOA account is required.
 
 /** Operation lifecycle, matching the on-chain `OperationState` enum. */
 export enum OperationState {
@@ -167,7 +165,7 @@ export const _getRoleAdmin = async (client: WalletClient, role: Hex): Promise<He
     }) as Promise<Hex>;
 }
 
-/** Reads one of the five role id constants off the contract. */
+// Reads one of the five role id constants off the contract.
 const _roleConstant = async (
     client: WalletClient,
     functionName: "DEFAULT_ADMIN_ROLE" | "PROPOSER_ROLE" | "CANCELLER_ROLE" | "EXECUTOR_ROLE" | "GUARDIAN_ROLE"

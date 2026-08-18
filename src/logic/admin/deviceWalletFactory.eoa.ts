@@ -4,20 +4,18 @@ import { MissingEOAWalletError } from "../errors.js";
 import { DeviceWalletFactory } from "../../abis/index.js";
 import { P256Key } from "../../types.js";
 
-/**
- * Admin-EOA logic for `DeviceWalletFactory`.
- *
- * Every function here is `onlyAdmin` / `onlyAdminOrRegistry` / `onlyOwner` on
- * chain, i.e. the caller must be the `eSIMWalletAdmin` (or `upgradeManager`)
- * EOA - never a device-wallet userOp. They therefore live on the EOA surface
- * (`KokioAdmin`) and use `writeContract`, mirroring `_createAccountWithEOA`
- * (which is reused as-is from `../deviceWalletFactory.js`).
- *
- * On the live deployment the owner is the `ProtocolAdmin` timelock, not an EOA,
- * so an `onlyOwner` call sent directly reverts. Route those through
- * `protocolAdmin.proposer.schedule` instead. The direct path stays for
- * deployments whose owner is a plain EOA or multisig.
- */
+// Admin-EOA logic for `DeviceWalletFactory`.
+//
+// Every function here is `onlyAdmin` / `onlyAdminOrRegistry` / `onlyOwner` on
+// chain, i.e. the caller must be the `eSIMWalletAdmin` (or `upgradeManager`)
+// EOA - never a device-wallet userOp. They therefore live on the EOA surface
+// (`KokioAdmin`) and use `writeContract`, mirroring `_createAccountWithEOA`
+// (which is reused as-is from `../deviceWalletFactory.js`).
+//
+// On the live deployment the owner is the `ProtocolAdmin` timelock, not an EOA,
+// so an `onlyOwner` call sent directly reverts. Route those through
+// `protocolAdmin.proposer.schedule` instead. The direct path stays for
+// deployments whose owner is a plain EOA or multisig.
 
 /**
  * Batch-deploy device wallets for lazy/fiat users. `onlyAdminOrRegistry`,

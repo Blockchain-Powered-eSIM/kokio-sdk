@@ -3,16 +3,14 @@ import { _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError } from "../errors.js";
 import { Registry } from "../../abis/index.js";
 
-/**
- * Admin-EOA logic for `Registry`. Most of this is `onlyOwner`, so the `client`
- * must carry the owner EOA. `_acceptAdminUpdate` is the nominee's own call and
- * `_assignESIMIdentifier` is `onlyESIMWalletAdmin`.
- *
- * On the live deployment the owner is the `ProtocolAdmin` timelock, not an EOA,
- * so an `onlyOwner` call sent directly reverts. Route those through
- * `protocolAdmin.proposer.schedule` instead. The direct path stays for
- * deployments whose owner is a plain EOA or multisig.
- */
+// Admin-EOA logic for `Registry`. Most of this is `onlyOwner`, so the `client`
+// must carry the owner EOA. `_acceptAdminUpdate` is the nominee's own call and
+// `_assignESIMIdentifier` is `onlyESIMWalletAdmin`.
+//
+// On the live deployment the owner is the `ProtocolAdmin` timelock, not an EOA,
+// so an `onlyOwner` call sent directly reverts. Route those through
+// `protocolAdmin.proposer.schedule` instead. The direct path stays for
+// deployments whose owner is a plain EOA or multisig.
 
 /** Wire (or rewire) the LazyWalletRegistry into the Registry. `onlyOwner`. */
 export const _addOrUpdateLazyWalletRegistryAddress = async (client: WalletClient, lazyWalletRegistry: Address) => {

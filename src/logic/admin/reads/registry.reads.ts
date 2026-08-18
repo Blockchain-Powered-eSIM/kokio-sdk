@@ -2,12 +2,10 @@ import { Address, Hex, WalletClient, publicActions } from "viem";
 import { _getChainSpecificConstants } from "../../constants.js";
 import { Registry } from "../../../abis/index.js";
 
-/**
- * Read-only admin logic for `Registry` (which inherits `RegistryHelper`, so its
- * ABI carries the helper mappings too). Surfaces the public storage getters for
- * the backend. Each read extends the `WalletClient` with `publicActions`; no EOA
- * account is required.
- */
+// Read-only admin logic for `Registry` (which inherits `RegistryHelper`, so its
+// ABI carries the helper mappings too). Surfaces the public storage getters for
+// the backend. Each read extends the `WalletClient` with `publicActions`; no EOA
+// account is required.
 
 /**
  * The admin EOA (`eSIMWalletAdmin`) recorded in the registry. Reads zero while a

@@ -1,13 +1,11 @@
 import { Address, WalletClient, publicActions } from "viem";
 import { DeviceWallet } from "../../../abis/index.js";
 
-/**
- * Read-only admin logic targeting a specific `DeviceWallet` instance (its address
- * is passed in). Surfaces the instance's public storage getters + `getVaultAddress`
- * view for the backend. Each read extends the `WalletClient` with `publicActions`;
- * no EOA account is required, and the target is the instance address (not a
- * factory address, so no chain-constants lookup is needed).
- */
+// Read-only admin logic targeting a specific `DeviceWallet` instance (its address
+// is passed in). Surfaces the instance's public storage getters + `getVaultAddress`
+// view for the backend. Each read extends the `WalletClient` with `publicActions`;
+// no EOA account is required, and the target is the instance address (not a
+// factory address, so no chain-constants lookup is needed).
 
 /** The device's unique identifier string. */
 export const _deviceUniqueIdentifier = async (client: WalletClient, deviceWalletAddress: Address): Promise<string> => {

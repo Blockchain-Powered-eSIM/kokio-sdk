@@ -3,15 +3,13 @@ import { _getChainSpecificConstants } from "../../constants.js";
 import { DeviceWalletFactory } from "../../../abis/index.js";
 import { P256Key } from "../../../types.js";
 
-/**
- * Read-only admin logic for `DeviceWalletFactory` - the contract's public
- * storage getters and `view` functions, surfaced for the backend.
- *
- * A viem `WalletClient` carries no public actions, so each read extends it with
- * `publicActions` (reusing the same transport, so it also works under an anvil
- * fork) before calling `readContract`. Reads need no EOA account, so there is no
- * `MissingEOAWalletError` guard.
- */
+// Read-only admin logic for `DeviceWalletFactory` - the contract's public
+// storage getters and `view` functions, surfaced for the backend.
+//
+// A viem `WalletClient` carries no public actions, so each read extends it with
+// `publicActions` (reusing the same transport, so it also works under an anvil
+// fork) before calling `readContract`. Reads need no EOA account, so there is no
+// `MissingEOAWalletError` guard.
 
 /** The admin EOA (`eSIMWalletAdmin`) currently set on the factory. */
 export const _eSIMWalletAdmin = async (client: WalletClient): Promise<Address> => {

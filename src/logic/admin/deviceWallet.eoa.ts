@@ -3,12 +3,10 @@ import { _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError } from "../errors.js";
 import { DeviceWallet } from "../../abis/index.js";
 
-/**
- * Admin-EOA logic targeting a specific `DeviceWallet` instance (its address is
- * passed in - there is no single factory address). `deployESIMWallet` is
- * `onlyESIMWalletAdmin` on chain, so it cannot be driven from a device-wallet
- * userOp and lives on the EOA surface.
- */
+// Admin-EOA logic targeting a specific `DeviceWallet` instance (its address is
+// passed in - there is no single factory address). `deployESIMWallet` is
+// `onlyESIMWalletAdmin` on chain, so it cannot be driven from a device-wallet
+// userOp and lives on the EOA surface.
 
 /** Deploy a new eSIM wallet under a device wallet. `onlyESIMWalletAdmin`. */
 export const _deployESIMWallet = async (

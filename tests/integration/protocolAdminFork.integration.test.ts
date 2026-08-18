@@ -30,22 +30,18 @@ const readRegistry = (fork: Fork) => getContract({
   client: fork.publicClient,
 });
 
-/**
- * `writeContract` sends without simulating, so a call the chain refuses still
- * returns a hash and only shows up as a reverted receipt. Assert on that rather
- * than on a rejected promise.
- */
+// `writeContract` sends without simulating, so a call the chain refuses still
+// returns a hash and only shows up as a reverted receipt. Assert on that rather
+// than on a rejected promise.
 const expectReverted = async (fork: Fork, send: Promise<Hex>) => {
   const receipt = await fork.publicClient.waitForTransactionReceipt({ hash: await send });
   expect(receipt.status).toBe("reverted");
 };
 
-/**
- * The timelock path against a local Base Sepolia fork: schedule an owner call as
- * the real proposer, move the clock past the delay, and execute from an account
- * holding no role at all. Skips cleanly unless INTEGRATION=1 and Foundry is
- * installed.
- */
+// The timelock path against a local Base Sepolia fork: schedule an owner call as
+// the real proposer, move the clock past the delay, and execute from an account
+// holding no role at all. Skips cleanly unless INTEGRATION=1 and Foundry is
+// installed.
 describe.skipIf(!forkAvailable())("ProtocolAdmin - timelock on a Base Sepolia fork", () => {
   let fork: Fork;
   let proposerSdk: KokioAdmin;

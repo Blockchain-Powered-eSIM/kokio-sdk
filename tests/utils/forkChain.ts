@@ -16,30 +16,26 @@ import { baseSepolia } from "viem/chains";
 import { DeviceWalletFactory, Registry } from "../../src/abis/index.js";
 import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 
-/**
- * Local Base Sepolia fork harness for the opt-in scenario tier.
- *
- * Instead of writing to live Base Sepolia with real funded keys + a Pimlico
- * bundler, each session spins up a local `anvil` fork. A fork carries the real
- * deployed contracts and (via `--chain-id 84532`) reports the Base Sepolia chain
- * id, so the SDK resolves the real factory addresses and runs unmodified. No
- * secret keys are needed: `anvil` impersonates the real on-chain admin, and
- * UserOps are submitted by a funded anvil account calling `EntryPoint.handleOps`
- * directly (no external bundler).
- */
+// Local Base Sepolia fork harness for the opt-in scenario tier.
+//
+// Instead of writing to live Base Sepolia with real funded keys + a Pimlico
+// bundler, each session spins up a local `anvil` fork. A fork carries the real
+// deployed contracts and (via `--chain-id 84532`) reports the Base Sepolia chain
+// id, so the SDK resolves the real factory addresses and runs unmodified. No
+// secret keys are needed: `anvil` impersonates the real on-chain admin, and
+// UserOps are submitted by a funded anvil account calling `EntryPoint.handleOps`
+// directly (no external bundler).
 
-/** The public Base Sepolia endpoint the fork pulls state from when no RPC is configured. */
+// The public Base Sepolia endpoint the fork pulls state from when no RPC is configured.
 const DEFAULT_FORK_RPC = "https://sepolia.base.org";
 
-/**
- * HTTP request timeout for the fork clients. A fork fetches upstream state lazily,
- * so a single write that touches many contracts or storage slots can spend well
- * over viem's 10s default waiting on the (rate-limited) public endpoint. Give it
- * room so those calls do not time out mid-execution.
- */
+// HTTP request timeout for the fork clients. A fork fetches upstream state lazily,
+// so a single write that touches many contracts or storage slots can spend well
+// over viem's 10s default waiting on the (rate-limited) public endpoint. Give it
+// room so those calls do not time out mid-execution.
 const FORK_HTTP_TIMEOUT = 90_000;
 
-/** Shared transport options for every client bound to the fork. */
+// Shared transport options for every client bound to the fork.
 const forkTransport = (rpcUrl: string) => http(rpcUrl, { timeout: FORK_HTTP_TIMEOUT });
 
 /**

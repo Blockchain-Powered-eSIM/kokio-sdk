@@ -30,12 +30,10 @@ const BUNDLE: DataBundleDetails = { dataBundleID: "bundle-1", dataBundlePrice: 1
 const F = baseSepoliaFactoryAddresses;
 const CHAIN_ID = 84532;
 
-/**
- * Every admin-EOA logic call. Each row asserts the SDK issues a `writeContract`
- * with the expected address / functionName / args (and `value` for payable
- * calls), matching the on-chain signature. `value: undefined` documents the
- * non-payable calls where viem is passed no msg.value.
- */
+// Every admin-EOA logic call. Each row asserts the SDK issues a `writeContract`
+// with the expected address / functionName / args (and `value` for payable
+// calls), matching the on-chain signature. `value: undefined` documents the
+// non-payable calls where viem is passed no msg.value.
 const eoaCases: Array<{
   label: string;
   run: (c: ReturnType<typeof makeMockWalletClient>) => Promise<unknown>;

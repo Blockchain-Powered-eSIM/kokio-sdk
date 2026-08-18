@@ -42,12 +42,10 @@ const readCounterfactual = (fork: Fork, uid: string, ownerKey: P256Key, salt: bi
     client: fork.publicClient,
   }).read.getCounterFactualAddress([ownerKey, uid, salt]) as Promise<Address>;
 
-/**
- * EOA-admin write scenarios against a local Base Sepolia fork. The real on-chain
- * `eSIMWalletAdmin` is impersonated (no private key), so `KokioAdmin`'s
- * access-controlled writes actually land on the forked deployment. Skips cleanly
- * unless INTEGRATION=1 and Foundry (`anvil`) is installed.
- */
+// EOA-admin write scenarios against a local Base Sepolia fork. The real on-chain
+// `eSIMWalletAdmin` is impersonated (no private key), so `KokioAdmin`'s
+// access-controlled writes actually land on the forked deployment. Skips cleanly
+// unless INTEGRATION=1 and Foundry (`anvil`) is installed.
 describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia fork", () => {
   let fork: Fork;
   let admin: Address;

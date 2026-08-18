@@ -23,11 +23,9 @@ const OWNER_KEY: [Hex, Hex] = [
 const F = baseSepoliaFactoryAddresses;
 const CHAIN_ID = 84532;
 
-/**
- * Every admin read. Each row asserts the SDK issues a `readContract` (via the
- * `publicActions`-extended client) against the expected address / functionName /
- * args, matching the on-chain getter signature. Reads never require an account.
- */
+// Every admin read. Each row asserts the SDK issues a `readContract` (via the
+// `publicActions`-extended client) against the expected address / functionName /
+// args, matching the on-chain getter signature. Reads never require an account.
 const readCases: Array<{
   label: string;
   run: (c: ReturnType<typeof makeMockWalletClient>) => Promise<unknown>;

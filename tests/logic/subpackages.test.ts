@@ -42,13 +42,11 @@ const WEBAUTHN_SIG: WebAuthnSignature = {
 
 const F = baseSepoliaFactoryAddresses;
 
-/**
- * Only functions that can genuinely succeed via a device-wallet userOp belong on
- * this surface: admin/registry-gated and always-reverting functions are not here,
- * and `view` functions are `readContract` calls (see the read table below). Each row
- * asserts the SDK sends `{ target, data }` matching an independent encodeFunctionData
- * of the expected (abi, functionName, args).
- */
+// Only functions that can genuinely succeed via a device-wallet userOp belong on
+// this surface: admin/registry-gated and always-reverting functions are not here,
+// and `view` functions are `readContract` calls (see the read table below). Each row
+// asserts the SDK sends `{ target, data }` matching an independent encodeFunctionData
+// of the expected (abi, functionName, args).
 const userOpCases: Array<{
   label: string;
   run: (c: ReturnType<typeof makeMockSmartAccountClient>) => Promise<unknown>;
@@ -134,11 +132,9 @@ describe("sub-package UserOp calldata", () => {
   });
 });
 
-/**
- * `view` functions are `readContract` calls that return the actual value rather
- * than a userOp hash. Each row asserts the SDK reads the expected
- * (address, functionName, args) and does not spend a userOp.
- */
+// `view` functions are `readContract` calls that return the actual value rather
+// than a userOp hash. Each row asserts the SDK reads the expected
+// (address, functionName, args) and does not spend a userOp.
 const readCases: Array<{
   label: string;
   run: (c: ReturnType<typeof makeMockSmartAccountClient>) => Promise<unknown>;
