@@ -2,16 +2,14 @@ import { _getChainSpecificConstants } from "./constants.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { Registry } from "../abis/index.js";
 
-// batchPopulateHistory, deployLazyWalletAndSetESIMIdentifier and
-// switchESIMIdentifierToNewDeviceIdentifier are all `onlyESIMWalletAdmin`, so a
-// device-wallet userOp (msg.sender = the device wallet account) always reverts. They
-// are exposed on `KokioAdmin.lazyWalletRegistry` instead. Only the `view` lookup
-// belongs on this surface, exposed as a direct read.
+// Everything else on the registry is `onlyOwner` or `onlyESIMWalletAdmin`, so a
+// device-wallet userOp always reverts. Those live on `KokioAdmin.registry`. Only
+// the reads a device needs belong on this surface.
 
 /**
- * True once the device has a wallet on chain. The registry answers this, not the
- * lazy registry: `LazyWalletRegistry.isDeviceIdentifierReserved` only says whether
- * history has been recorded for the device, which is true well before anything is
+ * True once the device has a wallet on chain. Note this is not the same question
+ * as `LazyWalletRegistry.isDeviceIdentifierReserved`, which only says whether
+ * history has been recorded for the device, and is true well before anything is
  * deployed.
  */
 export const _isDeviceIdentifierAlreadyUsed = async (client: KokioSmartAccountClient, deviceUniqueIdentifier: string): Promise<boolean> => {

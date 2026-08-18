@@ -8,7 +8,6 @@ import {
   DeviceWalletFactory,
   ESIMWallet,
   ESIMWalletFactory,
-  LazyWalletRegistry,
   P256Verifier,
 } from "../../src/abis/index.js";
 import type { DataBundleDetails, WebAuthnSignature } from "../../src/types.js";
@@ -17,7 +16,7 @@ import * as deviceWallet from "../../src/logic/deviceWallet.js";
 import * as deviceWalletFactory from "../../src/logic/deviceWalletFactory.js";
 import * as eSIMWallet from "../../src/logic/eSIMWallet.js";
 import * as eSIMWalletFactory from "../../src/logic/eSIMWalletFactory.js";
-import * as lazyWalletRegistry from "../../src/logic/lazyWalletRegistry.js";
+import * as registry from "../../src/logic/registry.js";
 import * as p256Verifier from "../../src/logic/P256Verifier.js";
 
 // --- Fixtures ---------------------------------------------------------------
@@ -183,8 +182,8 @@ const readCases: Array<{
     args: [],
   },
   {
-    label: "lazyWalletRegistry._isDeviceIdentifierAlreadyUsed",
-    run: (c) => lazyWalletRegistry._isDeviceIdentifierAlreadyUsed(c, "Device_11"),
+    label: "registry._isDeviceIdentifierAlreadyUsed",
+    run: (c) => registry._isDeviceIdentifierAlreadyUsed(c, "Device_11"),
     address: F.REGISTRY,
     functionName: "isDeviceIdentifierAlreadyUsed",
     args: ["Device_11"],

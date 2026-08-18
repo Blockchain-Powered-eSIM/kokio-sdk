@@ -1,9 +1,9 @@
 import {
     _isDeviceIdentifierAlreadyUsed
-} from "../logic/lazyWalletRegistry.js"
+} from "../logic/registry.js"
 import { KokioSmartAccountClient } from "../types.js";
 
-export class LazyWalletRegistrySubPackage {
+export class RegistrySubPackage {
 
     client: KokioSmartAccountClient;
 
