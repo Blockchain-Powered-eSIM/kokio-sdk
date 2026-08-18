@@ -13,7 +13,7 @@ import {
 } from "viem";
 import { baseSepolia } from "viem/chains";
 
-import { DeviceWalletFactory } from "../../src/abis/index.js";
+import { DeviceWalletFactory, Registry } from "../../src/abis/index.js";
 import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 
 /**
@@ -134,12 +134,23 @@ export const startFork = async (port = 8545): Promise<Fork> => {
 };
 
 /**
- * Impersonate the factory's real on-chain `eSIMWalletAdmin` and return a wallet
- * client that acts as it. The admin address is read from the deployed factory,
- * funded, and impersonated - so admin-gated writes succeed with no private key.
- * The returned client's `account` is a bare JSON-RPC address, so the SDK's
- * `writeContract` routes through `eth_sendTransaction` (anvil signs it).
+ * Fund an address and return a wallet client that acts as it, so gated writes
+ * succeed with no private key. The client's `account` is a bare JSON-RPC address,
+ * so the SDK's `writeContract` routes through `eth_sendTransaction` (anvil signs
+ * it). Works for contract addresses too, which is how the owner is reached.
  */
+export const impersonate = async (fork: Fork, address: Address): Promise<WalletClient> => {
+  await fork.testClient.impersonateAccount({ address });
+  await fork.testClient.setBalance({ address, value: parseEther("100") });
+
+  return createWalletClient({
+    account: address,
+    chain: baseSepolia,
+    transport: forkTransport(fork.rpcUrl),
+  });
+};
+
+/** Impersonate the factory's real on-chain `eSIMWalletAdmin`. */
 export const impersonateAdmin = async (fork: Fork): Promise<{ admin: Address; client: WalletClient }> => {
   const factory = getContract({
     abi: DeviceWalletFactory,
@@ -149,14 +160,22 @@ export const impersonateAdmin = async (fork: Fork): Promise<{ admin: Address; cl
 
   const admin = (await factory.read.eSIMWalletAdmin()) as Address;
 
-  await fork.testClient.impersonateAccount({ address: admin });
-  await fork.testClient.setBalance({ address: admin, value: parseEther("100") });
+  return { admin, client: await impersonate(fork, admin) };
+};
 
-  const client = createWalletClient({
-    account: admin,
-    chain: baseSepolia,
-    transport: forkTransport(fork.rpcUrl),
+/**
+ * Impersonate the registry's owner, which holds admin rotation and the vault
+ * setter. On the live deployment this is the ProtocolAdmin contract, so the
+ * calls it makes here skip that contract's own scheduling.
+ */
+export const impersonateRegistryOwner = async (fork: Fork): Promise<{ owner: Address; client: WalletClient }> => {
+  const registry = getContract({
+    abi: Registry,
+    address: baseSepoliaFactoryAddresses.REGISTRY,
+    client: fork.publicClient,
   });
 
-  return { admin, client };
+  const owner = (await registry.read.owner()) as Address;
+
+  return { owner, client: await impersonate(fork, owner) };
 };

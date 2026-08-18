@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
-import { getContract, toHex, zeroHash, type Address, type Hex } from "viem";
+import { getAddress, getContract, toHex, zeroAddress, zeroHash, type Address, type Hex } from "viem";
 import { p256 } from "@noble/curves/nist.js";
 
 // `createSmartAccount.ts` (pulled in transitively) statically imports
@@ -12,7 +12,13 @@ import { KokioAdmin } from "../../src/admin/config-admin.js";
 import { DeviceWalletFactory } from "../../src/abis/index.js";
 import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import type { P256Key } from "../../src/types.js";
-import { forkAvailable, impersonateAdmin, startFork, type Fork } from "../utils/forkChain.js";
+import {
+  forkAvailable,
+  impersonateAdmin,
+  impersonateRegistryOwner,
+  startFork,
+  type Fork,
+} from "../utils/forkChain.js";
 
 // The NIST P-256 base point. It has to be a real curve point: the factory runs
 // every deploy path through an on-curve check and rejects anything else.
@@ -45,13 +51,19 @@ const readCounterfactual = (fork: Fork, uid: string, ownerKey: P256Key, salt: bi
 describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia fork", () => {
   let fork: Fork;
   let admin: Address;
+  let owner: Address;
   let adminSdk: KokioAdmin;
+  let ownerSdk: KokioAdmin;
 
   beforeAll(async () => {
     fork = await startFork(8545);
-    const impersonated = await impersonateAdmin(fork);
-    admin = impersonated.admin;
-    adminSdk = new KokioAdmin(impersonated.client);
+    const impersonatedAdmin = await impersonateAdmin(fork);
+    admin = impersonatedAdmin.admin;
+    adminSdk = new KokioAdmin(impersonatedAdmin.client);
+
+    const impersonatedOwner = await impersonateRegistryOwner(fork);
+    owner = impersonatedOwner.owner;
+    ownerSdk = new KokioAdmin(impersonatedOwner.client);
   }, 60_000);
 
   afterAll(async () => {
@@ -108,33 +120,38 @@ describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia for
   );
 
   it(
-    "requestAdminUpdate succeeds as the impersonated admin",
+    "requestAdminUpdate nominates on the registry and puts the role dormant",
     async () => {
-      // A non-zero proposed admin distinct from the current one.
+      // A non-zero nominee distinct from the incumbent.
       const newAdmin = "0x000000000000000000000000000000000000a11c" as Address;
+      expect(await ownerSdk.registry.eSIMWalletAdmin()).toBe(admin);
 
-      const hash = (await adminSdk.deviceWalletFactory.requestAdminUpdate(newAdmin)) as Hex;
+      const hash = (await ownerSdk.registry.requestAdminUpdate(newAdmin)) as Hex;
       const receipt = await fork.publicClient.waitForTransactionReceipt({ hash });
       expect(receipt.status).toBe("success");
       // The gated call emitted a log (AdminUpdateRequested) rather than reverting.
       expect(receipt.logs.length).toBeGreaterThan(0);
       expect(receipt.logs[0].topics[0]).not.toBe(zeroHash);
+
+      expect(await ownerSdk.registry.newRequestedAdmin()).toBe(getAddress(newAdmin));
+      // The nomination strips the incumbent until the nominee accepts.
+      expect(await ownerSdk.registry.eSIMWalletAdmin()).toBe(zeroAddress);
     },
     60_000,
   );
 
   it(
-    "requestAdminUpdate is rejected on-chain for a non-admin EOA (access control is real)",
+    "requestAdminUpdate is rejected on-chain for a non-owner EOA (access control is real)",
     async () => {
-      // Bind KokioAdmin to the funded anvil dev account, which is NOT the admin.
-      const nonAdminSdk = new KokioAdmin(fork.funded);
-      expect(fork.funded.account?.address).not.toBe(admin);
+      // Bind KokioAdmin to the funded anvil dev account, which is NOT the owner.
+      const nonOwnerSdk = new KokioAdmin(fork.funded);
+      expect(fork.funded.account?.address).not.toBe(owner);
 
       // The EOA logic sends via a bare-address account (`eth_sendTransaction`),
-      // so anvil mines the tx and returns a hash even though `onlyAdmin` reverts
+      // so anvil mines the tx and returns a hash even though `onlyOwner` reverts
       // it - the access-control failure surfaces as a reverted receipt, not a
       // thrown promise.
-      const hash = (await nonAdminSdk.deviceWalletFactory.requestAdminUpdate(
+      const hash = (await nonOwnerSdk.registry.requestAdminUpdate(
         "0x000000000000000000000000000000000000beef" as Address,
       )) as Hex;
       const receipt = await fork.publicClient.waitForTransactionReceipt({ hash });
