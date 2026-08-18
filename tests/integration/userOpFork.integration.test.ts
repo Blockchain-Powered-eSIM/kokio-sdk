@@ -11,8 +11,7 @@ import {
   type Address,
   type Hex,
 } from "viem";
-import { getEntryPoint } from "@aa-sdk/core";
-import { baseSepolia } from "viem/chains";
+import { entryPoint08Abi } from "viem/account-abstraction";
 
 // Pulled in transitively via `_encodeSignature`; the native passkey module is
 // never invoked on this path (the software signer replaces it), so stub it out.
@@ -25,10 +24,9 @@ import { _encodeSignature } from "../../src/logic/account-kit/createSmartAccount
 import { forkAvailable, impersonateAdmin, startFork, type Fork } from "../utils/forkChain.js";
 import { createSoftSigner } from "../utils/softP256Signer.js";
 
-const entryPointDef = getEntryPoint(baseSepolia, { version: "0.7.0" });
-const ENTRY_POINT = entryPointDef.address as Address;
+const ENTRY_POINT = baseSepoliaFactoryAddresses.ENTRY_POINT as Address;
 
-/** Pack two 16-byte gas values into the EntryPoint v0.7 bytes32 layout (high ‖ low). */
+/** Pack two 16-byte gas values into the EntryPoint bytes32 layout (high ‖ low). */
 const packGas = (high: bigint, low: bigint): Hex =>
   concat([toHex(high, { size: 16 }), toHex(low, { size: 16 })]);
 
@@ -79,7 +77,7 @@ describe.skipIf(!forkAvailable())("Device-wallet userOp on a Base Sepolia fork",
         client: { public: fork.publicClient, wallet: fork.funded },
       });
       const entryPoint = getContract({
-        abi: entryPointDef.abi,
+        abi: entryPoint08Abi,
         address: ENTRY_POINT,
         client: { public: fork.publicClient, wallet: fork.funded },
       });

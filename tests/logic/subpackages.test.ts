@@ -124,8 +124,9 @@ describe("sub-package UserOp calldata", () => {
     expect(send).toHaveBeenCalledTimes(1);
     const arg = send.mock.calls[0][0];
     expect(arg.account).toBe(client.account);
-    expect(arg.uo.target).toBe(target);
-    expect(arg.uo.data).toBe(data);
+    expect(arg.calls).toHaveLength(1);
+    expect(arg.calls[0].to).toBe(target);
+    expect(arg.calls[0].data).toBe(data);
   });
 
   it.each(userOpCases)("$label throws MISSING_SMART_WALLET without an account", async ({ run }) => {

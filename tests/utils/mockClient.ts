@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import type { WalletClient } from "viem";
-import type { SmartAccountClient } from "@aa-sdk/core";
+import type { KokioSmartAccountClient } from "../../src/types.js";
 
 /**
  * Builds a minimal stand-in for a viem `WalletClient` sufficient for the SDK's
@@ -30,17 +30,18 @@ export const makeMockWalletClient = (opts: {
   return client as unknown as WalletClient;
 };
 
-const SENT_USER_OP = { hash: "0xuserophash" } as const;
+// viem returns the user operation hash itself, not a wrapper object.
+const SENT_USER_OP = "0xuserophash" as const;
 
 /**
- * Builds a stand-in for a 4337 `SmartAccountClient`. `sendUserOperation` is a
- * spy so tests can assert the `{ target, data }` UserOp the SDK produces.
+ * Builds a stand-in for the SDK's 4337 client. `sendUserOperation` is a spy so
+ * tests can assert the `calls` array the SDK produces.
  * Pass `withAccount: false` to exercise the missing-smart-wallet guard.
  */
 export const makeMockSmartAccountClient = (opts?: {
   chainId?: number;
   withAccount?: boolean;
-}): SmartAccountClient => {
+}): KokioSmartAccountClient => {
   const { chainId = 11155111, withAccount = true } = opts ?? {};
 
   return {
@@ -52,5 +53,5 @@ export const makeMockSmartAccountClient = (opts?: {
     sendUserOperation: vi.fn(async () => SENT_USER_OP),
     // `view` calls are issued via readContract (PublicActions), not userOps.
     readContract: vi.fn(async () => "0xreadresult"),
-  } as unknown as SmartAccountClient;
+  } as unknown as KokioSmartAccountClient;
 };

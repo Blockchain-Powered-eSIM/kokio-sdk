@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   decodeAbiParameters,
+  encodeFunctionData,
   getAddress,
   getContractAddress,
   hashMessage,
@@ -12,11 +13,20 @@ import {
   type Hex,
   type TypedDataDefinition,
 } from "viem";
+import {
+  getUserOperationHash,
+  getUserOperationTypedData,
+} from "viem/account-abstraction";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { p256 } from "@noble/curves/nist.js";
 
 import { makeMockWalletClient } from "../../utils/mockClient.js";
-import { sepoliaFactoryAddresses, CHAIN_ID } from "../../../src/logic/constants.js";
+import { DeviceWallet, DeviceWalletFactory } from "../../../src/abis/index.js";
+import {
+  baseSepoliaFactoryAddresses,
+  sepoliaFactoryAddresses,
+  CHAIN_ID,
+} from "../../../src/logic/constants.js";
 import type { P256Key, WebAuthnSignature } from "../../../src/types.js";
 
 // --- Mock the on-chain beacon read (getContract(...).read.beacon()) ---------
@@ -48,7 +58,9 @@ vi.mock("react-native-passkey", () => ({
 // Imported AFTER the mocks above are registered.
 import {
   _assertCounterfactualMatchesOnChain,
+  _encodeCalls,
   _encodeSignature,
+  _getFactoryArgs,
   _signMessage,
   _signTypedData,
   _signUserOperationHash,
@@ -338,5 +350,100 @@ describe("_signTypedData (P0: stub replaced with real passkey stamping)", () => 
     expect(isoBase64URL.toBuffer(req.challenge)).toEqual(
       new Uint8Array(Buffer.from(hashTypedData(typedData).slice(2), "hex")),
     );
+  });
+});
+
+describe("_encodeCalls", () => {
+  const A = "0x00000000000000000000000000000000000000a1" as const;
+  const B = "0x00000000000000000000000000000000000000b2" as const;
+
+  it("routes a single call through execute", async () => {
+    const encoded = await _encodeCalls([{ to: A, data: "0xdead" }]);
+    expect(encoded).toBe(
+      encodeFunctionData({
+        abi: DeviceWallet,
+        functionName: "execute",
+        args: [{ dest: A, value: 0n, data: "0xdead" }],
+      }),
+    );
+  });
+
+  it("routes several calls through executeBatch", async () => {
+    const encoded = await _encodeCalls([
+      { to: A, data: "0xdead" },
+      { to: B, data: "0xbeef", value: 7n },
+    ]);
+    expect(encoded).toBe(
+      encodeFunctionData({
+        abi: DeviceWallet,
+        functionName: "executeBatch",
+        args: [
+          [
+            { dest: A, value: 0n, data: "0xdead" },
+            { dest: B, value: 7n, data: "0xbeef" },
+          ],
+        ],
+      }),
+    );
+  });
+});
+
+describe("_getFactoryArgs", () => {
+  it("splits the factory address from the createAccount calldata", async () => {
+    const { factory, factoryData } = await _getFactoryArgs(client, UID, OWNER_KEY, SALT);
+
+    expect(factory).toBe(sepoliaFactoryAddresses.DEVICE_WALLET_FACTORY);
+    expect(factoryData).toBe(
+      encodeFunctionData({
+        abi: DeviceWalletFactory,
+        functionName: "createAccount",
+        args: [UID, OWNER_KEY, SALT],
+      }),
+    );
+  });
+});
+
+describe("user operation hash on EntryPoint v0.8", () => {
+  const userOperation = {
+    sender: "0x00000000000000000000000000000000000acc71",
+    nonce: 3n,
+    callData: "0xdead",
+    callGasLimit: 1n,
+    verificationGasLimit: 2n,
+    preVerificationGas: 3n,
+    maxFeePerGas: 4n,
+    maxPriorityFeePerGas: 5n,
+    signature: "0x",
+  } as const;
+
+  const hashParams = {
+    chainId: CHAIN_ID.BASE_SEPOLIA,
+    entryPointAddress: baseSepoliaFactoryAddresses.ENTRY_POINT,
+    userOperation,
+  };
+
+  // v0.8 domain-separates the digest, so a v0.7 signature never validates.
+  it("differs from the v0.7 hash for the same operation", () => {
+    const v8 = getUserOperationHash({ ...hashParams, entryPointVersion: "0.8" });
+    const v7 = getUserOperationHash({ ...hashParams, entryPointVersion: "0.7" });
+
+    expect(v8).not.toBe(v7);
+  });
+
+  it("is the EIP-712 digest over the ERC4337 domain", () => {
+    const v8 = getUserOperationHash({ ...hashParams, entryPointVersion: "0.8" });
+    const typedData = getUserOperationTypedData({
+      chainId: CHAIN_ID.BASE_SEPOLIA,
+      entryPointAddress: baseSepoliaFactoryAddresses.ENTRY_POINT,
+      userOperation,
+    });
+
+    expect(typedData.domain).toMatchObject({
+      name: "ERC4337",
+      version: "1",
+      chainId: CHAIN_ID.BASE_SEPOLIA,
+      verifyingContract: baseSepoliaFactoryAddresses.ENTRY_POINT,
+    });
+    expect(v8).toBe(hashTypedData(typedData));
   });
 });
