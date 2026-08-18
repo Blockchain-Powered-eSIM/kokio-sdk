@@ -1,8 +1,8 @@
 # Kokio SDK
 
 A TypeScript SDK for interacting with the Koki'o eSIM smart contracts. It wraps
-[viem](https://viem.sh) and [`@aa-sdk/core`](https://www.npmjs.com/package/@aa-sdk/core)
-so that two very different callers can use the same contracts:
+[viem](https://viem.sh), including its account abstraction module, so that two
+very different callers can use the same contracts:
 
 - the **mobile app** (Expo / React Native), which acts on behalf of a user through
   an ERC-4337 device-wallet smart account signed by an on-device passkey, and
@@ -23,8 +23,8 @@ npm install kokio-sdk
 ```
 
 The package ships as ES modules and requires Node 18 or newer (or a React Native
-runtime). `viem` and `@aa-sdk/core` are bundled as dependencies, so you do not
-need to install them separately.
+runtime). `viem` is bundled as a dependency, so you do not need to install it
+separately.
 
 ## Mobile client (Expo / React Native)
 
