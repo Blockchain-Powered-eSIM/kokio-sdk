@@ -58,6 +58,25 @@ export const _newRequestedAdmin = async (client: WalletClient): Promise<Address>
     }) as Promise<Address>;
 }
 
+/**
+ * Who holds `onlyOwner` on the registry. On the live deployment this is the
+ * `ProtocolAdmin` timelock, so an owner call sent from an EOA reverts and has to
+ * be scheduled instead.
+ */
+export const _owner = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "owner",
+        args: []
+    }) as Promise<Address>;
+}
+
 /** The upgrade-manager (owner) EOA recorded in the registry. */
 export const _upgradeManager = async (client: WalletClient): Promise<Address> => {
 

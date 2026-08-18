@@ -8,6 +8,11 @@ import { ESIMWalletFactory } from "../../abis/index.js";
  * (`addRegistryAddress` requires `msg.sender == owner()`, `updateESIMWalletImplementation`
  * is `onlyOwner`), so the `client` must carry the `upgradeManager` EOA.
  *
+ * On the live deployment the owner is the `ProtocolAdmin` timelock, not an EOA,
+ * so either call sent directly reverts. Route them through
+ * `protocolAdmin.proposer.schedule` instead. The direct path stays for
+ * deployments whose owner is a plain EOA or multisig.
+ *
  * Note: `ESIMWalletFactory.deployESIMWallet` is intentionally NOT exposed - it is
  * `onlyRegistryOrDeviceWalletFactoryOrDeviceWallet`, so a bare EOA always reverts.
  */

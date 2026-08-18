@@ -5,5 +5,9 @@ export type {
     DataBundleDetails,
     SignedRequest,
     KokioSmartAccount,
-    KokioSmartAccountClient
+    KokioSmartAccountClient,
+    OwnerCall,
+    OperationOptions,
+    ScheduledOperation,
+    ScheduledBatchOperation
 } from './types';

@@ -7,6 +7,7 @@ import {
     _assignESIMIdentifier,
 } from "../../logic/admin/registry.eoa.js";
 import {
+    _owner,
     _eSIMWalletAdmin,
     _newRequestedAdmin,
     _vault,
@@ -50,6 +51,10 @@ export class AdminRegistrySubPackage {
     }
 
     // Reads: public storage getters, including the inherited RegistryHelper mappings
+
+    owner() {
+        return _owner(this.walletClient);
+    }
 
     eSIMWalletAdmin() {
         return _eSIMWalletAdmin(this.walletClient);

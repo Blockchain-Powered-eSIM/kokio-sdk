@@ -12,8 +12,10 @@ export const makeMockWalletClient = (opts: {
   url?: string;
   account?: `0x${string}`;
   readResult?: unknown;
+  /** Per-function read results, for logic that reads several values in one call. */
+  reads?: Record<string, unknown>;
 }): WalletClient => {
-  const { chainId, url = "https://rpc.test.invalid", account, readResult = "0xreadresult" } = opts;
+  const { chainId, url = "https://rpc.test.invalid", account, readResult = "0xreadresult", reads } = opts;
 
   // Reads extend the wallet client with `publicActions` before calling
   // `readContract`; the stub's `extend` returns the same object so tests can
@@ -23,7 +25,8 @@ export const makeMockWalletClient = (opts: {
     transport: { url },
     account: account ? { address: account, type: "json-rpc" } : undefined,
     writeContract: vi.fn(async () => "0xwritehash"),
-    readContract: vi.fn(async () => readResult),
+    readContract: vi.fn(async ({ functionName }: { functionName: string }) =>
+      reads && functionName in reads ? reads[functionName] : readResult),
   };
   client.extend = () => client;
 

@@ -1,7 +1,65 @@
-import { Chain, Hex, PublicActions, Transport } from "viem";
+import { Abi, Address, Chain, Hex, PublicActions, Transport } from "viem";
 import type { BundlerClient, SmartAccount } from "viem/account-abstraction";
 
 export type P256Key = [Hex, Hex];
+
+/**
+ * A call the `ProtocolAdmin` timelock makes on a contract it owns. Same shape as
+ * a viem `writeContract`, because that is what it becomes once the delay is served.
+ */
+export type OwnerCall = {
+    address: Address;
+    abi: Abi;
+    functionName: string;
+    args?: readonly unknown[];
+    /** ETH sent with the call. The timelock has to be holding it. */
+    value?: bigint;
+}
+
+/**
+ * Optional operation fields. Both default to zero, which makes the operation id a
+ * function of the call alone, so it can be recomputed later from the same
+ * arguments. Pass a `salt` to schedule a call the timelock has already run once.
+ */
+export type OperationOptions = {
+    salt?: Hex;
+    /** Operation that has to be done before this one can execute. */
+    predecessor?: Hex;
+}
+
+/**
+ * What `schedule` returns. Hand the whole object to `execute`: the timelock
+ * recomputes the id from these fields, so anything altered makes it look up an
+ * operation that was never scheduled.
+ */
+export type ScheduledOperation = {
+    /** Transaction hash of the `schedule` call, not the operation id. */
+    hash: Hex;
+    id: Hex;
+    target: Address;
+    value: bigint;
+    payload: Hex;
+    predecessor: Hex;
+    salt: Hex;
+    /** Delay requested. `getTimestamp(id)` is when it can actually run. */
+    delay: bigint;
+}
+
+/**
+ * What `scheduleBatch` returns. A batch hashes differently from a single call, so
+ * this stays a separate type: a one-call batch is not the same operation as the
+ * same call scheduled on its own, and only `executeBatch` can run it.
+ */
+export type ScheduledBatchOperation = {
+    hash: Hex;
+    id: Hex;
+    targets: readonly Address[];
+    values: readonly bigint[];
+    payloads: readonly Hex[];
+    predecessor: Hex;
+    salt: Hex;
+    delay: bigint;
+}
 
 /** The device wallet, as an ERC-4337 account on EntryPoint v0.8. */
 export type KokioSmartAccount = SmartAccount;

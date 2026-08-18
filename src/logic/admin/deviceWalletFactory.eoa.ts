@@ -12,6 +12,11 @@ import { P256Key } from "../../types.js";
  * EOA - never a device-wallet userOp. They therefore live on the EOA surface
  * (`KokioAdmin`) and use `writeContract`, mirroring `_createAccountWithEOA`
  * (which is reused as-is from `../deviceWalletFactory.js`).
+ *
+ * On the live deployment the owner is the `ProtocolAdmin` timelock, not an EOA,
+ * so an `onlyOwner` call sent directly reverts. Route those through
+ * `protocolAdmin.proposer.schedule` instead. The direct path stays for
+ * deployments whose owner is a plain EOA or multisig.
  */
 
 /**
