@@ -88,25 +88,6 @@ export const _addRegistryAddress = async (client: WalletClient, registryContract
     });
 }
 
-/** Update the vault that receives eSIM payments. `onlyAdmin`. */
-export const _updateVaultAddress = async (client: WalletClient, newVaultAddress: Address) => {
-
-    const chainID = await client.getChainId();
-	const rpcURL = client.transport.url;
-	const values = _getChainSpecificConstants(chainID, rpcURL);
-
-    if (!client.account) throw new MissingEOAWalletError();
-
-    return client.writeContract({
-        address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
-        chain: values.chain,
-        account: client.account.address,
-        abi: DeviceWalletFactory,
-        functionName: 'updateVaultAddress',
-        args: [newVaultAddress]
-    });
-}
-
 /** Point the device-wallet beacon at a new implementation. `onlyOwner` (upgradeManager). */
 export const _updateDeviceWalletImplementation = async (client: WalletClient, newDeviceImpl: Address) => {
 

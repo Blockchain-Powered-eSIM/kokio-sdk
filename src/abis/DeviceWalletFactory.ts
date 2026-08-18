@@ -247,19 +247,6 @@ const DeviceWalletFactory = [
         "type": "event"
     },
     {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_updatedVaultAddress",
-                "type": "address"
-            }
-        ],
-        "name": "VaultAddressUpdated",
-        "type": "event"
-    },
-    {
         "inputs": [],
         "name": "UPGRADE_INTERFACE_VERSION",
         "outputs": [
@@ -671,25 +658,6 @@ const DeviceWalletFactory = [
         "inputs": [
             {
                 "internalType": "address",
-                "name": "_newVaultAddress",
-                "type": "address"
-            }
-        ],
-        "name": "updateVaultAddress",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
                 "name": "newImplementation",
                 "type": "address"
             },
@@ -702,19 +670,6 @@ const DeviceWalletFactory = [
         "name": "upgradeToAndCall",
         "outputs": [],
         "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "vault",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
         "type": "function"
     },
     {

@@ -28,21 +28,6 @@ export const _eSIMWalletAdmin = async (client: WalletClient): Promise<Address> =
     }) as Promise<Address>;
 }
 
-/** The vault EOA that receives eSIM payments. */
-export const _vault = async (client: WalletClient): Promise<Address> => {
-
-    const chainID = await client.getChainId();
-    const rpcURL = client.transport.url;
-    const values = _getChainSpecificConstants(chainID, rpcURL);
-
-    return client.extend(publicActions).readContract({
-        address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
-        abi: DeviceWalletFactory,
-        functionName: "vault",
-        args: []
-    }) as Promise<Address>;
-}
-
 /** Whether a device wallet has been registered with the factory. */
 export const _deviceWalletInfoAdded = async (client: WalletClient, deviceWallet: Address): Promise<boolean> => {
 

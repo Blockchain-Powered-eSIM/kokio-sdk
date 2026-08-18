@@ -5,12 +5,10 @@ import {
     _deployDeviceWalletForUsers,
     _postCreateAccount,
     _addRegistryAddress,
-    _updateVaultAddress,
     _updateDeviceWalletImplementation,
 } from "../../logic/admin/deviceWalletFactory.eoa.js";
 import {
     _eSIMWalletAdmin,
-    _vault,
     _deviceWalletInfoAdded,
     _getCurrentDeviceWalletImplementation,
     _getCounterFactualAddress,
@@ -51,10 +49,6 @@ export class AdminDeviceWalletFactorySubPackage {
         return _addRegistryAddress(this.walletClient, registryContractAddress);
     }
 
-    updateVaultAddress(newVaultAddress: Address) {
-        return _updateVaultAddress(this.walletClient, newVaultAddress);
-    }
-
     updateDeviceWalletImplementation(newDeviceImpl: Address) {
         return _updateDeviceWalletImplementation(this.walletClient, newDeviceImpl);
     }
@@ -63,10 +57,6 @@ export class AdminDeviceWalletFactorySubPackage {
 
     eSIMWalletAdmin() {
         return _eSIMWalletAdmin(this.walletClient);
-    }
-
-    vault() {
-        return _vault(this.walletClient);
     }
 
     deviceWalletInfoAdded(deviceWallet: Address) {

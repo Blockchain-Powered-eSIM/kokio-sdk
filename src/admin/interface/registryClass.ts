@@ -1,6 +1,7 @@
 import { Address, Hex, WalletClient } from "viem";
 import {
     _addOrUpdateLazyWalletRegistryAddress,
+    _updateVaultAddress,
     _requestAdminUpdate,
     _acceptAdminUpdate,
 } from "../../logic/admin/registry.eoa.js";
@@ -29,6 +30,10 @@ export class AdminRegistrySubPackage {
 
     addOrUpdateLazyWalletRegistryAddress(lazyWalletRegistry: Address) {
         return _addOrUpdateLazyWalletRegistryAddress(this.walletClient, lazyWalletRegistry);
+    }
+
+    updateVaultAddress(newVaultAddress: Address) {
+        return _updateVaultAddress(this.walletClient, newVaultAddress);
     }
 
     requestAdminUpdate(newAdmin: Address) {

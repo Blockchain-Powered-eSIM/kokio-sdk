@@ -37,7 +37,6 @@ const readCases: Array<{
 }> = [
   // deviceWalletFactory.reads (target = DEVICE_WALLET_FACTORY)
   { label: "deviceWalletFactory._eSIMWalletAdmin", run: (c) => deviceWalletFactory._eSIMWalletAdmin(c), address: F.DEVICE_WALLET_FACTORY, functionName: "eSIMWalletAdmin", args: [] },
-  { label: "deviceWalletFactory._vault", run: (c) => deviceWalletFactory._vault(c), address: F.DEVICE_WALLET_FACTORY, functionName: "vault", args: [] },
   { label: "deviceWalletFactory._deviceWalletInfoAdded", run: (c) => deviceWalletFactory._deviceWalletInfoAdded(c, WALLET), address: F.DEVICE_WALLET_FACTORY, functionName: "deviceWalletInfoAdded", args: [WALLET] },
   { label: "deviceWalletFactory._getCurrentDeviceWalletImplementation", run: (c) => deviceWalletFactory._getCurrentDeviceWalletImplementation(c), address: F.DEVICE_WALLET_FACTORY, functionName: "getCurrentDeviceWalletImplementation", args: [] },
   { label: "deviceWalletFactory._getCounterFactualAddress", run: (c) => deviceWalletFactory._getCounterFactualAddress(c, OWNER_KEY, "Device_11", 1n), address: F.DEVICE_WALLET_FACTORY, functionName: "getCounterFactualAddress", args: [OWNER_KEY, "Device_11", 1n] },

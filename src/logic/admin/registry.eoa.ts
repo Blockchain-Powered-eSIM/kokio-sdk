@@ -27,6 +27,25 @@ export const _addOrUpdateLazyWalletRegistryAddress = async (client: WalletClient
     });
 }
 
+/** Update the vault that receives eSIM payments. `onlyOwner`. */
+export const _updateVaultAddress = async (client: WalletClient, newVaultAddress: Address) => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return client.writeContract({
+        address: values.factoryAddresses.REGISTRY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: Registry,
+        functionName: 'updateVaultAddress',
+        args: [newVaultAddress]
+    });
+}
+
 /**
  * Step 1 of the 2-step admin handover: nominate the next admin. `onlyOwner`, so
  * the `client` is the owner EOA, not the outgoing admin.

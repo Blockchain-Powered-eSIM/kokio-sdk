@@ -68,13 +68,6 @@ const eoaCases: Array<{
     args: [REGISTRY],
   },
   {
-    label: "deviceWalletFactory._updateVaultAddress",
-    run: (c) => deviceWalletFactory._updateVaultAddress(c, VAULT),
-    address: F.DEVICE_WALLET_FACTORY,
-    functionName: "updateVaultAddress",
-    args: [VAULT],
-  },
-  {
     label: "deviceWalletFactory._updateDeviceWalletImplementation",
     run: (c) => deviceWalletFactory._updateDeviceWalletImplementation(c, IMPL),
     address: F.DEVICE_WALLET_FACTORY,
@@ -103,6 +96,13 @@ const eoaCases: Array<{
     address: F.REGISTRY,
     functionName: "addOrUpdateLazyWalletRegistryAddress",
     args: [LAZY],
+  },
+  {
+    label: "registry._updateVaultAddress",
+    run: (c) => registry._updateVaultAddress(c, VAULT),
+    address: F.REGISTRY,
+    functionName: "updateVaultAddress",
+    args: [VAULT],
   },
   {
     label: "registry._requestAdminUpdate",
