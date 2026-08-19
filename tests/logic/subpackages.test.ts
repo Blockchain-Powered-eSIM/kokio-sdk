@@ -276,6 +276,25 @@ const readCases: Array<{
     args: [],
   },
   {
+    // uid first here, unlike getCounterFactualAddress, which takes the key first.
+    label: "deviceWalletFactory._preCreateAccountValidation",
+    run: (c) => deviceWalletFactory._preCreateAccountValidation(c, "Device_11", OWNER_KEY),
+    address: F.DEVICE_WALLET_FACTORY,
+    functionName: "preCreateAccountValidation",
+    args: ["Device_11", OWNER_KEY],
+  },
+  {
+    label: "deviceWalletFactory._deviceWalletInfoAdded",
+    run: (c) => deviceWalletFactory._deviceWalletInfoAdded(c, WALLET),
+    address: F.DEVICE_WALLET_FACTORY,
+    functionName: "deviceWalletInfoAdded",
+    args: [WALLET],
+  },
+  { label: "deviceWalletFactory._beacon", run: (c) => deviceWalletFactory._beacon(c), address: F.DEVICE_WALLET_FACTORY, functionName: "beacon", args: [] },
+  { label: "deviceWalletFactory._registry", run: (c) => deviceWalletFactory._registry(c), address: F.DEVICE_WALLET_FACTORY, functionName: "registry", args: [] },
+  { label: "deviceWalletFactory._entryPoint", run: (c) => deviceWalletFactory._entryPoint(c), address: F.DEVICE_WALLET_FACTORY, functionName: "entryPoint", args: [] },
+  { label: "deviceWalletFactory._verifier", run: (c) => deviceWalletFactory._verifier(c), address: F.DEVICE_WALLET_FACTORY, functionName: "verifier", args: [] },
+  {
     label: "eSIMWalletFactory._getCurrentESIMWalletImplementation",
     run: (c) => eSIMWalletFactory._getCurrentESIMWalletImplementation(c),
     address: F.ESIM_WALLET_FACTORY,
