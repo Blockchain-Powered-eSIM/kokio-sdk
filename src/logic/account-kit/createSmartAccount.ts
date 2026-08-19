@@ -326,8 +326,32 @@ export const _encodeSignature = async (webAuthnSignature: WebAuthnSignature, val
 	return signature;
 };
 
+// The challenge the wallet's isValidSignature rebuilds before checking a passkey
+// assertion. Everything the caller controls has to be inside what was signed:
+// validUntil so an expired signature cannot be revived by rewriting the header,
+// and the chain id and wallet address because neither is implied by the message.
+// Wallets sit at the same address on every chain, and one owner key can back a
+// second wallet at another salt.
+const _erc1271Challenge = (
+	validUntil: number,
+	chainId: number,
+	accountAddress: Address,
+	messageHash: Hex
+): Hex => hashMessage({
+	raw: encodePacked(
+		["uint8", "uint48", "uint256", "address", "bytes32"],
+		[1, validUntil, BigInt(chainId), accountAddress, messageHash]
+	)
+});
+
 // message here is the original message data (string or Uint8Array) directly from the app
-export const _signMessage = async (message: SignableMessage, credentialId: string, rpId: string): Promise<Hex> => {
+export const _signMessage = async (
+	message: SignableMessage,
+	credentialId: string,
+	rpId: string,
+	chainId: number,
+	accountAddress: Address
+): Promise<Hex> => {
 
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
@@ -335,10 +359,10 @@ export const _signMessage = async (message: SignableMessage, credentialId: strin
 	// string is a UTF-8 message; the `{ raw }` form is already-serialized bytes
 	// (possibly a pre-computed digest). hashMessage handles both natively, so
 	// forward the message as-is rather than force-casting it to a string.
-	const payload = hashMessage(message);
-	// The original message is passed to the stamp and sign function.
-	// The stamp and sign function creates the EIP-191 digest hash using its hashMessage function
-	// The result of the hashMessage(message) will be the `payload` used as a challenge
+	const messageHash = hashMessage(message);
+	// The verifier is handed this digest and derives the challenge from it, so
+	// the digest is what gets bound rather than what gets stamped.
+	const payload = _erc1271Challenge(validUntil, chainId, accountAddress, messageHash);
 	const webAuthnSignature = await _stamp(credentialId, rpId, payload);
 
 	return _encodeSignature(webAuthnSignature, validUntil);
@@ -347,15 +371,21 @@ export const _signMessage = async (message: SignableMessage, credentialId: strin
 export const _signTypedData = async <
     const typedData extends TypedData | Record<string, unknown>,
     primaryType extends keyof typedData | "EIP712Domain" = keyof typedData
-> (typedData: TypedDataDefinition<typedData, primaryType>, credentialId: string, rpId: string): Promise<Hex> => {
+> (
+	typedData: TypedDataDefinition<typedData, primaryType>,
+	credentialId: string,
+	rpId: string,
+	chainId: number,
+	accountAddress: Address
+): Promise<Hex> => {
 
 	// signature valid until, UNIX timestamp in seconds
 	const validUntil = Math.floor(Date.now() / 1000) + SIGNATURE_VALIDITY_SECONDS;
 
-	// EIP-712 digest is the WebAuthn challenge, mirroring _signMessage's use of
-	// the EIP-191 digest. The contract's isValidSignature receives this same
-	// hashTypedData result and verifies the passkey signature against it.
-	const payload = hashTypedData(typedData);
+	// The EIP-712 digest takes the place of the EIP-191 one, and the challenge
+	// is built over it the same way. The verifier cannot tell the two apart.
+	const messageHash = hashTypedData(typedData);
+	const payload = _erc1271Challenge(validUntil, chainId, accountAddress, messageHash);
 
 	const webAuthnSignature = await _stamp(credentialId, rpId, payload);
 
@@ -426,9 +456,11 @@ export const _getSmartWallet = async (
 		// Placeholder signature for gas estimation. Must not revert validation.
 		getStubSignature: async (): Promise<Hash> => "0x",
 
-		signMessage: async ({ message }): Promise<Hash> => _signMessage(message, credentialId, rpId),
+		signMessage: async ({ message }): Promise<Hash> =>
+			_signMessage(message, credentialId, rpId, chainID, accountAddress as Address),
 
-		signTypedData: async (typedData): Promise<Hash> => _signTypedData(typedData, credentialId, rpId),
+		signTypedData: async (typedData): Promise<Hash> =>
+			_signTypedData(typedData, credentialId, rpId, chainID, accountAddress as Address),
 
 		signUserOperation: async ({ chainId = chainID, ...userOperation }): Promise<Hash> => {
 			const userOpHash = getUserOperationHash({

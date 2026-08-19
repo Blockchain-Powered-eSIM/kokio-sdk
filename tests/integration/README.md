@@ -18,9 +18,10 @@ No keys or funds - read access only.
 ## Write / UserOp scenario tier - local Base Sepolia fork
 
 `adminFork.integration.test.ts`, `userOpFork.integration.test.ts`,
-`protocolAdminFork.integration.test.ts` and
-`lazyDeploymentFork.integration.test.ts` drive real state-changing flows against
-a local [`anvil`](https://book.getfoundry.sh/anvil/) fork of Base Sepolia. **No
+`protocolAdminFork.integration.test.ts`,
+`lazyDeploymentFork.integration.test.ts` and
+`erc1271Fork.integration.test.ts` drive real state-changing flows against a
+local [`anvil`](https://book.getfoundry.sh/anvil/) fork of Base Sepolia. **No
 private keys and no bundler** are required:
 
 - The fork carries the real deployed contracts and reports chain id `84532`, so
@@ -34,7 +35,9 @@ private keys and no bundler** are required:
 - The passkey signature is produced by a **software** P-256 signer
   (`tests/utils/softP256Signer.ts`, test-only) that assembles the same
   `WebAuthnSignature` envelope the native passkey path produces and feeds it
-  through the SDK's real `_encodeSignature`.
+  through the SDK's real `_encodeSignature`. The ERC-1271 suite goes one step
+  further and mocks `Passkey.get` itself, so `_signMessage` and `_signTypedData`
+  run unchanged and the challenge they derive is what the wallet checks.
 
 ### Prerequisites
 

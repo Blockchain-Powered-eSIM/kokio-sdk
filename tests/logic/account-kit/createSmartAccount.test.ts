@@ -2,14 +2,18 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   decodeAbiParameters,
   encodeFunctionData,
+  encodePacked,
   getAddress,
   getContractAddress,
   hashMessage,
   hashTypedData,
+  hexToNumber,
   keccak256,
   parseAbiParameters,
+  size,
   sliceHex,
   toHex,
+  type Address,
   type Hex,
   type TypedDataDefinition,
 } from "viem";
@@ -255,6 +259,29 @@ describe("_stamp (passkey -> WebAuthnSignature)", () => {
   });
 });
 
+// The two ERC-1271 signers bind the wallet and the chain into the challenge, so
+// every assertion below has to rebuild it rather than compare against the bare
+// message digest. Mirrors Account4337.isValidSignature rather than calling the
+// SDK's own helper, so a change to that helper fails here instead of agreeing
+// with itself.
+const SIGNER_CHAIN_ID = CHAIN_ID.BASE_SEPOLIA;
+const SIGNER_ACCOUNT = "0x1111111111111111111111111111111111111111" as Address;
+
+const erc1271Precursor = (validUntil: number, chainId: number, account: Address, messageHash: Hex): Hex =>
+  encodePacked(
+    ["uint8", "uint48", "uint256", "address", "bytes32"],
+    [1, validUntil, BigInt(chainId), account, messageHash],
+  );
+
+// validUntil is a wall-clock value the signer picks, so read it back out of the
+// envelope instead of trying to predict it.
+const validUntilOf = (sig: Hex): number => hexToNumber(sliceHex(sig, 1, 7));
+
+const challengeOf = (): Hex => {
+  const req = passkeyGet.mock.calls[0][0];
+  return toHex(isoBase64URL.toBuffer(req.challenge));
+};
+
 describe("_signMessage / _signUserOperationHash envelope shape", () => {
   beforeEach(() => {
     passkeyGet.mockReset();
@@ -262,7 +289,7 @@ describe("_signMessage / _signUserOperationHash envelope shape", () => {
   });
 
   it("_signMessage produces a version-1 envelope with the stamped sig", async () => {
-    const sig = await _signMessage("hello", "cred-id", "kokio.test");
+    const sig = await _signMessage("hello", "cred-id", "kokio.test", SIGNER_CHAIN_ID, SIGNER_ACCOUNT);
     expect(sliceHex(sig, 0, 1)).toBe("0x01");
 
     const [decoded] = decodeAbiParameters(
@@ -279,29 +306,80 @@ describe("_signMessage / _signUserOperationHash envelope shape", () => {
     const userOpHash = keccak256("0xfeed");
     const sig = await _signUserOperationHash("cred-id", "kokio.test", userOpHash);
     expect(sliceHex(sig, 0, 1)).toBe("0x01");
-    // the challenge handed to the passkey is hashMessage(uint8|uint48|bytes32)
-    const req = passkeyGet.mock.calls[0][0];
-    expect(req.challenge).toBeTypeOf("string");
+
+    // The user operation path stays three fields. The EntryPoint already folds
+    // the chain id and the sender into userOpHash, so binding them again would
+    // only make the precursor a different length from the contract's "39".
+    const precursor = encodePacked(
+      ["uint8", "uint48", "bytes32"],
+      [1, validUntilOf(sig), userOpHash],
+    );
+    expect(size(precursor)).toBe(39);
+    expect(challengeOf()).toBe(hashMessage({ raw: precursor }));
   });
 
-  it("_signMessage forwards a string message to hashMessage as the challenge", async () => {
-    await _signMessage("hello", "cred-id", "kokio.test");
-    const req = passkeyGet.mock.calls[0][0];
-    // EIP-191 digest of the UTF-8 string - NOT the raw-bytes force-cast path.
-    expect(isoBase64URL.toBuffer(req.challenge)).toEqual(
-      new Uint8Array(Buffer.from(hashMessage("hello").slice(2), "hex")),
+  it("_signMessage binds version, validUntil, chain id and wallet into the challenge", async () => {
+    const sig = await _signMessage("hello", "cred-id", "kokio.test", SIGNER_CHAIN_ID, SIGNER_ACCOUNT);
+
+    const precursor = erc1271Precursor(
+      validUntilOf(sig),
+      SIGNER_CHAIN_ID,
+      SIGNER_ACCOUNT,
+      hashMessage("hello"),
     );
+    // 1 + 6 + 32 + 20 + 32. The contract hardcodes "91" as the EIP-191 length
+    // prefix, so a precursor of any other size hashes to a challenge it will
+    // never rebuild.
+    expect(size(precursor)).toBe(91);
+    expect(challengeOf()).toBe(hashMessage({ raw: precursor }));
+  });
+
+  it("_signMessage does not stamp the bare message digest", async () => {
+    await _signMessage("hello", "cred-id", "kokio.test", SIGNER_CHAIN_ID, SIGNER_ACCOUNT);
+    expect(challengeOf()).not.toBe(hashMessage("hello"));
+  });
+
+  it("_signMessage produces a different challenge per chain", async () => {
+    await _signMessage("hello", "cred-id", "kokio.test", SIGNER_CHAIN_ID, SIGNER_ACCOUNT);
+    const onBaseSepolia = challengeOf();
+
+    passkeyGet.mockClear();
+    await _signMessage("hello", "cred-id", "kokio.test", CHAIN_ID.OPTIMISM_SEPOLIA, SIGNER_ACCOUNT);
+
+    expect(challengeOf()).not.toBe(onBaseSepolia);
+  });
+
+  it("_signMessage produces a different challenge per wallet", async () => {
+    await _signMessage("hello", "cred-id", "kokio.test", SIGNER_CHAIN_ID, SIGNER_ACCOUNT);
+    const firstWallet = challengeOf();
+
+    // Same owner key at another salt is a second wallet, so the address is the
+    // only thing separating the two signatures.
+    passkeyGet.mockClear();
+    await _signMessage(
+      "hello",
+      "cred-id",
+      "kokio.test",
+      SIGNER_CHAIN_ID,
+      "0x2222222222222222222222222222222222222222",
+    );
+
+    expect(challengeOf()).not.toBe(firstWallet);
   });
 
   it("_signMessage handles the { raw } SignableMessage form (pre-serialized bytes)", async () => {
     const raw = keccak256("0xbeef"); // a 32-byte pre-computed digest
-    await _signMessage({ raw }, "cred-id", "kokio.test");
-    const req = passkeyGet.mock.calls[0][0];
+    const sig = await _signMessage({ raw }, "cred-id", "kokio.test", SIGNER_CHAIN_ID, SIGNER_ACCOUNT);
+
     // hashMessage applies the EIP-191 prefix to the raw bytes; the old
     // `stringToBytes(message as string)` cast would have thrown / mangled this.
-    expect(isoBase64URL.toBuffer(req.challenge)).toEqual(
-      new Uint8Array(Buffer.from(hashMessage({ raw }).slice(2), "hex")),
+    const precursor = erc1271Precursor(
+      validUntilOf(sig),
+      SIGNER_CHAIN_ID,
+      SIGNER_ACCOUNT,
+      hashMessage({ raw }),
     );
+    expect(challengeOf()).toBe(hashMessage({ raw: precursor }));
   });
 });
 
@@ -327,7 +405,7 @@ describe("_signTypedData (P0: stub replaced with real passkey stamping)", () => 
   };
 
   it("produces a non-zero WebAuthnSignature (proves the zero-filled stub is gone)", async () => {
-    const sig = await _signTypedData(typedData, "cred-id", "kokio.test");
+    const sig = await _signTypedData(typedData, "cred-id", "kokio.test", SIGNER_CHAIN_ID, SIGNER_ACCOUNT);
     expect(sliceHex(sig, 0, 1)).toBe("0x01");
 
     const [decoded] = decodeAbiParameters(
@@ -343,12 +421,34 @@ describe("_signTypedData (P0: stub replaced with real passkey stamping)", () => 
     expect(wa.clientDataJSON).toBe(CLIENT_DATA_JSON);
   });
 
-  it("uses hashTypedData(typedData) as the passkey challenge", async () => {
-    await _signTypedData(typedData, "cred-id", "kokio.test");
-    const req = passkeyGet.mock.calls[0][0];
-    expect(isoBase64URL.toBuffer(req.challenge)).toEqual(
-      new Uint8Array(Buffer.from(hashTypedData(typedData).slice(2), "hex")),
+  it("carries hashTypedData(typedData) as the message hash inside the challenge", async () => {
+    const sig = await _signTypedData(typedData, "cred-id", "kokio.test", SIGNER_CHAIN_ID, SIGNER_ACCOUNT);
+
+    const precursor = erc1271Precursor(
+      validUntilOf(sig),
+      SIGNER_CHAIN_ID,
+      SIGNER_ACCOUNT,
+      hashTypedData(typedData),
     );
+    expect(size(precursor)).toBe(91);
+    expect(challengeOf()).toBe(hashMessage({ raw: precursor }));
+  });
+
+  it("does not stamp the bare EIP-712 digest", async () => {
+    await _signTypedData(typedData, "cred-id", "kokio.test", SIGNER_CHAIN_ID, SIGNER_ACCOUNT);
+    expect(challengeOf()).not.toBe(hashTypedData(typedData));
+  });
+
+  // The typed data carries its own chainId, which is the app's domain and has
+  // nothing to do with where the wallet lives.
+  it("binds the wallet's chain, not the one in the EIP-712 domain", async () => {
+    await _signTypedData(typedData, "cred-id", "kokio.test", SIGNER_CHAIN_ID, SIGNER_ACCOUNT);
+    const onBaseSepolia = challengeOf();
+
+    passkeyGet.mockClear();
+    await _signTypedData(typedData, "cred-id", "kokio.test", CHAIN_ID.OPTIMISM_SEPOLIA, SIGNER_ACCOUNT);
+
+    expect(challengeOf()).not.toBe(onBaseSepolia);
   });
 });
 
