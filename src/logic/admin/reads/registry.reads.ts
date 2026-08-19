@@ -275,3 +275,98 @@ export const _isESIMWalletOnStandby = async (client: WalletClient, eSIMWallet: A
         args: [eSIMWallet]
     }) as Promise<boolean>;
 }
+
+/**
+ * Whether a device identifier already has a wallet on chain. Not the same
+ * question as `lazyWalletRegistry.isDeviceIdentifierReserved`, which reads true
+ * as soon as history is recorded and well before anything is deployed.
+ */
+export const _isDeviceIdentifierAlreadyUsed = async (client: WalletClient, deviceUniqueIdentifier: string): Promise<boolean> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "isDeviceIdentifierAlreadyUsed",
+        args: [deviceUniqueIdentifier]
+    }) as Promise<boolean>;
+}
+
+/** Whether an eSIM identifier is already held by a wallet. */
+export const _isESIMIdentifierClaimed = async (client: WalletClient, eSIMUniqueIdentifier: string): Promise<boolean> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "isESIMIdentifierClaimed",
+        args: [eSIMUniqueIdentifier]
+    }) as Promise<boolean>;
+}
+
+/**
+ * The one eSIM wallet holding an eSIM identifier, zero if nobody holds it. Set
+ * once and never cleared, an ownership transfer included, because the eSIM
+ * belongs to the wallet rather than to whichever device is holding it.
+ */
+export const _eSIMWalletForIdentifier = async (client: WalletClient, eSIMUniqueIdentifier: string): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "eSIMWalletForIdentifier",
+        args: [eSIMUniqueIdentifier]
+    }) as Promise<Address>;
+}
+
+/**
+ * The same answer as `_eSIMWalletForIdentifier`, keyed by the keccak256 of the
+ * identifier. Use it when the hash is what you already have; otherwise take the
+ * string version and skip the hashing.
+ */
+export const _claimedESIMIdentifiers = async (client: WalletClient, hashOfESIMIdentifier: Hex): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "claimedESIMIdentifiers",
+        args: [hashOfESIMIdentifier]
+    }) as Promise<Address>;
+}
+
+/**
+ * The check `DeviceWalletFactory` runs before taking a device identifier.
+ * Resolves if the identifier is free, reverts `DeviceIdentifierReservedForLazyWallet`
+ * if a fiat user's eSIMs are already waiting on it.
+ *
+ * Worth calling ahead of a deployment: taking a reserved identifier strands the
+ * lazy user, since the history copy, the wallet deployment and the device switch
+ * all then refuse it.
+ */
+export const _requireDeviceIdentifierNotReserved = async (client: WalletClient, deviceUniqueIdentifier: string): Promise<void> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    await client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "requireDeviceIdentifierNotReserved",
+        args: [deviceUniqueIdentifier]
+    });
+}

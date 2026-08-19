@@ -59,6 +59,11 @@ const readCases: Array<{
   { label: "registry._isESIMWalletOnStandby", run: (c) => registry._isESIMWalletOnStandby(c, ESIM), address: F.REGISTRY, functionName: "isESIMWalletOnStandby", args: [ESIM] },
   { label: "registry._paused", run: (c) => registry._paused(c), address: F.REGISTRY, functionName: "paused", args: [] },
   { label: "registry._defaultDataBundlePriceCap", run: (c) => registry._defaultDataBundlePriceCap(c), address: F.REGISTRY, functionName: "defaultDataBundlePriceCap", args: [] },
+  { label: "registry._isDeviceIdentifierAlreadyUsed", run: (c) => registry._isDeviceIdentifierAlreadyUsed(c, "Device_11"), address: F.REGISTRY, functionName: "isDeviceIdentifierAlreadyUsed", args: ["Device_11"] },
+  { label: "registry._isESIMIdentifierClaimed", run: (c) => registry._isESIMIdentifierClaimed(c, "eSIM_11"), address: F.REGISTRY, functionName: "isESIMIdentifierClaimed", args: ["eSIM_11"] },
+  { label: "registry._eSIMWalletForIdentifier", run: (c) => registry._eSIMWalletForIdentifier(c, "eSIM_11"), address: F.REGISTRY, functionName: "eSIMWalletForIdentifier", args: ["eSIM_11"] },
+  { label: "registry._claimedESIMIdentifiers", run: (c) => registry._claimedESIMIdentifiers(c, HASH), address: F.REGISTRY, functionName: "claimedESIMIdentifiers", args: [HASH] },
+  { label: "registry._requireDeviceIdentifierNotReserved", run: (c) => registry._requireDeviceIdentifierNotReserved(c, "Device_11"), address: F.REGISTRY, functionName: "requireDeviceIdentifierNotReserved", args: ["Device_11"] },
 
   // lazyWalletRegistry.reads (target = LAZY_WALLET_REGISTRY)
   { label: "lazyWalletRegistry._upgradeManager", run: (c) => lazyWalletRegistry._upgradeManager(c), address: F.LAZY_WALLET_REGISTRY, functionName: "upgradeManager", args: [] },

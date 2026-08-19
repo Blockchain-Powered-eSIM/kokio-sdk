@@ -28,6 +28,11 @@ import {
     _isESIMWalletOnStandby,
     _paused,
     _defaultDataBundlePriceCap,
+    _isDeviceIdentifierAlreadyUsed,
+    _isESIMIdentifierClaimed,
+    _eSIMWalletForIdentifier,
+    _claimedESIMIdentifiers,
+    _requireDeviceIdentifierNotReserved,
 } from "../../logic/admin/reads/registry.reads.js";
 
 /** Thin EOA (owner) wrapper around `Registry`. */
@@ -143,5 +148,25 @@ export class AdminRegistrySubPackage {
 
     defaultDataBundlePriceCap() {
         return _defaultDataBundlePriceCap(this.walletClient);
+    }
+
+    isDeviceIdentifierAlreadyUsed(deviceUniqueIdentifier: string) {
+        return _isDeviceIdentifierAlreadyUsed(this.walletClient, deviceUniqueIdentifier);
+    }
+
+    isESIMIdentifierClaimed(eSIMUniqueIdentifier: string) {
+        return _isESIMIdentifierClaimed(this.walletClient, eSIMUniqueIdentifier);
+    }
+
+    eSIMWalletForIdentifier(eSIMUniqueIdentifier: string) {
+        return _eSIMWalletForIdentifier(this.walletClient, eSIMUniqueIdentifier);
+    }
+
+    claimedESIMIdentifiers(hashOfESIMIdentifier: Hex) {
+        return _claimedESIMIdentifiers(this.walletClient, hashOfESIMIdentifier);
+    }
+
+    requireDeviceIdentifierNotReserved(deviceUniqueIdentifier: string) {
+        return _requireDeviceIdentifierNotReserved(this.walletClient, deviceUniqueIdentifier);
     }
 }
