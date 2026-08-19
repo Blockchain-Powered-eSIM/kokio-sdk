@@ -198,11 +198,12 @@ const eoaCases: Array<{
   },
   // deviceWallet.eoa (target = device wallet instance address)
   {
+    // The contract reverts on a `true`, so the SDK hardcodes the `false`.
     label: "deviceWallet._deployESIMWallet",
-    run: (c) => deviceWallet._deployESIMWallet(c, WALLET, true, 7n),
+    run: (c) => deviceWallet._deployESIMWallet(c, WALLET, 7n),
     address: WALLET,
     functionName: "deployESIMWallet",
-    args: [true, 7n],
+    args: [false, 7n],
   },
   {
     label: "deviceWallet._addDeposit",

@@ -36,16 +36,16 @@ export class DeviceWalletSubPackage {
         return _addDeposit(this.smartAccountClient, this.address, amount);
     }
 
-    addESIMWallet (eSIMWalletAddress: Address, hasAccessToETH: boolean) {
-        return _addESIMWallet(this.smartAccountClient, this.address, eSIMWalletAddress, hasAccessToETH);
+    addESIMWallet (eSIMWalletAddress: Address) {
+        return _addESIMWallet(this.smartAccountClient, this.address, eSIMWalletAddress);
     }
 
     getVaultAddress () {
         return _getVaultAddress(this.smartAccountClient, this.address);
     }
 
-    removeESIMWallet (eSIMWalletAddress: Address, hasAccessToETH: boolean) {
-        return _removeESIMWallet(this.smartAccountClient, this.address, eSIMWalletAddress, hasAccessToETH);
+    removeESIMWallet (eSIMWalletAddress: Address, callBackETH: boolean) {
+        return _removeESIMWallet(this.smartAccountClient, this.address, eSIMWalletAddress, callBackETH);
     }
 
     toggleAccessToETH (eSIMWalletAddress: Address, hasAccessToETH: boolean) {

@@ -29,8 +29,8 @@ export class AdminDeviceWalletSubPackage {
         this.deviceWalletAddress = deviceWalletAddress;
     }
 
-    deployESIMWallet(hasAccessToETH: boolean, salt: bigint) {
-        return _deployESIMWallet(this.walletClient, this.deviceWalletAddress, hasAccessToETH, salt);
+    deployESIMWallet(salt: bigint) {
+        return _deployESIMWallet(this.walletClient, this.deviceWalletAddress, salt);
     }
 
     addDeposit(amount: bigint) {

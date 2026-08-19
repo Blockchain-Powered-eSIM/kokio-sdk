@@ -36,7 +36,15 @@ export const _toggleAccessToETH = async (client: KokioSmartAccountClient, addres
     });
 }
 
-export const _addESIMWallet = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
+/**
+ * Bind an eSIM wallet this device wallet already owns.
+ *
+ * A bind never carries ETH access: the contract reverts on a `true` rather than
+ * downgrading it quietly, so the SDK passes `false` and there is nothing to
+ * choose. `toggleAccessToETH` is the only way to grant it, which is what stops a
+ * bind from undoing the owner's revocation.
+ */
+export const _addESIMWallet = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address) => {
 
     if(!client.account) throw new MissingSmartWalletError();
 
@@ -48,13 +56,21 @@ export const _addESIMWallet = async (client: KokioSmartAccountClient, address: A
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "addESIMWallet",
-                args: [eSIMWalletAddress, hasAccessToETH]
+                args: [eSIMWalletAddress, false]
             })
         }]
     });
 }
 
-export const _removeESIMWallet = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
+/**
+ * Release an eSIM wallet and put it on standby for a transfer.
+ *
+ * `callBackETH` sweeps whatever ETH the eSIM wallet still holds back here. It
+ * runs after the release, so a wallet whose handler misbehaves has already lost
+ * its ETH access and its registry association. A failed sweep is swallowed by
+ * the contract, so a `true` is not a promise that anything arrived.
+ */
+export const _removeESIMWallet = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address, callBackETH: boolean) => {
 
     if(!client.account) throw new MissingSmartWalletError();
 
@@ -66,7 +82,7 @@ export const _removeESIMWallet = async (client: KokioSmartAccountClient, address
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "removeESIMWallet",
-                args: [eSIMWalletAddress, hasAccessToETH]
+                args: [eSIMWalletAddress, callBackETH]
             })
         }]
     });

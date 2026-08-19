@@ -65,10 +65,17 @@ const userOpCases: Array<{
     data: encodeFunctionData({ abi: DeviceWallet, functionName: "toggleAccessToETH", args: [ESIM, true] }),
   },
   {
+    // The contract reverts on a `true`, so the SDK hardcodes the `false`.
     label: "deviceWallet._addESIMWallet",
-    run: (c) => deviceWallet._addESIMWallet(c, WALLET, ESIM, true),
+    run: (c) => deviceWallet._addESIMWallet(c, WALLET, ESIM),
     target: WALLET,
-    data: encodeFunctionData({ abi: DeviceWallet, functionName: "addESIMWallet", args: [ESIM, true] }),
+    data: encodeFunctionData({ abi: DeviceWallet, functionName: "addESIMWallet", args: [ESIM, false] }),
+  },
+  {
+    label: "deviceWallet._removeESIMWallet",
+    run: (c) => deviceWallet._removeESIMWallet(c, WALLET, ESIM, true),
+    target: WALLET,
+    data: encodeFunctionData({ abi: DeviceWallet, functionName: "removeESIMWallet", args: [ESIM, true] }),
   },
   {
     label: "deviceWallet._transferOwnership",

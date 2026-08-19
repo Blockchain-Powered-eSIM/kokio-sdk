@@ -132,7 +132,7 @@ with a setter and keep using the same `KokioAdmin` reference:
 
 ```ts
 admin.setDeviceWalletAddress(deviceWalletAddress);
-await admin.deviceWallet!.deployESIMWallet(true, salt);
+await admin.deviceWallet!.deployESIMWallet(salt);
 
 admin.setESIMWalletAddress(eSIMWalletAddress);
 await admin.eSIMWallet!.buyDataBundle({ dataBundleID, dataBundlePrice });

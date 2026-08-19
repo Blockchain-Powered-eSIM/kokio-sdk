@@ -8,11 +8,17 @@ import { DeviceWallet } from "../../abis/index.js";
 // `onlyESIMWalletAdmin` on chain, so it cannot be driven from a device-wallet
 // userOp and lives on the EOA surface.
 
-/** Deploy a new eSIM wallet under a device wallet. `onlyESIMWalletAdmin`. */
+/**
+ * Deploy a new eSIM wallet under a device wallet. `onlyESIMWalletAdmin`.
+ *
+ * The bind that follows never carries ETH access: the contract reverts on a
+ * `true` rather than downgrading it quietly, so the SDK passes `false` and there
+ * is nothing to choose. The owner grants access afterwards with
+ * `toggleAccessToETH`, which the admin EOA cannot reach.
+ */
 export const _deployESIMWallet = async (
     client: WalletClient,
     deviceWalletAddress: Address,
-    hasAccessToETH: boolean,
     salt: bigint
 ) => {
 
@@ -28,7 +34,7 @@ export const _deployESIMWallet = async (
         account: client.account.address,
         abi: DeviceWallet,
         functionName: 'deployESIMWallet',
-        args: [hasAccessToETH, salt]
+        args: [false, salt]
     });
 }
 
