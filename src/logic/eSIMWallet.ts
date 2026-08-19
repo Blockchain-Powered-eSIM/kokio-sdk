@@ -14,6 +14,33 @@ import { ESIMWallet } from "../abis/index.js";
 // The functions below are `onlyDeviceWallet` (the eSIM wallet's owner IS the device
 // wallet) or otherwise satisfiable by the device-wallet userOp sender, so they succeed.
 
+/**
+ * Cap what this eSIM wallet may be charged for one data bundle. Zero hands it
+ * back to the registry's ceiling.
+ *
+ * `onlyDeviceWallet`, so it needs the user's own signature. That is the point:
+ * the admin names the price on `buyDataBundle`, so it must not be able to raise
+ * the ceiling on that price too. A handover clears the cap, and the new owner has
+ * to set it again.
+ */
+export const _setDataBundlePriceCap = async (client: KokioSmartAccountClient, address: Address, cap: bigint) => {
+
+    if(!client.account) throw new MissingSmartWalletError()
+
+    // UserOp - `onlyDeviceWallet`.
+    return client.sendUserOperation({
+        account: client.account,
+        calls: [{
+            to: address,
+            data: encodeFunctionData({
+                abi: ESIMWallet,
+                functionName: "setDataBundlePriceCap",
+                args: [cap]
+            })
+        }]
+    });
+}
+
 export const _buyDataBundle = async (client: KokioSmartAccountClient, address: Address, dataBundleDetails: DataBundleDetails) => {
 
     if(!client.account) throw new MissingSmartWalletError()

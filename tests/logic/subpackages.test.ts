@@ -92,6 +92,12 @@ const userOpCases: Array<{
     data: encodeFunctionData({ abi: ESIMWallet, functionName: "acceptOwnershipTransfer", args: [] }),
   },
   {
+    label: "eSIMWallet._setDataBundlePriceCap",
+    run: (c) => eSIMWallet._setDataBundlePriceCap(c, ESIM, 5n * 10n ** 18n),
+    target: ESIM,
+    data: encodeFunctionData({ abi: ESIMWallet, functionName: "setDataBundlePriceCap", args: [5n * 10n ** 18n] }),
+  },
+  {
     label: "eSIMWallet._sendETHToDeviceWallet",
     run: (c) => eSIMWallet._sendETHToDeviceWallet(c, ESIM, 3n),
     target: ESIM,

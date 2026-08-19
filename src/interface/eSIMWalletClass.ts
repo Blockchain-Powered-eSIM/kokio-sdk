@@ -4,7 +4,8 @@ import {
     _buyDataBundle,
     _owner,
     _requestTransferOwnership,
-    _sendETHToDeviceWallet
+    _sendETHToDeviceWallet,
+    _setDataBundlePriceCap
 } from "../logic/eSIMWallet.js"
 import { DataBundleDetails } from "../types";
 import { KokioSmartAccountClient } from "../types.js";
@@ -37,5 +38,9 @@ export class ESIMWalletSubPackage {
 
     sendETHToDeviceWallet (amount: bigint) {
         return _sendETHToDeviceWallet(this.client, this.address, amount);
+    }
+
+    setDataBundlePriceCap (cap: bigint) {
+        return _setDataBundlePriceCap(this.client, this.address, cap);
     }
 }
