@@ -14,8 +14,22 @@ export const makeMockWalletClient = (opts: {
   readResult?: unknown;
   /** Per-function read results, for logic that reads several values in one call. */
   reads?: Record<string, unknown>;
+  /**
+   * Receipts `waitForTransactionReceipt` hands back, one per call in order. Supply
+   * this to exercise logic that reads a batch's outcome off its own event.
+   */
+  receipts?: Array<{ logs: unknown[] }>;
+  /** What `simulateContract` does. Throw from here to exercise a revert path. */
+  simulate?: () => unknown;
 }): WalletClient => {
-  const { chainId, url = "https://rpc.test.invalid", account, readResult = "0xreadresult", reads } = opts;
+  const { chainId, url = "https://rpc.test.invalid", account, readResult = "0xreadresult", reads, receipts, simulate } = opts;
+
+  // Each write gets its own hash so a test driving several batches can tell them
+  // apart and check the order they were sent in.
+  let sent = 0;
+  const nextHash = () => `0x${(++sent).toString(16).padStart(64, "0")}`;
+
+  let delivered = 0;
 
   // Reads extend the wallet client with `publicActions` before calling
   // `readContract`; the stub's `extend` returns the same object so tests can
@@ -24,9 +38,15 @@ export const makeMockWalletClient = (opts: {
     getChainId: async () => chainId,
     transport: { url },
     account: account ? { address: account, type: "json-rpc" } : undefined,
-    writeContract: vi.fn(async () => "0xwritehash"),
+    writeContract: vi.fn(async () => (receipts ? nextHash() : "0xwritehash")),
     readContract: vi.fn(async ({ functionName }: { functionName: string }) =>
       reads && functionName in reads ? reads[functionName] : readResult),
+    waitForTransactionReceipt: vi.fn(async () => {
+      const receipt = receipts?.[delivered++];
+      if (!receipt) throw new Error(`Mock client has no receipt for transaction ${delivered}`);
+      return receipt;
+    }),
+    simulateContract: vi.fn(async () => (simulate ? simulate() : { result: undefined })),
   };
   client.extend = () => client;
 

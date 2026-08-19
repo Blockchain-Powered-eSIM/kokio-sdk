@@ -141,6 +141,20 @@ const eoaCases: Array<{
     value: 2n,
   },
   {
+    label: "lazyWalletRegistry._deployMoreESIMWalletsForLazyDevice",
+    run: (c) => lazyWalletRegistry._deployMoreESIMWalletsForLazyDevice(c, "Device_11", 10n),
+    address: F.LAZY_WALLET_REGISTRY,
+    functionName: "deployMoreESIMWalletsForLazyDevice",
+    args: ["Device_11", 10n],
+  },
+  {
+    label: "lazyWalletRegistry._setHistoryForLazyWallet",
+    run: (c) => lazyWalletRegistry._setHistoryForLazyWallet(c, "eid-1", 25n),
+    address: F.LAZY_WALLET_REGISTRY,
+    functionName: "setHistoryForLazyWallet",
+    args: ["eid-1", 25n],
+  },
+  {
     label: "lazyWalletRegistry._switchESIMIdentifierToNewDeviceIdentifier",
     run: (c) => lazyWalletRegistry._switchESIMIdentifierToNewDeviceIdentifier(c, "eid-1", "old", "new"),
     address: F.LAZY_WALLET_REGISTRY,

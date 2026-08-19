@@ -60,6 +60,14 @@ const readCases: Array<{
   { label: "lazyWalletRegistry._upgradeManager", run: (c) => lazyWalletRegistry._upgradeManager(c), address: F.LAZY_WALLET_REGISTRY, functionName: "upgradeManager", args: [] },
   { label: "lazyWalletRegistry._eSIMIdentifierToDeviceIdentifier", run: (c) => lazyWalletRegistry._eSIMIdentifierToDeviceIdentifier(c, "eid-1"), address: F.LAZY_WALLET_REGISTRY, functionName: "eSIMIdentifierToDeviceIdentifier", args: ["eid-1"] },
   { label: "lazyWalletRegistry._eSIMIdentifiersAssociatedWithDeviceIdentifier", run: (c) => lazyWalletRegistry._eSIMIdentifiersAssociatedWithDeviceIdentifier(c, "Device_11", 0n), address: F.LAZY_WALLET_REGISTRY, functionName: "eSIMIdentifiersAssociatedWithDeviceIdentifier", args: ["Device_11", 0n] },
+  { label: "lazyWalletRegistry._maxESIMWalletsPerCall", run: (c) => lazyWalletRegistry._maxESIMWalletsPerCall(c), address: F.LAZY_WALLET_REGISTRY, functionName: "MAX_ESIM_WALLETS_PER_CALL", args: [] },
+  { label: "lazyWalletRegistry._maxHistoryEntriesPerCall", run: (c) => lazyWalletRegistry._maxHistoryEntriesPerCall(c), address: F.LAZY_WALLET_REGISTRY, functionName: "MAX_HISTORY_ENTRIES_PER_CALL", args: [] },
+  { label: "lazyWalletRegistry._eSIMWalletsDeployed", run: (c) => lazyWalletRegistry._eSIMWalletsDeployed(c, "Device_11"), address: F.LAZY_WALLET_REGISTRY, functionName: "eSIMWalletsDeployed", args: ["Device_11"] },
+  { label: "lazyWalletRegistry._lazyDeploymentSalt", run: (c) => lazyWalletRegistry._lazyDeploymentSalt(c, "Device_11"), address: F.LAZY_WALLET_REGISTRY, functionName: "lazyDeploymentSalt", args: ["Device_11"] },
+  { label: "lazyWalletRegistry._lazyDeployedESIMWallet", run: (c) => lazyWalletRegistry._lazyDeployedESIMWallet(c, "eid-1"), address: F.LAZY_WALLET_REGISTRY, functionName: "lazyDeployedESIMWallet", args: ["eid-1"] },
+  { label: "lazyWalletRegistry._historyEntriesCopied", run: (c) => lazyWalletRegistry._historyEntriesCopied(c, "eid-1"), address: F.LAZY_WALLET_REGISTRY, functionName: "historyEntriesCopied", args: ["eid-1"] },
+  { label: "lazyWalletRegistry._isDeviceIdentifierReserved", run: (c) => lazyWalletRegistry._isDeviceIdentifierReserved(c, "Device_11"), address: F.LAZY_WALLET_REGISTRY, functionName: "isDeviceIdentifierReserved", args: ["Device_11"] },
+  { label: "lazyWalletRegistry._isESIMIdentifierReserved", run: (c) => lazyWalletRegistry._isESIMIdentifierReserved(c, "eid-1"), address: F.LAZY_WALLET_REGISTRY, functionName: "isESIMIdentifierReserved", args: ["eid-1"] },
 
   // deviceWallet.reads (target = device wallet instance address)
   { label: "deviceWallet._deviceUniqueIdentifier", run: (c) => deviceWallet._deviceUniqueIdentifier(c, WALLET), address: WALLET, functionName: "deviceUniqueIdentifier", args: [] },
