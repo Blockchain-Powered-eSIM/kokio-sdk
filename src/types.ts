@@ -99,6 +99,48 @@ export type DataBundleDetails = {
     dataBundlePrice: bigint;
 }
 
+/** One `deployMoreESIMWalletsForLazyDevice` (or first) transaction, read back from its receipt. */
+export type LazyDeploymentBatch = {
+    hash: Hex;
+    /** Wallets this batch deployed, in the order of the device's identifier list. */
+    eSIMWallets: readonly Address[];
+    eSIMIdentifiers: readonly string[];
+    /** eSIM wallets still waiting after this batch. Zero means the device is done. */
+    remaining: bigint;
+}
+
+/**
+ * What a fully paginated lazy deployment did. `eSIMWallets` and `eSIMIdentifiers`
+ * cover only the batches this call ran, so a resume reports what it finished
+ * rather than the device's whole set.
+ */
+export type LazyDeployment = {
+    deviceWallet: Address;
+    eSIMWallets: readonly Address[];
+    eSIMIdentifiers: readonly string[];
+    batches: readonly LazyDeploymentBatch[];
+    /** Every eSIM wallet already existed, so nothing was sent. */
+    alreadyComplete: boolean;
+}
+
+/** One `setHistoryForLazyWallet` transaction, read back from its receipt. */
+export type LazyHistoryBatch = {
+    hash: Hex;
+    copied: bigint;
+    /** Entries still waiting after this batch. Zero means the copy is done. */
+    remaining: bigint;
+}
+
+/** What a fully paginated history copy did, for one eSIM. */
+export type LazyHistoryCopy = {
+    eSIMWallet: Address;
+    /** Entries written by this call, across every batch it ran. */
+    copied: bigint;
+    batches: readonly LazyHistoryBatch[];
+    /** The history was already fully copied, so nothing was sent. */
+    alreadyComplete: boolean;
+}
+
 export type SignedRequest = {
     body: string;
     stamp : {
