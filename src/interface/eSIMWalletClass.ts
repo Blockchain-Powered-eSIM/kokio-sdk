@@ -2,6 +2,7 @@ import { Address } from "viem";
 import {
     _acceptOwnershipTransfer,
     _buyDataBundle,
+    _dataBundlePriceCap,
     _deviceWallet,
     _owner,
     _requestTransferOwnership,
@@ -28,6 +29,10 @@ export class ESIMWalletSubPackage {
 
     buyDataBundle (dataBundleDetails: DataBundleDetails) {
         return _buyDataBundle(this.client, this.address, dataBundleDetails);
+    }
+
+    dataBundlePriceCap () {
+        return _dataBundlePriceCap(this.client, this.address);
     }
 
     deviceWallet () {

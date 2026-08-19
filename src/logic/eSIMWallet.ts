@@ -1,8 +1,9 @@
-import { Address, encodeFunctionData } from "viem"
+import { Address, encodeFunctionData, maxUint256 } from "viem"
 import { DataBundleDetails } from "../types.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { MissingSmartWalletError } from "./errors.js";
 import { ESIMWallet } from "../abis/index.js";
+import { _defaultDataBundlePriceCap } from "./registry.js";
 
 // Not exposed on this surface:
 //   - populateHistory and setESIMUniqueIdentifier are `onlyRegistry` - callable
@@ -67,6 +68,38 @@ export const _owner = async (client: KokioSmartAccountClient, address: Address):
         functionName: "owner",
         args: []
     }) as Promise<Address>;
+}
+
+/**
+ * The ceiling that actually applies to this wallet's next purchase, in wei.
+ * Read it before naming a price on `buyDataBundle`, since a price above the
+ * ceiling reverts.
+ *
+ * Resolved the way the contract resolves it. The wallet's own cap wins when it
+ * has one. Zero there means "follow the registry", which is where a fresh wallet
+ * and a newly handed-over wallet both start. A zero on both means no ceiling at
+ * all, so this returns `maxUint256` rather than a zero that reads as "you may
+ * not spend anything".
+ *
+ * That last case cannot happen on a live deployment: the registry refuses a zero
+ * cap in both `initialize` and `setDefaultDataBundlePriceCap`. It is handled
+ * because the contract's own check treats zero as unlimited, not because the
+ * state is reachable.
+ */
+export const _dataBundlePriceCap = async (client: KokioSmartAccountClient, address: Address): Promise<bigint> => {
+
+    const walletCap = await client.readContract({
+        address,
+        abi: ESIMWallet,
+        functionName: "dataBundlePriceCap",
+        args: []
+    }) as bigint;
+
+    if (walletCap !== 0n) return walletCap;
+
+    const registryCap = await _defaultDataBundlePriceCap(client);
+
+    return registryCap === 0n ? maxUint256 : registryCap;
 }
 
 /**

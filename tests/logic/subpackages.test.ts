@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { encodeFunctionData, type Address, type Hex } from "viem";
+import { encodeFunctionData, maxUint256, type Address, type Hex } from "viem";
 
 import { makeMockSmartAccountClient } from "../utils/mockClient.js";
 import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
@@ -272,6 +272,13 @@ const readCases: Array<{
     args: [],
   },
   {
+    label: "eSIMWallet._dataBundlePriceCap",
+    run: (c) => eSIMWallet._dataBundlePriceCap(c, ESIM),
+    address: ESIM,
+    functionName: "dataBundlePriceCap",
+    args: [],
+  },
+  {
     label: "eSIMWallet._deviceWallet",
     run: (c) => eSIMWallet._deviceWallet(c, ESIM),
     address: ESIM,
@@ -421,5 +428,37 @@ describe("deviceWallet._getOwner", () => {
     const owner = await _getOwner(client, WALLET);
     expect(owner).toEqual(OWNER_KEY);
     vi.doUnmock("viem");
+  });
+});
+
+// --- Effective price ceiling ------------------------------------------------
+// The wallet's cap, the registry's, or no cap at all. The table above only
+// covers the first, since the shared mock never hands back a zero.
+describe("eSIMWallet._dataBundlePriceCap", () => {
+  const capClient = (reads: Record<string, unknown>) =>
+    ({
+      getChainId: async () => 84532,
+      transport: { url: "https://rpc.test.invalid" },
+      account: { address: ACCOUNT },
+      readContract: vi.fn(async ({ functionName }: { functionName: string }) => reads[functionName]),
+    }) as unknown as Parameters<typeof eSIMWallet._dataBundlePriceCap>[0];
+
+  it("returns the wallet's own cap when it has one", async () => {
+    const client = capClient({ dataBundlePriceCap: 7n, defaultDataBundlePriceCap: 99n });
+
+    expect(await eSIMWallet._dataBundlePriceCap(client, ESIM)).toBe(7n);
+    expect(client.readContract).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to the registry default when the wallet has no cap", async () => {
+    const client = capClient({ dataBundlePriceCap: 0n, defaultDataBundlePriceCap: 99n });
+
+    expect(await eSIMWallet._dataBundlePriceCap(client, ESIM)).toBe(99n);
+  });
+
+  it("reports no ceiling as maxUint256, not as zero", async () => {
+    const client = capClient({ dataBundlePriceCap: 0n, defaultDataBundlePriceCap: 0n });
+
+    expect(await eSIMWallet._dataBundlePriceCap(client, ESIM)).toBe(maxUint256);
   });
 });
