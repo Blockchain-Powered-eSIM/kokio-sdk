@@ -232,6 +232,9 @@ export const _scheduleBatch = async (
 /**
  * Schedule a payload built elsewhere. `PROPOSER_ROLE`. For calldata that did not
  * come from an ABI in this SDK.
+ *
+ * Returns what `_schedule` returns, so the id needed to cancel or inspect the
+ * operation comes back with it.
  */
 export const _scheduleRaw = async (
     client: WalletClient,
@@ -241,13 +244,20 @@ export const _scheduleRaw = async (
     predecessor: Hex,
     salt: Hex,
     delay: bigint
-) => {
+): Promise<ScheduledOperation> => {
 
     const values = await _resolve(client);
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    const id = await client.extend(publicActions).readContract({
+        address: values.factoryAddresses.PROTOCOL_ADMIN,
+        abi: ProtocolAdmin,
+        functionName: "hashOperation",
+        args: [target, value, payload, predecessor, salt]
+    }) as Hex;
+
+    const hash = await client.writeContract({
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -255,6 +265,8 @@ export const _scheduleRaw = async (
         functionName: 'schedule',
         args: [target, value, payload, predecessor, salt, delay]
     });
+
+    return { hash, id, target, value, payload, predecessor, salt, delay };
 }
 
 // ---------------------------------------------------------------------------

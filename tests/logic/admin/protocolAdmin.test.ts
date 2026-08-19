@@ -157,6 +157,23 @@ describe("protocolAdmin raw operation ids", () => {
         expect(arg.args).toEqual([[F.REGISTRY, F.DEVICE_WALLET_FACTORY], [1n, 0n], ["0xdead", "0xbeef"], ZERO32, SALT]);
     });
 
+    it("scheduleRaw hands back the same shape schedule does", async () => {
+        const client = scheduleClient();
+
+        const op = await protocolAdmin._scheduleRaw(client, F.REGISTRY, 1n, "0xdead", ZERO32, SALT, 60n);
+
+        expect(op).toEqual({
+            hash: "0xwritehash",
+            id: OP_ID,
+            target: F.REGISTRY,
+            value: 1n,
+            payload: "0xdead",
+            predecessor: ZERO32,
+            salt: SALT,
+            delay: 60n,
+        });
+    });
+
     it("agrees with the owner-call id helper for the same payload", async () => {
         const client = scheduleClient();
 
