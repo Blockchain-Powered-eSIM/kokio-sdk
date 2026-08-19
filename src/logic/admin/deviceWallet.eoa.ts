@@ -31,3 +31,29 @@ export const _deployESIMWallet = async (
         args: [hasAccessToETH, salt]
     });
 }
+
+/**
+ * Top up a device wallet's gas deposit at the EntryPoint, paid by the admin EOA.
+ *
+ * Open to anyone: paying another account's gas costs the payer and nobody else.
+ * `withdrawDepositTo` is `onlySelf`, so only the wallet's owner can take it back
+ * out, and topping one up is not a way to reach its funds.
+ */
+export const _addDeposit = async (client: WalletClient, deviceWalletAddress: Address, amount: bigint) => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return client.writeContract({
+        address: deviceWalletAddress,
+        chain: values.chain,
+        account: client.account.address,
+        abi: DeviceWallet,
+        functionName: 'addDeposit',
+        args: [],
+        value: amount
+    });
+}

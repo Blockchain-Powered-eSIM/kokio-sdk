@@ -204,6 +204,14 @@ const eoaCases: Array<{
     functionName: "deployESIMWallet",
     args: [true, 7n],
   },
+  {
+    label: "deviceWallet._addDeposit",
+    run: (c) => deviceWallet._addDeposit(c, WALLET, 500n),
+    address: WALLET,
+    functionName: "addDeposit",
+    args: [],
+    value: 500n,
+  },
   // eSIMWallet.eoa (target = eSIM instance address)
   {
     label: "eSIMWallet._buyDataBundle (explicit value)",

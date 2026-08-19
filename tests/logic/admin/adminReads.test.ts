@@ -83,6 +83,12 @@ const readCases: Array<{
   { label: "deviceWallet._isValidESIMWallet", run: (c) => deviceWallet._isValidESIMWallet(c, WALLET, ESIM), address: WALLET, functionName: "isValidESIMWallet", args: [ESIM] },
   { label: "deviceWallet._canPullETH", run: (c) => deviceWallet._canPullETH(c, WALLET, ESIM), address: WALLET, functionName: "canPullETH", args: [ESIM] },
   { label: "deviceWallet._getVaultAddress", run: (c) => deviceWallet._getVaultAddress(c, WALLET), address: WALLET, functionName: "getVaultAddress", args: [] },
+  { label: "deviceWallet._getDeposit", run: (c) => deviceWallet._getDeposit(c, WALLET), address: WALLET, functionName: "getDeposit", args: [] },
+  { label: "deviceWallet._isValidSignature", run: (c) => deviceWallet._isValidSignature(c, WALLET, HASH, "0x01000000000000dead"), address: WALLET, functionName: "isValidSignature", args: [HASH, "0x01000000000000dead"] },
+  { label: "deviceWallet._registry", run: (c) => deviceWallet._registry(c, WALLET), address: WALLET, functionName: "registry", args: [] },
+  { label: "deviceWallet._eSIMWalletFactory", run: (c) => deviceWallet._eSIMWalletFactory(c, WALLET), address: WALLET, functionName: "eSIMWalletFactory", args: [] },
+  { label: "deviceWallet._entryPoint", run: (c) => deviceWallet._entryPoint(c, WALLET), address: WALLET, functionName: "entryPoint", args: [] },
+  { label: "deviceWallet._verifier", run: (c) => deviceWallet._verifier(c, WALLET), address: WALLET, functionName: "verifier", args: [] },
 
   // eSIMWallet.reads (target = eSIM instance address)
   { label: "eSIMWallet._eSIMWalletFactory", run: (c) => eSIMWallet._eSIMWalletFactory(c, ESIM), address: ESIM, functionName: "eSIMWalletFactory", args: [] },
@@ -107,6 +113,21 @@ describe("admin readContract calls", () => {
     expect(arg.args).toEqual(args);
     // Reads never thread an account/value through - only the read shape matters.
     expect(arg.value).toBeUndefined();
+  });
+
+  // The owner key is stored as an array, so Solidity gives an indexed getter and
+  // reading the pair takes two calls rather than one.
+  it("getOwner reads both co-ordinates of the P256 key", async () => {
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, readResult: HASH });
+
+    const owner = await deviceWallet._getOwner(client, WALLET);
+
+    const read = client.readContract as ReturnType<typeof vi.fn>;
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(read.mock.calls[0][0].functionName).toBe("owner");
+    expect(read.mock.calls[0][0].args).toEqual([0n]);
+    expect(read.mock.calls[1][0].args).toEqual([1n]);
+    expect(owner).toEqual([HASH, HASH]);
   });
 
   it("deviceIdentifierToESIMDetails maps the (id, price) tuple into a DataBundleDetails", async () => {
