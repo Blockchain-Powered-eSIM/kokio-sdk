@@ -19,6 +19,25 @@ export const ZERO = BigInt('0');
 
 export const SIGNATURE_VALIDITY_SECONDS = 180; // 3 minutes validity
 
+// Gas estimation runs before a passkey signature exists, so the account hands the
+// bundler "0x" as a stub. Account4337 rejects any signature of 39 bytes or fewer
+// before it reaches the P256 verifier, so the bundler measures an early return and
+// prices calldata that is 519 bytes short of the real thing. Both estimates come
+// back too low and an operation sized from them is refused, so both are padded.
+//
+// Measured on Base Sepolia: verification estimated at 33,703 gas against a floor of
+// 76,628, and preVerificationGas 11,536 lower than the same operation carrying a
+// real-length signature.
+
+// Unused verification gas is refunded in full, unlike callGasLimit, so headroom
+// here only raises the prefund the sponsor has to post and costs nothing when it
+// goes unspent.
+export const STUB_VERIFICATION_GAS_PAD = BigInt(60_000);
+
+// preVerificationGas is charged whether or not it is used, so this stays close to
+// the measured shortfall.
+export const STUB_PRE_VERIFICATION_GAS_PAD = BigInt(15_000);
+
 export enum CHAIN_ID  {
     MAINNET = 1,
     SEPOLIA = 11155111,

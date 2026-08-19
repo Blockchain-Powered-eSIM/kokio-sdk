@@ -18,7 +18,11 @@ import { entryPoint08Abi } from "viem/account-abstraction";
 vi.mock("react-native-passkey", () => ({ Passkey: {} }));
 
 import { DeviceWallet, DeviceWalletFactory } from "../../src/abis/index.js";
-import { baseSepoliaFactoryAddresses, SIGNATURE_VALIDITY_SECONDS } from "../../src/logic/constants.js";
+import {
+  baseSepoliaFactoryAddresses,
+  SIGNATURE_VALIDITY_SECONDS,
+  STUB_VERIFICATION_GAS_PAD,
+} from "../../src/logic/constants.js";
 import { _encodeSignature } from "../../src/logic/account-kit/createSmartAccount.js";
 import { forkAvailable, startFork, type Fork } from "../utils/forkChain.js";
 import { createSoftSigner } from "../utils/softP256Signer.js";
@@ -178,10 +182,6 @@ describe.skipIf(!forkAvailable())("Stub signature validation cost", () => {
         });
 
       // An operation sized from the stub cannot afford to check the signature it
-      // carries, and the EntryPoint refuses it.
-      await expect(submit(await signedAt(stubCost))).rejects.toThrow();
-
-      // An operation sized from the stub cannot afford to check the signature it
       // carries. The EntryPoint refuses it outright with AA26 rather than running
       // it and reporting failure, so this is a dropped operation, not a failed one.
       await expect(submit(await signedAt(stubCost))).rejects.toThrow();
@@ -190,6 +190,12 @@ describe.skipIf(!forkAvailable())("Stub signature validation cost", () => {
       // Measured minimum on this deployment is 76,628; the headroom here is for
       // compiler and chain drift, not for the shortfall being approximate.
       await expect(submit(await signedAt(VERIFICATION_GAS_FLOOR))).resolves.toBeDefined();
+
+      // And the padded estimate is what the SDK signs for, so the same operation
+      // has to go through at exactly that size, not merely at a round number.
+      await expect(
+        submit(await signedAt(stubCost + STUB_VERIFICATION_GAS_PAD)),
+      ).resolves.toBeDefined();
 
       // Guards the finding itself: if the stub ever starts measuring the real
       // path, this ratio collapses and the SDK no longer needs to pad.

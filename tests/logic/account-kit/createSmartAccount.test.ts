@@ -29,6 +29,8 @@ import { DeviceWallet, DeviceWalletFactory } from "../../../src/abis/index.js";
 import {
   baseSepoliaFactoryAddresses,
   CHAIN_ID,
+  STUB_PRE_VERIFICATION_GAS_PAD,
+  STUB_VERIFICATION_GAS_PAD,
 } from "../../../src/logic/constants.js";
 import type { P256Key, WebAuthnSignature } from "../../../src/types.js";
 
@@ -64,6 +66,7 @@ import {
   _encodeCalls,
   _encodeSignature,
   _getFactoryArgs,
+  _padGasEstimate,
   _signMessage,
   _signTypedData,
   _signUserOperationHash,
@@ -544,5 +547,52 @@ describe("user operation hash on EntryPoint v0.8", () => {
       verifyingContract: baseSepoliaFactoryAddresses.ENTRY_POINT,
     });
     expect(v8).toBe(hashTypedData(typedData));
+  });
+});
+
+// --- Gas estimate padding ----------------------------------------------------
+// The bundler estimates against a stub signature that never reaches the P256
+// verifier, so both verification numbers come back too low. The transport raises
+// them before the operation that gets signed is built.
+describe("_padGasEstimate", () => {
+  it("raises verificationGasLimit and preVerificationGas by the measured shortfall", () => {
+    const padded = _padGasEstimate({
+      verificationGasLimit: toHex(100_000n),
+      preVerificationGas: toHex(50_000n),
+      callGasLimit: toHex(20_000n),
+    });
+
+    expect(BigInt(padded.verificationGasLimit)).toBe(100_000n + STUB_VERIFICATION_GAS_PAD);
+    expect(BigInt(padded.preVerificationGas)).toBe(50_000n + STUB_PRE_VERIFICATION_GAS_PAD);
+  });
+
+  it("leaves every other field alone", () => {
+    const padded = _padGasEstimate({
+      verificationGasLimit: toHex(1n),
+      preVerificationGas: toHex(1n),
+      callGasLimit: toHex(20_000n),
+      paymasterPostOpGasLimit: toHex(3_000n),
+      paymasterVerificationGasLimit: toHex(4_000n),
+    });
+
+    expect(padded.callGasLimit).toBe(toHex(20_000n));
+    expect(padded.paymasterPostOpGasLimit).toBe(toHex(3_000n));
+    expect(padded.paymasterVerificationGasLimit).toBe(toHex(4_000n));
+  });
+
+  // A bundler that omits a field has not estimated it, and inventing a padded
+  // zero would read as an estimate downstream.
+  it("does not invent a field the bundler left out", () => {
+    const padded = _padGasEstimate({ callGasLimit: toHex(20_000n) });
+
+    expect("verificationGasLimit" in padded).toBe(false);
+    expect("preVerificationGas" in padded).toBe(false);
+  });
+
+  // Covers the gap the padding exists to close: Base Sepolia measured 33,703 gas
+  // estimated against a 76,628 floor, and 11,536 of missing calldata.
+  it("covers the shortfall measured on Base Sepolia", () => {
+    expect(STUB_VERIFICATION_GAS_PAD).toBeGreaterThanOrEqual(76_628n - 33_703n);
+    expect(STUB_PRE_VERIFICATION_GAS_PAD).toBeGreaterThanOrEqual(11_536n);
   });
 });

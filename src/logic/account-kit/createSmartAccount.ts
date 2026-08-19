@@ -9,7 +9,10 @@ import {
 	createBundlerClient, createPaymasterClient, entryPoint08Abi,
 	getUserOperationHash, toSmartAccount, type UserOperation
 } from "viem/account-abstraction";
-import { _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS } from "../constants.js";
+import {
+	_getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS,
+	STUB_VERIFICATION_GAS_PAD, STUB_PRE_VERIFICATION_GAS_PAD
+} from "../constants.js";
 import { CounterfactualMismatchError } from "../errors.js";
 import { _add0x, _concatUint8Arrays, _shouldRemoveLeadingZero } from "../utils.js";
 import { P256Key, WebAuthnSignature, KokioSmartAccount, KokioSmartAccountClient } from "../../types.js";
@@ -486,6 +489,35 @@ const BUNDLER_METHODS = new Set([
 	"eth_supportedEntryPoints",
 ]);
 
+// A bundler answers eth_estimateUserOperationGas in hex quantities.
+type RawGasEstimate = Record<string, Hex>;
+
+/**
+ * Raise the bundler's verification estimates to what a real signature costs.
+ * See `STUB_VERIFICATION_GAS_PAD` for the measurements behind the numbers.
+ *
+ * This sits in the transport because viem binds `prepareUserOperation` to the
+ * client as it was before `.extend` ran, so an `estimateUserOperationGas`
+ * override placed on the client is never the one it calls.
+ */
+export const _padGasEstimate = (estimate: RawGasEstimate): RawGasEstimate => {
+
+	const pad = (value: Hex | undefined, by: bigint): Hex | undefined =>
+		value === undefined ? undefined : toHex(BigInt(value) + by);
+
+	return {
+		...estimate,
+		// Left out rather than set to zero when the bundler omits one, so a missing
+		// field still reads as "not estimated" downstream.
+		...(estimate.verificationGasLimit === undefined ? {} : {
+			verificationGasLimit: pad(estimate.verificationGasLimit, STUB_VERIFICATION_GAS_PAD)!,
+		}),
+		...(estimate.preVerificationGas === undefined ? {} : {
+			preVerificationGas: pad(estimate.preVerificationGas, STUB_PRE_VERIFICATION_GAS_PAD)!,
+		}),
+	};
+}
+
 // Routes bundler calls to Pimlico and everything else to the chain RPC. viem
 // ships no split transport, and the returned client needs both: the SDK reads
 // contracts through the same client it sends user operations with.
@@ -500,10 +532,16 @@ const _splitTransport = (pimlicoRpcURL: string, rpcURL: string): Transport => {
 			name: "Split",
 			type: "split",
 			retryCount,
-			request: (async ({ method, params }: { method: string; params?: unknown }) =>
-				BUNDLER_METHODS.has(method)
-					? bundler.request({ method, params } as never)
-					: rpc.request({ method, params } as never)) as EIP1193RequestFn,
+			request: (async ({ method, params }: { method: string; params?: unknown }) => {
+
+				if (!BUNDLER_METHODS.has(method)) return rpc.request({ method, params } as never);
+
+				const result = await bundler.request({ method, params } as never);
+
+				return method === "eth_estimateUserOperationGas"
+					? _padGasEstimate(result as RawGasEstimate)
+					: result;
+			}) as EIP1193RequestFn,
 		},
 		// Chain constants are resolved from client.transport.url, so the chain
 		// RPC has to stay readable here.
