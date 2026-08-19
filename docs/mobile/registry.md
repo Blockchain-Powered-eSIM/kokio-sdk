@@ -8,7 +8,7 @@ from a device-wallet user operation; everything else on the registry is
 admin-gated and lives on `admin.registry` instead.
 
 ```ts
-const { hash } = await kokio.registry!.bindESIMWallet(eSIMWalletAddress);
+const hash = await kokio.registry!.bindESIMWallet(eSIMWalletAddress);
 ```
 
 ## bindESIMWallet
@@ -21,7 +21,7 @@ transfer first, then bind. This also clears any standby flag left over from
 the transfer.
 
 ```ts
-const { hash } = await kokio.registry!.bindESIMWallet(eSIMWalletAddress);
+const hash = await kokio.registry!.bindESIMWallet(eSIMWalletAddress);
 ```
 
 Returns: `Promise<Hash>`, a user operation hash.
@@ -33,7 +33,7 @@ transfer as started or cancelled. Only the flag changes; the registry keeps
 naming this device wallet as the holder either way.
 
 ```ts
-const { hash } = await kokio.registry!.toggleESIMWalletStandbyStatus(eSIMWalletAddress, true);
+const hash = await kokio.registry!.toggleESIMWalletStandbyStatus(eSIMWalletAddress, true);
 ```
 
 Returns: `Promise<Hash>`.

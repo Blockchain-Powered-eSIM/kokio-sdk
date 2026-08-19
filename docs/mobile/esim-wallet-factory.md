@@ -6,7 +6,7 @@ Deploys a new eSIM wallet for a device wallet. Present as soon as `Kokio` has
 a `smartAccountClient`, chain-wide like the device wallet factory.
 
 ```ts
-const { hash } = await kokio.eSIMWalletFactory!.deployESIMWalletWithUserOp(deviceWalletAddress, salt);
+const hash = await kokio.eSIMWalletFactory!.deployESIMWalletWithUserOp(deviceWalletAddress, salt);
 ```
 
 ## deployESIMWalletWithUserOp
@@ -16,7 +16,7 @@ user is adding a new eSIM to a device wallet they already have. The device
 wallet sending the user operation has to be a wallet the registry recognizes.
 
 ```ts
-const { hash } = await kokio.eSIMWalletFactory!.deployESIMWalletWithUserOp(
+const hash = await kokio.eSIMWalletFactory!.deployESIMWalletWithUserOp(
   deviceWalletAddress,
   salt, // bigint, makes the eSIM wallet's address unique
 );

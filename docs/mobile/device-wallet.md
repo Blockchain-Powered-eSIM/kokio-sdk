@@ -9,7 +9,7 @@ Only present once `Kokio` has both a `smartAccountClient` and a
 operation signed by the passkey.
 
 ```ts
-const { hash } = await kokio.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, true);
+const hash = await kokio.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, true);
 await smartAccountClient.waitForUserOperationTransaction({ hash });
 ```
 
@@ -39,7 +39,7 @@ This never grants ETH access on its own. Call `toggleAccessToETH` afterwards
 if the eSIM wallet should be able to pull ETH.
 
 ```ts
-const { hash } = await kokio.deviceWallet!.addESIMWallet(eSIMWalletAddress);
+const hash = await kokio.deviceWallet!.addESIMWallet(eSIMWalletAddress);
 ```
 
 Returns: `Promise<Hash>`, a user operation hash.
@@ -54,7 +54,7 @@ device wallet, after the release runs. A failed sweep does not fail the whole
 call, so a `true` here does not guarantee anything arrived.
 
 ```ts
-const { hash } = await kokio.deviceWallet!.removeESIMWallet(eSIMWalletAddress, true);
+const hash = await kokio.deviceWallet!.removeESIMWallet(eSIMWalletAddress, true);
 ```
 
 Returns: `Promise<Hash>`.
@@ -66,7 +66,7 @@ wallet. Use it when the user wants to fund a specific eSIM's purchases, or to
 take that permission back.
 
 ```ts
-const { hash } = await kokio.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, true);
+const hash = await kokio.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, true);
 ```
 
 Returns: `Promise<Hash>`.
@@ -81,7 +81,7 @@ current passkey, and there is no way to transfer again if the new key turns
 out to be unusable. Make sure the new key can actually sign before calling.
 
 ```ts
-const { hash } = await kokio.deviceWallet!.transferOwnership(newOwnerKey);
+const hash = await kokio.deviceWallet!.transferOwnership(newOwnerKey);
 ```
 
 Returns: `Promise<Hash>`.
@@ -93,7 +93,7 @@ the wallet's own ETH balance. Use it to keep the wallet able to pay for its
 own user operations.
 
 ```ts
-const { hash } = await kokio.deviceWallet!.addDeposit(amount);
+const hash = await kokio.deviceWallet!.addDeposit(amount);
 ```
 
 Returns: `Promise<Hash>`.
@@ -104,7 +104,7 @@ Pulls part of the EntryPoint gas deposit back out, to any address. Use it to
 recover unused gas funds.
 
 ```ts
-const { hash } = await kokio.deviceWallet!.withdrawDepositTo(withdrawAddress, amount);
+const hash = await kokio.deviceWallet!.withdrawDepositTo(withdrawAddress, amount);
 ```
 
 Returns: `Promise<Hash>`.

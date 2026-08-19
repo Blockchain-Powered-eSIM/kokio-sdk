@@ -80,7 +80,7 @@ const session = new Kokio(
 );
 
 // 4. Send a user operation. The passkey signs it on the device.
-const { hash } = await session.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, true);
+const hash = await session.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, true);
 await smartAccountClient.waitForUserOperationTransaction({ hash });
 ```
 

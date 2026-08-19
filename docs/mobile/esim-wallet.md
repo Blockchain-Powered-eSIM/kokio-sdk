@@ -11,7 +11,7 @@ Writes here need the device wallet that owns this eSIM wallet to be the
 signer, which is exactly what a passkey user operation already is.
 
 ```ts
-const { hash } = await kokio.eSIMWallet!.buyDataBundle({ dataBundleID, dataBundlePrice });
+const hash = await kokio.eSIMWallet!.buyDataBundle({ dataBundleID, dataBundlePrice });
 ```
 
 ## buyDataBundle
@@ -21,7 +21,7 @@ Buys a data bundle for this eSIM. Use this for the everyday purchase flow.
 Check `dataBundlePriceCap()` first: a price above the cap reverts.
 
 ```ts
-const { hash } = await kokio.eSIMWallet!.buyDataBundle({
+const hash = await kokio.eSIMWallet!.buyDataBundle({
   dataBundleID: "5gb-30d",
   dataBundlePrice: price, // must not exceed dataBundlePriceCap()
 });
@@ -38,7 +38,7 @@ admin sets as the default.
 Pass `0n` to hand control back to the registry's default cap.
 
 ```ts
-const { hash } = await kokio.eSIMWallet!.setDataBundlePriceCap(cap);
+const hash = await kokio.eSIMWallet!.setDataBundlePriceCap(cap);
 ```
 
 Returns: `Promise<Hash>`.
@@ -50,7 +50,7 @@ switching their eSIM to a different device. The move only completes once the
 new device wallet calls `acceptOwnershipTransfer`.
 
 ```ts
-const { hash } = await kokio.eSIMWallet!.requestTransferOwnership(newDeviceWalletAddress);
+const hash = await kokio.eSIMWallet!.requestTransferOwnership(newDeviceWalletAddress);
 ```
 
 Returns: `Promise<Hash>`.
@@ -61,7 +61,7 @@ Finishes a transfer that another device wallet started. Call this from the
 device wallet that was named in `requestTransferOwnership`.
 
 ```ts
-const { hash } = await kokio.eSIMWallet!.acceptOwnershipTransfer();
+const hash = await kokio.eSIMWallet!.acceptOwnershipTransfer();
 ```
 
 Returns: `Promise<Hash>`.
@@ -71,7 +71,7 @@ Returns: `Promise<Hash>`.
 Sends ETH held by this eSIM wallet back to its owning device wallet.
 
 ```ts
-const { hash } = await kokio.eSIMWallet!.sendETHToDeviceWallet(amount);
+const hash = await kokio.eSIMWallet!.sendETHToDeviceWallet(amount);
 ```
 
 Returns: `Promise<Hash>`.
