@@ -1,3 +1,7 @@
+// Loaded here rather than per suite: every fork test reaches the chain through
+// this module, and a missing BASE_SEPOLIA_RPC_URL silently falls back to the
+// public endpoint, which is rate limited enough to fail the fork on startup.
+import "dotenv/config";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import {
   createPublicClient,

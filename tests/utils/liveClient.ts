@@ -1,3 +1,6 @@
+// Same reason as forkChain.ts: `hasRpc` decides whether a suite runs at all, so
+// the env has to be loaded before any suite imports this.
+import "dotenv/config";
 import { createPublicClient, http, type PublicClient, type WalletClient } from "viem";
 import { baseSepolia } from "viem/chains";
 
