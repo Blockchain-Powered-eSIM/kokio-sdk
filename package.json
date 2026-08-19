@@ -48,21 +48,20 @@
   },
   "homepage": "https://github.com/Blockchain-Powered-eSIM/kokio-sdk#readme",
   "devDependencies": {
-    "dotenv": "^16.5.0",
-    "typescript": "^5.7.3",
+    "@types/node": "22.20.1",
+    "dotenv": "16.6.1",
+    "typescript": "5.9.3",
     "vitest": "4.1.10"
   },
   "dependencies": {
     "@noble/curves": "2.2.0",
-    "@peculiar/asn1-ecc": "2.8.0",
-    "@peculiar/asn1-schema": "2.8.0",
+    "@peculiar/asn1-ecc": "2.9.3",
+    "@peculiar/asn1-schema": "2.9.3",
     "@simplewebauthn/server": "13.3.2",
     "react-native-passkey": "3.5.0",
     "viem": "2.53.1"
   },
   "overrides": {
-    "ws": "8.21.0",
-    "uuid": "14.0.0",
-    "js-cookie": "3.0.8"
+    "ws": "8.21.0"
   }
 }
