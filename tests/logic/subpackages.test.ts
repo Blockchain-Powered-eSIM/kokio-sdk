@@ -74,12 +74,6 @@ const userOpCases: Array<{
   },
   // eSIMWallet.ts - the eSIM wallet's owner IS the device-wallet sender (onlyDeviceWallet)
   {
-    label: "eSIMWallet._setESIMUniqueIdentifier",
-    run: (c) => eSIMWallet._setESIMUniqueIdentifier(c, ESIM, "eid-9"),
-    target: ESIM,
-    data: encodeFunctionData({ abi: ESIMWallet, functionName: "setESIMUniqueIdentifier", args: ["eid-9"] }),
-  },
-  {
     label: "eSIMWallet._buyDataBundle",
     run: (c) => eSIMWallet._buyDataBundle(c, ESIM, BUNDLE),
     target: ESIM,

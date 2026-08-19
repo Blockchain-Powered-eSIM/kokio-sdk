@@ -5,30 +5,14 @@ import { MissingSmartWalletError } from "./errors.js";
 import { ESIMWallet } from "../abis/index.js";
 
 // Not exposed on this surface:
-//   - populateHistory is `onlyRegistry` - callable only by the registry contract.
+//   - populateHistory and setESIMUniqueIdentifier are `onlyRegistry` - callable
+//     only by the registry contract. Naming an eSIM goes through
+//     `admin.registry.assignESIMIdentifier` instead.
 //   - transferOwnership is a `pure` override that always reverts
 //     ("Use acceptOwnershipTransfer instead."); use requestTransferOwnership /
 //     acceptOwnershipTransfer instead.
 // The functions below are `onlyDeviceWallet` (the eSIM wallet's owner IS the device
 // wallet) or otherwise satisfiable by the device-wallet userOp sender, so they succeed.
-
-export const _setESIMUniqueIdentifier = async (client: KokioSmartAccountClient, address: Address, eSIMUniqueIdentifier: string) => {
-
-    if(!client.account) throw new MissingSmartWalletError()
-
-    // UserOp - `onlyDeviceWallet`.
-    return client.sendUserOperation({
-        account: client.account,
-        calls: [{
-            to: address,
-            data: encodeFunctionData({
-                abi: ESIMWallet,
-                functionName: "setESIMUniqueIdentifier",
-                args: [eSIMUniqueIdentifier]
-            })
-        }]
-    });
-}
 
 export const _buyDataBundle = async (client: KokioSmartAccountClient, address: Address, dataBundleDetails: DataBundleDetails) => {
 
