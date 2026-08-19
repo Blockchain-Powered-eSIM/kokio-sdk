@@ -17,9 +17,10 @@ No keys or funds - read access only.
 
 ## Write / UserOp scenario tier - local Base Sepolia fork
 
-`adminFork.integration.test.ts`, `userOpFork.integration.test.ts` and
-`protocolAdminFork.integration.test.ts` drive real state-changing flows against a
-local [`anvil`](https://book.getfoundry.sh/anvil/) fork of Base Sepolia. **No
+`adminFork.integration.test.ts`, `userOpFork.integration.test.ts`,
+`protocolAdminFork.integration.test.ts` and
+`lazyDeploymentFork.integration.test.ts` drive real state-changing flows against
+a local [`anvil`](https://book.getfoundry.sh/anvil/) fork of Base Sepolia. **No
 private keys and no bundler** are required:
 
 - The fork carries the real deployed contracts and reports chain id `84532`, so
@@ -52,5 +53,8 @@ The fork pulls upstream state from `BASE_SEPOLIA_RPC_URL` if set, otherwise the
 public `https://sepolia.base.org`. Set `ANVIL_BIN` to point at a specific `anvil`
 binary when a newer Foundry lives outside `PATH` (e.g. `~/.foundry/bin/anvil`).
 
-The tier runs with `--no-file-parallelism` so the two forks don't fetch upstream
-state concurrently (which can rate-limit the public endpoint).
+The tier runs with `--no-file-parallelism` so the forks don't fetch upstream
+state concurrently (which can rate-limit the public endpoint). Each suite still
+starts its own fork, and `startFork` retries once when anvil exits before it
+serves a request, which is what a rate-limited or briefly unhealthy upstream
+looks like. Set `BASE_SEPOLIA_RPC_URL` to a private endpoint to avoid it.
