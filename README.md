@@ -37,8 +37,7 @@ You will need:
 
 - a viem `WalletClient` connected to the target chain,
 - the passkey `credentialId` and `rpId` registered for the device,
-- your `organizationId`, a Pimlico API key, and a gas policy id (used by the
-  bundler and paymaster).
+- a Pimlico API key and a gas policy id (used by the bundler and paymaster).
 
 ```ts
 import { Kokio } from "kokio-sdk";
@@ -51,7 +50,6 @@ const kokio = new Kokio(
   walletClient,
   credentialId,        // passkey credential id on the device
   rpId,                // relying party id (your app domain)
-  organizationId,
   pimlicoAPIKey,
   gasPolicyId,
 );
@@ -70,7 +68,6 @@ const session = new Kokio(
   walletClient,
   credentialId,
   rpId,
-  organizationId,
   pimlicoAPIKey,
   gasPolicyId,
   smartAccountClient,
@@ -84,7 +81,7 @@ await smartAccountClient.waitForUserOperationTransaction({ hash });
 ```
 
 The contract surfaces (`deviceWallet`, `eSIMWallet`, `deviceWalletFactory`,
-`eSIMWalletFactory`, `lazyWalletRegistry`, `P256Verifier`) are only present once a
+`eSIMWalletFactory`, `registry`, `P256Verifier`) are only present once a
 `smartAccountClient` is supplied, which is why the example constructs `Kokio`
 twice. Instance surfaces (`deviceWallet`, `eSIMWallet`) also need their contract
 address. They stay `undefined` until you pass it.
@@ -143,9 +140,27 @@ the instance and return `this`, so they can be chained. Admin methods send ordin
 transactions and resolve to a transaction hash.
 
 The chain-wide surfaces (`deviceWalletFactory`, `eSIMWalletFactory`, `registry`,
-`lazyWalletRegistry`) are available as soon as the instance exists. The
-instance-scoped surfaces (`deviceWallet`, `eSIMWallet`) become available once their
-address is set.
+`lazyWalletRegistry`, `protocolAdmin`) are available as soon as the instance
+exists. The instance-scoped surfaces (`deviceWallet`, `eSIMWallet`) become
+available once their address is set.
+
+`protocolAdmin` wraps the timelock that owns `registry`, `lazyWalletRegistry`,
+`deviceWalletFactory`, and `eSIMWalletFactory` on chain. It schedules, executes,
+and cancels privileged calls behind a delay, split across four role-scoped
+surfaces: `proposer` schedules a call, `executor` runs one once its delay has
+passed, `canceller` cancels a pending one, and `guardian` bypasses the delay for
+emergency actions such as unpausing or disabling a compromised admin.
+
+## Types and ABIs
+
+Two more subpaths support the entry points above:
+
+- `kokio-sdk/types` re-exports the shared types (`P256Key`, `WebAuthnSignature`,
+  `DataBundleDetails`, `KokioSmartAccountClient`, `OwnerCall`, and others) so you
+  can type your own code without reaching into internal paths.
+- `kokio-sdk/abis` re-exports the typed contract ABIs (`DeviceWallet`,
+  `ESIMWallet`, `Registry`, `ProtocolAdmin`, and others), useful if you need to
+  decode logs or call a contract directly with viem.
 
 ## Errors
 
@@ -169,11 +184,26 @@ try {
 `CounterfactualMismatchError`, and `ContractRevertError`. `decodeContractRevert`
 turns raw revert data into a readable reason.
 
-## Supported chains
+The paginated `lazyWalletRegistry` calls on `KokioAdmin` can also throw a few
+narrower `KokioError` subclasses that are not exported by name (for example
+`BatchSizeOutOfRangeError`). Catch them with `instanceof KokioError` and read
+`.code` instead of importing the specific class.
 
-The SDK resolves the contract addresses from the wallet client's connected chain
-id, so you do not pass them yourself. Base Sepolia (chain id `84532`) is the
-deployment used in development. Sepolia and other testnets are also configured.
+## Constants and supported chains
+
+Both entry points expose an async `constants` getter with the resolved factory
+addresses, chain, RPC URL, and custom-error selectors for the wallet client's
+connected chain:
+
+```ts
+const { factoryAddresses, chain, rpcURL } = await kokio.constants;
+```
+
+The SDK resolves these from the wallet client's connected chain id, so you do not
+pass addresses yourself. Base Sepolia (chain id `84532`) is the only chain with a
+live deployment today. Ethereum, Optimism, and Arbitrum (mainnet and their
+testnets) are wired into the chain-resolution logic but not yet deployed;
+connecting to one of them throws `UnconfiguredChainError` until it is.
 
 ## Testing
 
