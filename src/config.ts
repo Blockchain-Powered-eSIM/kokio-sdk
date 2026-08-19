@@ -30,7 +30,6 @@ export class Kokio {
     viemWalletClient: WalletClient;
     credentialId: string;
     rpId: string;
-    organizationId: string;
     pimlicoAPIKey: string;
     gasPolicyId: string;
 
@@ -48,7 +47,6 @@ export class Kokio {
         viemWalletClient: WalletClient,
         credentialId: string,
         rpId: string,
-        organizationId: string,
         pimlicoAPIKey: string,
         gasPolicyId: string,
         smartAccountClient?: KokioSmartAccountClient,
@@ -58,13 +56,12 @@ export class Kokio {
         this.viemWalletClient = viemWalletClient;
         this.credentialId = credentialId;
         this.rpId = rpId;
-        this.organizationId = organizationId;
         this.pimlicoAPIKey = pimlicoAPIKey;
         this.gasPolicyId = gasPolicyId;
 
         this._constants = new ConstantsSubPackage(this.viemWalletClient, this.pimlicoAPIKey);
 
-        this.smartAccount = new SmartAccountSubPackage(this.viemWalletClient, this.credentialId, this.rpId, this.organizationId, this.pimlicoAPIKey, this.gasPolicyId);
+        this.smartAccount = new SmartAccountSubPackage(this.viemWalletClient, this.credentialId, this.rpId, this.pimlicoAPIKey, this.gasPolicyId);
         this.deviceWalletFactory = smartAccountClient? new DeviceWalletFactorySubPackage(viemWalletClient, smartAccountClient): undefined;
         this.eSIMWalletFactory = smartAccountClient? new ESIMWalletFactorySubPackage(viemWalletClient, smartAccountClient): undefined;
         this.registry = smartAccountClient? new RegistrySubPackage(smartAccountClient): undefined;

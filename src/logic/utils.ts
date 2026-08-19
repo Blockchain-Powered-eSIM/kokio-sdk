@@ -80,7 +80,8 @@ export function parseDEREncodedSignature(signature: Uint8Array): {
     let offset = 0;
     if (signature[offset++] !== 0x30) throw new Error("Invalid DER sequence");
   
-    const length = signature[offset++];
+    // Sequence length byte. Skipped, because r and s each carry their own length.
+    offset++;
     if (signature[offset++] !== 0x02) throw new Error("Expected integer for r");
   
     const rLen = signature[offset++];

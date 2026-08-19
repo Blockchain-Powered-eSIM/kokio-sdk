@@ -18,7 +18,7 @@ import { _add0x, _concatUint8Arrays, _shouldRemoveLeadingZero } from "../utils.j
 import { P256Key, WebAuthnSignature, KokioSmartAccount, KokioSmartAccountClient } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
 
-import { decodeAttestationObject, decodeClientDataJSON, isoBase64URL, parseAuthenticatorData } from "@simplewebauthn/server/helpers";
+import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { Passkey, PasskeyGetRequest, PasskeyGetResult } from "react-native-passkey";
 import { p256 } from "@noble/curves/nist.js";
 
@@ -421,7 +421,6 @@ export const _getSmartWallet = async (
 	client: WalletClient,
 	credentialId: string,
 	rpId: string,
-	organiationId: string,
 	deviceUniqueIdentifier: string,
 	deviceWalletOwnerKey: P256Key,
 	salt: bigint

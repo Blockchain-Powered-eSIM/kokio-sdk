@@ -1,9 +1,8 @@
-import { Address, Hex, WalletClient } from "viem";
+import { Hex } from "viem";
 import {
     _verifySignature
 } from "../logic/P256Verifier.js"
-import { WebAuthnSignature } from "../types";
-import { KokioSmartAccountClient } from "../types.js";
+import { WebAuthnSignature, KokioSmartAccountClient } from "../types.js";
 
 export class P256VerifierSubPackage {
 
