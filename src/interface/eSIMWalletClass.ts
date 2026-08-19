@@ -2,10 +2,12 @@ import { Address } from "viem";
 import {
     _acceptOwnershipTransfer,
     _buyDataBundle,
+    _deviceWallet,
     _owner,
     _requestTransferOwnership,
     _sendETHToDeviceWallet,
-    _setDataBundlePriceCap
+    _setDataBundlePriceCap,
+    _transactionHistory
 } from "../logic/eSIMWallet.js"
 import { DataBundleDetails } from "../types";
 import { KokioSmartAccountClient } from "../types.js";
@@ -28,6 +30,10 @@ export class ESIMWalletSubPackage {
         return _buyDataBundle(this.client, this.address, dataBundleDetails);
     }
 
+    deviceWallet () {
+        return _deviceWallet(this.client, this.address);
+    }
+
     owner () {
         return _owner(this.client, this.address);
     }
@@ -42,5 +48,9 @@ export class ESIMWalletSubPackage {
 
     setDataBundlePriceCap (cap: bigint) {
         return _setDataBundlePriceCap(this.client, this.address, cap);
+    }
+
+    transactionHistory (index: bigint) {
+        return _transactionHistory(this.client, this.address, index);
     }
 }

@@ -157,6 +157,20 @@ const readCases: Array<{
     args: [],
   },
   {
+    label: "eSIMWallet._deviceWallet",
+    run: (c) => eSIMWallet._deviceWallet(c, ESIM),
+    address: ESIM,
+    functionName: "deviceWallet",
+    args: [],
+  },
+  {
+    label: "eSIMWallet._transactionHistory",
+    run: (c) => eSIMWallet._transactionHistory(c, ESIM, 2n),
+    address: ESIM,
+    functionName: "transactionHistory",
+    args: [2n],
+  },
+  {
     label: "deviceWalletFactory._getAddress",
     run: (c) => deviceWalletFactory._getAddress(c, "Device_11", OWNER_KEY, 1n),
     address: F.DEVICE_WALLET_FACTORY,

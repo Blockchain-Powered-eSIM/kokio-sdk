@@ -69,6 +69,40 @@ export const _owner = async (client: KokioSmartAccountClient, address: Address):
     }) as Promise<Address>;
 }
 
+/**
+ * The device wallet this eSIM wallet belongs to. Tracks `owner`, but it is its
+ * own storage slot with its own getter, so read whichever one you mean.
+ */
+export const _deviceWallet = async (client: KokioSmartAccountClient, address: Address): Promise<Address> => {
+    return client.readContract({
+        address,
+        abi: ESIMWallet,
+        functionName: "deviceWallet",
+        args: []
+    }) as Promise<Address>;
+}
+
+/**
+ * One data bundle purchase, by position. Holds every purchase this wallet has
+ * made, and for a wallet that came off the fiat path it also holds the
+ * pre-deployment purchases the lazy registry copies in.
+ *
+ * There is no length getter on the contract. Read upwards from zero until a call
+ * reverts, or track the count from the `DataBundleBought` and
+ * `TransactionHistoryPopulated` events.
+ */
+export const _transactionHistory = async (client: KokioSmartAccountClient, address: Address, index: bigint): Promise<DataBundleDetails> => {
+
+    const [dataBundleID, dataBundlePrice] = await client.readContract({
+        address,
+        abi: ESIMWallet,
+        functionName: "transactionHistory",
+        args: [index]
+    }) as [string, bigint];
+
+    return { dataBundleID, dataBundlePrice };
+}
+
 export const _requestTransferOwnership = async (client: KokioSmartAccountClient, address: Address, newOwner: Address) => {
 
     if(!client.account) throw new MissingSmartWalletError()

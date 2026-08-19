@@ -90,6 +90,8 @@ const readCases: Array<{
   { label: "eSIMWallet._newRequestedOwner", run: (c) => eSIMWallet._newRequestedOwner(c, ESIM), address: ESIM, functionName: "newRequestedOwner", args: [] },
   { label: "eSIMWallet._owner", run: (c) => eSIMWallet._owner(c, ESIM), address: ESIM, functionName: "owner", args: [] },
   { label: "eSIMWallet._dataBundlePriceCap", run: (c) => eSIMWallet._dataBundlePriceCap(c, ESIM), address: ESIM, functionName: "dataBundlePriceCap", args: [] },
+  { label: "eSIMWallet._deviceWallet", run: (c) => eSIMWallet._deviceWallet(c, ESIM), address: ESIM, functionName: "deviceWallet", args: [] },
+  { label: "eSIMWallet._transactionHistory", run: (c) => eSIMWallet._transactionHistory(c, ESIM, 2n), address: ESIM, functionName: "transactionHistory", args: [2n] },
 ];
 
 describe("admin readContract calls", () => {
