@@ -8,7 +8,7 @@ import { KokioSmartAccountClient } from "../types.js";
 export class ESIMWalletFactorySubPackage {
 
     smartAccountClient: KokioSmartAccountClient;
-    walletClient;
+    walletClient: WalletClient;
 
     constructor(walletClient: WalletClient, smartAccountClient: KokioSmartAccountClient) {
         this.smartAccountClient = smartAccountClient;

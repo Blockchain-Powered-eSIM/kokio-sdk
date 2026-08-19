@@ -16,7 +16,7 @@ import { P256Key } from "../types.js";
 export class DeviceWalletFactorySubPackage {
 
     smartAccountClient: KokioSmartAccountClient;
-    walletClient;
+    walletClient: WalletClient;
 
     constructor(walletClient: WalletClient, smartAccountClient: KokioSmartAccountClient) {
         this.smartAccountClient = smartAccountClient;

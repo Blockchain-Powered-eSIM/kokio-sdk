@@ -4,7 +4,7 @@ import { P256Key, KokioSmartAccountClient, KokioSmartAccount } from "../types.js
 
 export class SmartAccountSubPackage {
 
-    client;
+    client: WalletClient;
     credentialId;
     rpId;
     pimlicoAPIKey;

@@ -23,7 +23,7 @@ import { KokioSmartAccountClient, P256Key } from "../types.js";
 export class DeviceWalletSubPackage {
 
     smartAccountClient: KokioSmartAccountClient;
-    walletClient;
+    walletClient: WalletClient;
     address;
 
     constructor(walletClient: WalletClient, smartAccountClient: KokioSmartAccountClient, address: Address) {

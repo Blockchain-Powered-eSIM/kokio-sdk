@@ -59,7 +59,7 @@
     "@peculiar/asn1-schema": "2.9.3",
     "@simplewebauthn/server": "13.3.2",
     "react-native-passkey": "3.6.1",
-    "viem": "2.53.1"
+    "viem": "2.55.19"
   },
   "overrides": {
     "ws": "8.21.0"
