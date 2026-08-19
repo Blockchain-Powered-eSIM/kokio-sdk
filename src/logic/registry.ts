@@ -159,7 +159,14 @@ export const _isESIMWalletValid = async (client: KokioSmartAccountClient, eSIMWa
     }) as Promise<Address>;
 }
 
-/** Whether a transfer is outstanding on an eSIM wallet. */
+/**
+ * Whether a transfer is outstanding on an eSIM wallet. `bindESIMWallet` clears
+ * it once the new device wallet takes the eSIM wallet on.
+ *
+ * Independent of `isESIMWalletValid`, and neither implies the other. A `true`
+ * here is not a claim the wallet left the protocol, and it is normal for the
+ * association to still name the device wallet that raised the flag.
+ */
 export const _isESIMWalletOnStandby = async (client: KokioSmartAccountClient, eSIMWalletAddress: Address): Promise<boolean> => {
 
     const chainID = await client.getChainId();

@@ -326,9 +326,13 @@ export const _isDeviceWalletValid = async (client: WalletClient, deviceWallet: A
 }
 
 /**
- * The device wallet that owns an eSIM wallet (zero address if the eSIM is not
- * valid). On-chain this getter is named `isESIMWalletValid` but returns the
- * associated device-wallet address, not a boolean.
+ * The device wallet an eSIM wallet is registered against, zero if the protocol
+ * never deployed it. Despite the name this returns an address, not a boolean.
+ *
+ * This is a registration record, not a current holder. Once it goes non-zero it
+ * stays non-zero for the rest of the wallet's life, and mid-transfer it still
+ * names the device wallet that last held it. To ask who holds it now, read
+ * `DeviceWallet.isValidESIMWallet` on the device wallet.
  */
 export const _isESIMWalletValid = async (client: WalletClient, eSIMWallet: Address): Promise<Address> => {
 
@@ -344,7 +348,15 @@ export const _isESIMWalletValid = async (client: WalletClient, eSIMWallet: Addre
     }) as Promise<Address>;
 }
 
-/** Whether an eSIM wallet is currently on standby. */
+/**
+ * Whether a transfer is outstanding on an eSIM wallet. `bindESIMWallet` clears
+ * it once the new device wallet takes the eSIM wallet on.
+ *
+ * Independent of `isESIMWalletValid`, and neither implies the other. A `true`
+ * here is not a claim the wallet left the protocol, and it is normal for the
+ * association to still name the device wallet that raised the flag. Do not use
+ * this to decide whether an eSIM wallet belongs to the protocol.
+ */
 export const _isESIMWalletOnStandby = async (client: WalletClient, eSIMWallet: Address): Promise<boolean> => {
 
     const chainID = await client.getChainId();
