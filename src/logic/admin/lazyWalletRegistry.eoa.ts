@@ -216,7 +216,7 @@ export const _switchESIMIdentifierToNewDeviceIdentifier = async (
 // is left comes from the event each batch emits rather than from the call.
 const _batchEvent = async <T>(
     client: ReadWriteClient,
-    registryAddress: Address,
+    lazyRegistryAddress: Address,
     hash: Hex,
     eventName: "LazyESIMWalletsDeployed" | "LazyHistoryCopied"
 ): Promise<T> => {
@@ -226,7 +226,7 @@ const _batchEvent = async <T>(
     const logs = parseEventLogs({
         abi: LazyWalletRegistry,
         eventName,
-        logs: receipt.logs.filter((log) => isAddressEqual(log.address, registryAddress)),
+        logs: receipt.logs.filter((log) => isAddressEqual(log.address, lazyRegistryAddress)),
     });
 
     if (logs.length === 0) throw new MissingBatchEventError(eventName, hash);
@@ -293,7 +293,7 @@ export const _deployLazyWalletAllBatches = async (
     if (!client.account) throw new MissingEOAWalletError();
 
     const publicClient = client.extend(publicActions);
-    const registryAddress = values.factoryAddresses.LAZY_WALLET_REGISTRY;
+    const lazyRegistryAddress = values.factoryAddresses.LAZY_WALLET_REGISTRY;
 
     if (maxWallets < 1n || maxWallets > MAX_ESIM_WALLETS_PER_CALL) {
         throw new BatchSizeOutOfRangeError("maxWallets", maxWallets, MAX_ESIM_WALLETS_PER_CALL);
@@ -320,7 +320,7 @@ export const _deployLazyWalletAllBatches = async (
             _eSIMWallets: readonly Address[];
             _eSIMUniqueIdentifiers: readonly string[];
             _remaining: bigint;
-        }>(publicClient, registryAddress, hash, "LazyESIMWalletsDeployed");
+        }>(publicClient, lazyRegistryAddress, hash, "LazyESIMWalletsDeployed");
 
         deviceWallet = first._deviceWallet;
         outstanding = first._remaining > 0n;
@@ -342,7 +342,7 @@ export const _deployLazyWalletAllBatches = async (
         }) as Address;
 
         const finished = await _isFinished(publicClient, {
-            address: registryAddress,
+            address: lazyRegistryAddress,
             abi: LazyWalletRegistry,
             functionName: "deployMoreESIMWalletsForLazyDevice",
             args: [deviceUniqueIdentifier, maxWallets],
@@ -362,7 +362,7 @@ export const _deployLazyWalletAllBatches = async (
             _eSIMWallets: readonly Address[];
             _eSIMUniqueIdentifiers: readonly string[];
             _remaining: bigint;
-        }>(publicClient, registryAddress, hash, "LazyESIMWalletsDeployed");
+        }>(publicClient, lazyRegistryAddress, hash, "LazyESIMWalletsDeployed");
 
         if (next._eSIMWallets.length === 0) throw new StalledBatchError(hash, next._remaining);
 
@@ -408,7 +408,7 @@ export const _setHistoryForLazyWalletAllBatches = async (
     if (!client.account) throw new MissingEOAWalletError();
 
     const publicClient = client.extend(publicActions);
-    const registryAddress = values.factoryAddresses.LAZY_WALLET_REGISTRY;
+    const lazyRegistryAddress = values.factoryAddresses.LAZY_WALLET_REGISTRY;
 
     if (maxEntries < 1n || maxEntries > MAX_HISTORY_ENTRIES_PER_CALL) {
         throw new BatchSizeOutOfRangeError("maxEntries", maxEntries, MAX_HISTORY_ENTRIES_PER_CALL);
@@ -420,7 +420,7 @@ export const _setHistoryForLazyWalletAllBatches = async (
     if (eSIMWallet === ZERO_ADDRESS) throw new ESIMWalletNotLazyDeployedError(eSIMIdentifier);
 
     const finished = await _isFinished(publicClient, {
-        address: registryAddress,
+        address: lazyRegistryAddress,
         abi: LazyWalletRegistry,
         functionName: "setHistoryForLazyWallet",
         args: [eSIMIdentifier, maxEntries],
@@ -439,7 +439,7 @@ export const _setHistoryForLazyWalletAllBatches = async (
         const batch = await _batchEvent<{
             _copied: bigint;
             _remaining: bigint;
-        }>(publicClient, registryAddress, hash, "LazyHistoryCopied");
+        }>(publicClient, lazyRegistryAddress, hash, "LazyHistoryCopied");
 
         if (batch._copied === 0n) throw new StalledBatchError(hash, batch._remaining);
 
