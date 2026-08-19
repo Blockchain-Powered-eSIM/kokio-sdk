@@ -27,6 +27,7 @@ const OWNER_KEY: [Hex, Hex] = [
   "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C291",
   "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F1",
 ];
+const MESSAGE_HASH = "0x00000000000000000000000000000000000000000000000000000000000000a1" as Hex;
 const BUNDLE: DataBundleDetails = {
   dataBundleID: "bundle-1",
   dataBundlePrice: 1000n,
@@ -65,6 +66,24 @@ const userOpCases: Array<{
     run: (c) => deviceWallet._addESIMWallet(c, WALLET, ESIM, true),
     target: WALLET,
     data: encodeFunctionData({ abi: DeviceWallet, functionName: "addESIMWallet", args: [ESIM, true] }),
+  },
+  {
+    label: "deviceWallet._transferOwnership",
+    run: (c) => deviceWallet._transferOwnership(c, WALLET, OWNER_KEY),
+    target: WALLET,
+    data: encodeFunctionData({ abi: DeviceWallet, functionName: "transferOwnership", args: [OWNER_KEY] }),
+  },
+  {
+    label: "deviceWallet._addDeposit",
+    run: (c) => deviceWallet._addDeposit(c, WALLET, 500n),
+    target: WALLET,
+    data: encodeFunctionData({ abi: DeviceWallet, functionName: "addDeposit", args: [] }),
+  },
+  {
+    label: "deviceWallet._withdrawDepositTo",
+    run: (c) => deviceWallet._withdrawDepositTo(c, WALLET, NEW_OWNER, 500n),
+    target: WALLET,
+    data: encodeFunctionData({ abi: DeviceWallet, functionName: "withdrawDepositTo", args: [NEW_OWNER, 500n] }),
   },
   {
     label: "deviceWallet._removeESIMWallet",
@@ -130,6 +149,15 @@ describe("sub-package UserOp calldata", () => {
     const client = makeMockSmartAccountClient({ withAccount: false });
     await expect(run(client)).rejects.toThrow(/smart wallet/i);
   });
+
+  // addDeposit is payable and the amount rides as msg.value, not as an argument.
+  it("deviceWallet._addDeposit sends the amount as the call's value", async () => {
+    const client = makeMockSmartAccountClient();
+    await deviceWallet._addDeposit(client, WALLET, 500n);
+
+    const arg = (client.sendUserOperation as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(arg.calls[0].value).toBe(500n);
+  });
 });
 
 // `view` functions are `readContract` calls that return the actual value rather
@@ -147,6 +175,69 @@ const readCases: Array<{
     run: (c) => deviceWallet._getVaultAddress(c, WALLET),
     address: WALLET,
     functionName: "getVaultAddress",
+    args: [],
+  },
+  {
+    label: "deviceWallet._getDeposit",
+    run: (c) => deviceWallet._getDeposit(c, WALLET),
+    address: WALLET,
+    functionName: "getDeposit",
+    args: [],
+  },
+  {
+    label: "deviceWallet._deviceUniqueIdentifier",
+    run: (c) => deviceWallet._deviceUniqueIdentifier(c, WALLET),
+    address: WALLET,
+    functionName: "deviceUniqueIdentifier",
+    args: [],
+  },
+  {
+    label: "deviceWallet._isValidESIMWallet",
+    run: (c) => deviceWallet._isValidESIMWallet(c, WALLET, ESIM),
+    address: WALLET,
+    functionName: "isValidESIMWallet",
+    args: [ESIM],
+  },
+  {
+    label: "deviceWallet._canPullETH",
+    run: (c) => deviceWallet._canPullETH(c, WALLET, ESIM),
+    address: WALLET,
+    functionName: "canPullETH",
+    args: [ESIM],
+  },
+  {
+    label: "deviceWallet._isValidSignature",
+    run: (c) => deviceWallet._isValidSignature(c, WALLET, MESSAGE_HASH, "0x01000000000000dead"),
+    address: WALLET,
+    functionName: "isValidSignature",
+    args: [MESSAGE_HASH, "0x01000000000000dead"],
+  },
+  {
+    label: "deviceWallet._registry",
+    run: (c) => deviceWallet._registry(c, WALLET),
+    address: WALLET,
+    functionName: "registry",
+    args: [],
+  },
+  {
+    label: "deviceWallet._eSIMWalletFactory",
+    run: (c) => deviceWallet._eSIMWalletFactory(c, WALLET),
+    address: WALLET,
+    functionName: "eSIMWalletFactory",
+    args: [],
+  },
+  {
+    label: "deviceWallet._entryPoint",
+    run: (c) => deviceWallet._entryPoint(c, WALLET),
+    address: WALLET,
+    functionName: "entryPoint",
+    args: [],
+  },
+  {
+    label: "deviceWallet._verifier",
+    run: (c) => deviceWallet._verifier(c, WALLET),
+    address: WALLET,
+    functionName: "verifier",
     args: [],
   },
   {
