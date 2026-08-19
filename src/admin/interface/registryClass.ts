@@ -33,6 +33,11 @@ import {
     _eSIMWalletForIdentifier,
     _claimedESIMIdentifiers,
     _requireDeviceIdentifierNotReserved,
+    _pendingOwner,
+    _deviceWalletFactory,
+    _eSIMWalletFactory,
+    _entryPoint,
+    _requireNotPaused,
 } from "../../logic/admin/reads/registry.reads.js";
 
 /** Thin EOA (owner) wrapper around `Registry`. */
@@ -168,5 +173,25 @@ export class AdminRegistrySubPackage {
 
     requireDeviceIdentifierNotReserved(deviceUniqueIdentifier: string) {
         return _requireDeviceIdentifierNotReserved(this.walletClient, deviceUniqueIdentifier);
+    }
+
+    requireNotPaused() {
+        return _requireNotPaused(this.walletClient);
+    }
+
+    pendingOwner() {
+        return _pendingOwner(this.walletClient);
+    }
+
+    deviceWalletFactory() {
+        return _deviceWalletFactory(this.walletClient);
+    }
+
+    eSIMWalletFactory() {
+        return _eSIMWalletFactory(this.walletClient);
+    }
+
+    entryPoint() {
+        return _entryPoint(this.walletClient);
     }
 }

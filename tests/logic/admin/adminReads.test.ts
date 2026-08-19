@@ -72,6 +72,11 @@ const readCases: Array<{
   { label: "registry._eSIMWalletForIdentifier", run: (c) => registry._eSIMWalletForIdentifier(c, "eSIM_11"), address: F.REGISTRY, functionName: "eSIMWalletForIdentifier", args: ["eSIM_11"] },
   { label: "registry._claimedESIMIdentifiers", run: (c) => registry._claimedESIMIdentifiers(c, HASH), address: F.REGISTRY, functionName: "claimedESIMIdentifiers", args: [HASH] },
   { label: "registry._requireDeviceIdentifierNotReserved", run: (c) => registry._requireDeviceIdentifierNotReserved(c, "Device_11"), address: F.REGISTRY, functionName: "requireDeviceIdentifierNotReserved", args: ["Device_11"] },
+  { label: "registry._requireNotPaused", run: (c) => registry._requireNotPaused(c), address: F.REGISTRY, functionName: "requireNotPaused", args: [] },
+  { label: "registry._pendingOwner", run: (c) => registry._pendingOwner(c), address: F.REGISTRY, functionName: "pendingOwner", args: [] },
+  { label: "registry._deviceWalletFactory", run: (c) => registry._deviceWalletFactory(c), address: F.REGISTRY, functionName: "deviceWalletFactory", args: [] },
+  { label: "registry._eSIMWalletFactory", run: (c) => registry._eSIMWalletFactory(c), address: F.REGISTRY, functionName: "eSIMWalletFactory", args: [] },
+  { label: "registry._entryPoint", run: (c) => registry._entryPoint(c), address: F.REGISTRY, functionName: "entryPoint", args: [] },
 
   // lazyWalletRegistry.reads (target = LAZY_WALLET_REGISTRY)
   { label: "lazyWalletRegistry._upgradeManager", run: (c) => lazyWalletRegistry._upgradeManager(c), address: F.LAZY_WALLET_REGISTRY, functionName: "upgradeManager", args: [] },

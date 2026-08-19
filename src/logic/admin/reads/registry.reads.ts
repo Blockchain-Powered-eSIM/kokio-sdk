@@ -164,6 +164,89 @@ export const _upgradeManager = async (client: WalletClient): Promise<Address> =>
     }) as Promise<Address>;
 }
 
+/**
+ * The address a `transferOwnership` is waiting on. Worth reading before
+ * `protocolAdmin.acceptOwnershipBatch`, which reverts on any target that has not
+ * been offered to the timelock.
+ */
+export const _pendingOwner = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "pendingOwner",
+        args: []
+    }) as Promise<Address>;
+}
+
+/** The `DeviceWalletFactory` address wired into the registry. */
+export const _deviceWalletFactory = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "deviceWalletFactory",
+        args: []
+    }) as Promise<Address>;
+}
+
+/** The `ESIMWalletFactory` address wired into the registry. */
+export const _eSIMWalletFactory = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "eSIMWalletFactory",
+        args: []
+    }) as Promise<Address>;
+}
+
+/** The EntryPoint the registry recognises. One per chain. */
+export const _entryPoint = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "entryPoint",
+        args: []
+    }) as Promise<Address>;
+}
+
+/**
+ * The same pause check the wallets themselves run, which throws rather than
+ * returning false. Use `_paused` to branch on it; use this when you want the
+ * failure to carry the protocol's own revert reason.
+ */
+export const _requireNotPaused = async (client: WalletClient): Promise<void> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    await client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "requireNotPaused",
+        args: []
+    });
+}
+
 /** The `LazyWalletRegistry` address wired into the registry. */
 export const _lazyWalletRegistry = async (client: WalletClient): Promise<Address> => {
 
