@@ -38,6 +38,14 @@ const readCases: Array<{
   { label: "deviceWalletFactory._deviceWalletInfoAdded", run: (c) => deviceWalletFactory._deviceWalletInfoAdded(c, WALLET), address: F.DEVICE_WALLET_FACTORY, functionName: "deviceWalletInfoAdded", args: [WALLET] },
   { label: "deviceWalletFactory._getCurrentDeviceWalletImplementation", run: (c) => deviceWalletFactory._getCurrentDeviceWalletImplementation(c), address: F.DEVICE_WALLET_FACTORY, functionName: "getCurrentDeviceWalletImplementation", args: [] },
   { label: "deviceWalletFactory._getCounterFactualAddress", run: (c) => deviceWalletFactory._getCounterFactualAddress(c, OWNER_KEY, "Device_11", 1n), address: F.DEVICE_WALLET_FACTORY, functionName: "getCounterFactualAddress", args: [OWNER_KEY, "Device_11", 1n] },
+  // uid first here, unlike getCounterFactualAddress, which takes the key first.
+  { label: "deviceWalletFactory._preCreateAccountValidation", run: (c) => deviceWalletFactory._preCreateAccountValidation(c, "Device_11", OWNER_KEY), address: F.DEVICE_WALLET_FACTORY, functionName: "preCreateAccountValidation", args: ["Device_11", OWNER_KEY] },
+  { label: "deviceWalletFactory._beacon", run: (c) => deviceWalletFactory._beacon(c), address: F.DEVICE_WALLET_FACTORY, functionName: "beacon", args: [] },
+  { label: "deviceWalletFactory._registry", run: (c) => deviceWalletFactory._registry(c), address: F.DEVICE_WALLET_FACTORY, functionName: "registry", args: [] },
+  { label: "deviceWalletFactory._entryPoint", run: (c) => deviceWalletFactory._entryPoint(c), address: F.DEVICE_WALLET_FACTORY, functionName: "entryPoint", args: [] },
+  { label: "deviceWalletFactory._verifier", run: (c) => deviceWalletFactory._verifier(c), address: F.DEVICE_WALLET_FACTORY, functionName: "verifier", args: [] },
+  { label: "deviceWalletFactory._owner", run: (c) => deviceWalletFactory._owner(c), address: F.DEVICE_WALLET_FACTORY, functionName: "owner", args: [] },
+  { label: "deviceWalletFactory._pendingOwner", run: (c) => deviceWalletFactory._pendingOwner(c), address: F.DEVICE_WALLET_FACTORY, functionName: "pendingOwner", args: [] },
 
   // eSIMWalletFactory.reads (target = ESIM_WALLET_FACTORY)
   { label: "eSIMWalletFactory._isESIMWalletDeployed", run: (c) => eSIMWalletFactory._isESIMWalletDeployed(c, ESIM), address: F.ESIM_WALLET_FACTORY, functionName: "isESIMWalletDeployed", args: [ESIM] },

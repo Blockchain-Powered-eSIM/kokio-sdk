@@ -12,6 +12,13 @@ import {
     _deviceWalletInfoAdded,
     _getCurrentDeviceWalletImplementation,
     _getCounterFactualAddress,
+    _preCreateAccountValidation,
+    _beacon,
+    _registry,
+    _entryPoint,
+    _verifier,
+    _owner,
+    _pendingOwner,
 } from "../../logic/admin/reads/deviceWalletFactory.reads.js";
 
 /**
@@ -69,5 +76,33 @@ export class AdminDeviceWalletFactorySubPackage {
 
     getCounterFactualAddress(deviceWalletOwnerKey: P256Key, deviceUniqueIdentifier: string, salt: bigint) {
         return _getCounterFactualAddress(this.walletClient, deviceWalletOwnerKey, deviceUniqueIdentifier, salt);
+    }
+
+    preCreateAccountValidation(deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key) {
+        return _preCreateAccountValidation(this.walletClient, deviceUniqueIdentifier, deviceWalletOwnerKey);
+    }
+
+    beacon() {
+        return _beacon(this.walletClient);
+    }
+
+    registry() {
+        return _registry(this.walletClient);
+    }
+
+    entryPoint() {
+        return _entryPoint(this.walletClient);
+    }
+
+    verifier() {
+        return _verifier(this.walletClient);
+    }
+
+    owner() {
+        return _owner(this.walletClient);
+    }
+
+    pendingOwner() {
+        return _pendingOwner(this.walletClient);
     }
 }
