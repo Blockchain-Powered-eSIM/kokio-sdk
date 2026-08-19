@@ -9,6 +9,8 @@ import {
 import {
     _owner,
     _eSIMWalletAdmin,
+    _adminOfRecord,
+    _adminDisabled,
     _newRequestedAdmin,
     _vault,
     _upgradeManager,
@@ -58,6 +60,14 @@ export class AdminRegistrySubPackage {
 
     eSIMWalletAdmin() {
         return _eSIMWalletAdmin(this.walletClient);
+    }
+
+    adminOfRecord() {
+        return _adminOfRecord(this.walletClient);
+    }
+
+    adminDisabled() {
+        return _adminDisabled(this.walletClient);
     }
 
     newRequestedAdmin() {

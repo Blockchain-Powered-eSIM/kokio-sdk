@@ -120,7 +120,7 @@ export class ProtocolAdminGuardianSubPackage {
         return _revokeCancellersInstantly(this.walletClient, accounts);
     }
 
-    disableAdminInstantly(target: Address) {
+    disableAdminInstantly(target?: Address) {
         return _disableAdminInstantly(this.walletClient, target);
     }
 }

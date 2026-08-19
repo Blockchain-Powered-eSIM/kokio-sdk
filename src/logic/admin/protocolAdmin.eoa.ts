@@ -363,8 +363,12 @@ export const _revokeCancellersInstantly = async (client: WalletClient, accounts:
  *
  * Takes the power away and hands none out. Reinstating the key or naming a
  * replacement is an owner action and waits out the delay.
+ *
+ * `target` defaults to the registry, the one contract that keeps the admin
+ * address. Everything else reads it from there, so suspending it there closes
+ * every gate in the protocol.
  */
-export const _disableAdminInstantly = async (client: WalletClient, target: Address) => {
+export const _disableAdminInstantly = async (client: WalletClient, target?: Address) => {
 
     const values = await _resolve(client);
 
@@ -376,7 +380,7 @@ export const _disableAdminInstantly = async (client: WalletClient, target: Addre
         account: client.account.address,
         abi: ProtocolAdmin,
         functionName: 'disableAdminInstantly',
-        args: [target]
+        args: [target ?? values.factoryAddresses.REGISTRY]
     });
 }
 

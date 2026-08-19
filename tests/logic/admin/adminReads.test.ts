@@ -45,6 +45,8 @@ const readCases: Array<{
 
   // registry.reads (target = REGISTRY)
   { label: "registry._eSIMWalletAdmin", run: (c) => registry._eSIMWalletAdmin(c), address: F.REGISTRY, functionName: "eSIMWalletAdmin", args: [] },
+  { label: "registry._adminOfRecord", run: (c) => registry._adminOfRecord(c), address: F.REGISTRY, functionName: "adminOfRecord", args: [] },
+  { label: "registry._adminDisabled", run: (c) => registry._adminDisabled(c), address: F.REGISTRY, functionName: "adminDisabled", args: [] },
   { label: "registry._newRequestedAdmin", run: (c) => registry._newRequestedAdmin(c), address: F.REGISTRY, functionName: "newRequestedAdmin", args: [] },
   { label: "registry._vault", run: (c) => registry._vault(c), address: F.REGISTRY, functionName: "vault", args: [] },
   { label: "registry._upgradeManager", run: (c) => registry._upgradeManager(c), address: F.REGISTRY, functionName: "upgradeManager", args: [] },

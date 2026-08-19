@@ -207,6 +207,14 @@ const directCases: Array<{
         args: [F.REGISTRY],
     },
     {
+        // The registry is the only contract holding the admin address, so a
+        // guardian acting during an incident should not have to supply it.
+        label: "_disableAdminInstantly (no target)",
+        run: (c) => protocolAdmin._disableAdminInstantly(c),
+        functionName: "disableAdminInstantly",
+        args: [F.REGISTRY],
+    },
+    {
         label: "_acceptOwnershipBatch",
         run: (c) => protocolAdmin._acceptOwnershipBatch(c, [F.REGISTRY, F.DEVICE_WALLET_FACTORY]),
         functionName: "acceptOwnershipBatch",

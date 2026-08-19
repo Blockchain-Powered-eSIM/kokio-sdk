@@ -26,6 +26,44 @@ export const _eSIMWalletAdmin = async (client: WalletClient): Promise<Address> =
     }) as Promise<Address>;
 }
 
+/**
+ * The admin address on the books, which keeps naming a suspended admin so the
+ * suspension can be lifted without supplying it again. Ask `_eSIMWalletAdmin`
+ * who may actually act.
+ */
+export const _adminOfRecord = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "adminOfRecord",
+        args: []
+    }) as Promise<Address>;
+}
+
+/**
+ * Whether the admin's powers are suspended protocol-wide. True and a pending
+ * nomination are separate reasons for `_eSIMWalletAdmin` to read zero, so read
+ * this alongside `_newRequestedAdmin` to tell them apart.
+ */
+export const _adminDisabled = async (client: WalletClient): Promise<boolean> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "adminDisabled",
+        args: []
+    }) as Promise<boolean>;
+}
+
 /** The vault EOA recorded in the registry. */
 export const _vault = async (client: WalletClient): Promise<Address> => {
 
