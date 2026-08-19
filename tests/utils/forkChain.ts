@@ -85,29 +85,46 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  */
 export const startFork = async (port = 8545): Promise<Fork> => {
   const upstream = getForkUpstreamRpc();
-  const proc: ChildProcess = spawn(
-    getAnvilBin(),
-    ["--fork-url", upstream, "--port", String(port), "--chain-id", "84532", "--silent"],
-    { stdio: "ignore" },
-  );
-
   const rpcUrl = `http://127.0.0.1:${port}`;
   const publicClient = createPublicClient({ chain: baseSepolia, transport: forkTransport(rpcUrl) });
 
-  // Poll until the fork is serving requests (fork state fetch can take a moment).
-  const deadline = Date.now() + 30_000;
-  for (;;) {
-    try {
-      if ((await publicClient.getChainId()) === baseSepolia.id) break;
-    } catch {
-      // not up yet
+  // anvil reads upstream state to build its genesis, so a rate-limited or
+  // briefly unhealthy endpoint makes it exit before it ever serves a request.
+  // That is transient, and each suite in the tier starts its own fork, so one
+  // retry is what keeps a run from failing on someone else's traffic.
+  const attempt = async (): Promise<ChildProcess | null> => {
+    const proc: ChildProcess = spawn(
+      getAnvilBin(),
+      ["--fork-url", upstream, "--port", String(port), "--chain-id", "84532", "--silent"],
+      { stdio: "ignore" },
+    );
+
+    let exited = false;
+    proc.once("exit", () => { exited = true; });
+
+    const deadline = Date.now() + 30_000;
+    for (;;) {
+      try {
+        if ((await publicClient.getChainId()) === baseSepolia.id) return proc;
+      } catch {
+        // not up yet
+      }
+      // Nothing to wait for once the process is gone: anvil gave up on upstream.
+      if (exited) return null;
+      if (Date.now() > deadline) {
+        proc.kill("SIGKILL");
+        return null;
+      }
+      await sleep(250);
     }
-    if (Date.now() > deadline) {
-      proc.kill("SIGKILL");
-      throw new Error(`anvil fork did not become ready within 30s (upstream: ${upstream})`);
-    }
-    await sleep(250);
+  };
+
+  let proc = await attempt();
+  if (!proc) {
+    await sleep(5_000);
+    proc = await attempt();
   }
+  if (!proc) throw new Error(`anvil fork did not become ready within 30s (upstream: ${upstream})`);
 
   const testClient = createTestClient({ chain: baseSepolia, mode: "anvil", transport: forkTransport(rpcUrl) });
 
