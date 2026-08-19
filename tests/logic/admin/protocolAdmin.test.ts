@@ -317,3 +317,41 @@ describe("protocolAdmin self-call payloads", () => {
         );
     });
 });
+
+// The admin suspension payloads. Unlike the self-call group these are aimed at
+// the target contract, so the address is the thing worth pinning.
+describe("protocolAdmin admin suspension payloads", () => {
+    const OTHER = "0x0000000000000000000000000000000000007a61" as Address;
+    const client = () => makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
+
+    const cases = [
+        { label: "disableAdminCall", run: protocolAdmin._disableAdminCall, functionName: "disableAdmin" },
+        { label: "enableAdminCall", run: protocolAdmin._enableAdminCall, functionName: "enableAdmin" },
+    ] as const;
+
+    it.each(cases)("$label defaults to the registry, not the timelock", async ({ run, functionName }) => {
+        const call = await run(client());
+
+        expect(call.address).toBe(F.REGISTRY);
+        expect(call.address).not.toBe(PA);
+        expect(call.functionName).toBe(functionName);
+        expect(call.args).toEqual([]);
+    });
+
+    it.each(cases)("$label aims at an explicit target when given one", async ({ run }) => {
+        const call = await run(client(), OTHER);
+        expect(call.address).toBe(OTHER);
+    });
+
+    it("enableAdminCall schedules against the registry", async () => {
+        const c = scheduleClient();
+
+        await protocolAdmin._schedule(c, await protocolAdmin._enableAdminCall(c));
+
+        const arg = (c.writeContract as ReturnType<typeof vi.fn>).mock.calls[0][0];
+        expect(arg.args[0]).toBe(F.REGISTRY);
+        expect(arg.args[2]).toBe(encodeFunctionData({ abi: Registry, functionName: "enableAdmin", args: [] }));
+        // Waits like anything else: the delay is the min delay, not zero.
+        expect(arg.args[5]).toBe(MIN_DELAY);
+    });
+});

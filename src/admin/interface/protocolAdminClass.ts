@@ -18,6 +18,8 @@ import {
     _revokeRoleCall,
     _updateDelayCall,
     _disableAndNominateCall,
+    _disableAdminCall,
+    _enableAdminCall,
 } from "../../logic/admin/protocolAdmin.eoa.js";
 import {
     _getMinDelay,
@@ -189,6 +191,17 @@ export class AdminProtocolAdminSubPackage {
 
     disableAndNominateCall(target: Address, newAdmin: Address) {
         return _disableAndNominateCall(this.walletClient, target, newAdmin);
+    }
+
+    // Payload builders for the target contract's own owner functions. Same
+    // route: hand the result to `proposer.schedule`.
+
+    disableAdminCall(target?: Address) {
+        return _disableAdminCall(this.walletClient, target);
+    }
+
+    enableAdminCall(target?: Address) {
+        return _enableAdminCall(this.walletClient, target);
     }
 
     // Operation ids

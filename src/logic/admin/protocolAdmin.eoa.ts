@@ -1,7 +1,7 @@
 import { Address, Hex, WalletClient, encodeFunctionData, publicActions } from "viem";
 import { _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError } from "../errors.js";
-import { ProtocolAdmin } from "../../abis/index.js";
+import { ProtocolAdmin, Registry } from "../../abis/index.js";
 import type {
     OperationOptions,
     OwnerCall,
@@ -500,5 +500,63 @@ export const _disableAndNominateCall = async (client: WalletClient, target: Addr
         abi: ProtocolAdmin,
         functionName: 'disableAndNominate',
         args: [target, newAdmin],
+    };
+}
+
+// ---------------------------------------------------------------------------
+// Admin suspension payloads - the owner's route, aimed at the target contract
+// ---------------------------------------------------------------------------
+
+// Unlike the four above, these are aimed at the registry rather than the
+// timelock. The timelock owns it, so both are `onlyOwner` calls it can only make
+// through `schedule`.
+//
+// There is no instant form of either. A guardian can suspend an admin without
+// waiting through `_disableAdminInstantly`, and nothing lifts a suspension
+// without the delay. That asymmetry is what stops a compromised key from undoing
+// its own suspension.
+
+/**
+ * Suspend a contract's admin key on the owner's route. Pass the result to
+ * `schedule`.
+ *
+ * Prefer `_disableAdminInstantly` during an incident: it does the same thing
+ * with no wait. This form is for a planned suspension, and for an owner holding
+ * no guardian key.
+ *
+ * `target` defaults to the registry, the one contract that keeps the admin
+ * address.
+ */
+export const _disableAdminCall = async (client: WalletClient, target?: Address): Promise<OwnerCall> => {
+
+    const values = await _resolve(client);
+
+    return {
+        address: target ?? values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: 'disableAdmin',
+        args: [],
+    };
+}
+
+/**
+ * Give a suspended admin its powers back. Pass the result to `schedule`.
+ *
+ * The only route there is, and it waits out the delay however the key is held.
+ * Leaves an outstanding nomination alone, so an incumbent stripped by one is
+ * still powerless afterwards; withdraw that by naming the incumbent in
+ * `requestAdminUpdate`.
+ *
+ * `target` defaults to the registry.
+ */
+export const _enableAdminCall = async (client: WalletClient, target?: Address): Promise<OwnerCall> => {
+
+    const values = await _resolve(client);
+
+    return {
+        address: target ?? values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: 'enableAdmin',
+        args: [],
     };
 }
