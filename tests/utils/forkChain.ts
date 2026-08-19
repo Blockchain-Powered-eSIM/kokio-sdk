@@ -40,10 +40,17 @@ const forkTransport = (rpcUrl: string) => http(rpcUrl, { timeout: FORK_HTTP_TIME
 
 /**
  * The `anvil` binary to run. Defaults to whatever is on PATH, overridable via
- * `ANVIL_BIN` - useful when a newer Foundry lives outside PATH (a recent anvil
- * is required so the fork serves the RIP-7212 P256 precompile at 0x100).
+ * `ANVIL_BIN` - useful when a newer Foundry lives outside PATH.
  */
 export const getAnvilBin = (): string => process.env.ANVIL_BIN ?? "anvil";
+
+// Base Sepolia answers at 0x100, so signature verification there runs the RIP-7212
+// precompile and never reaches the FreshCryptoLib fallback. A fork does not inherit
+// that: anvil decides its own precompile set from the hardfork, and on the default
+// it serves nothing at 0x100, so every P256 verification silently takes the fallback
+// and costs about 30x what production costs. Pinning `osaka` puts the precompile back
+// and is what makes a fork measurement mean anything.
+const FORK_HARDFORK = "osaka";
 
 /** True when the resolved `anvil` binary is runnable (Foundry installed). */
 export const anvilInstalled = (): boolean => {
@@ -95,7 +102,13 @@ export const startFork = async (port = 8545): Promise<Fork> => {
   const attempt = async (): Promise<ChildProcess | null> => {
     const proc: ChildProcess = spawn(
       getAnvilBin(),
-      ["--fork-url", upstream, "--port", String(port), "--chain-id", "84532", "--silent"],
+      [
+        "--fork-url", upstream,
+        "--port", String(port),
+        "--chain-id", "84532",
+        "--hardfork", FORK_HARDFORK,
+        "--silent",
+      ],
       { stdio: "ignore" },
     );
 
