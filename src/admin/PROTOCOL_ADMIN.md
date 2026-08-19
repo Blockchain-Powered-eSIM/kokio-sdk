@@ -151,7 +151,9 @@ if (await timelock.isOperationReady(op.id)) {
 ## Watching an operation
 
 ```ts
-await timelock.getOperationState(op.id);   // 0 Unset, 1 Waiting, 2 Ready, 3 Done
+import { OperationState } from "kokio-sdk/admin";
+
+await timelock.getOperationState(op.id);   // Unset, Waiting, Ready or Done
 await timelock.isOperationPending(op.id);  // scheduled, not yet run
 await timelock.isOperationReady(op.id);    // delay served, run it now
 await timelock.isOperationDone(op.id);     // already run

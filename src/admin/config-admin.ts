@@ -25,6 +25,10 @@ export {
 } from "../logic/errors.js";
 export type { DecodedRevert } from "../logic/errors.js";
 
+// `getOperationState` answers with this, and comparing against it needs the enum
+// at runtime rather than only in the types.
+export { OperationState } from "../logic/admin/reads/protocolAdmin.reads.js";
+
 /**
  * EOA-only entry point for the NodeJS backend.
  *
