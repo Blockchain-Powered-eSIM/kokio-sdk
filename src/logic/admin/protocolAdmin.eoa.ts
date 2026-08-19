@@ -504,6 +504,54 @@ export const _disableAndNominateCall = async (client: WalletClient, target: Addr
 }
 
 // ---------------------------------------------------------------------------
+// Pause and price ceiling payloads - aimed at the registry
+// ---------------------------------------------------------------------------
+
+/**
+ * Release the protocol pause on the owner's route. Pass the result to `schedule`.
+ *
+ * There is no matching `pauseCall`. Tripping the pause is `onlyESIMWalletAdmin`,
+ * so the timelock cannot do it at all; the admin key calls `registry.pause`
+ * directly.
+ *
+ * A guardian can skip the delay with `_unpauseInstantly`. Use this form when no
+ * guardian key is to hand, or when the release is planned rather than urgent.
+ *
+ * `target` defaults to the registry.
+ */
+export const _unpauseCall = async (client: WalletClient, target?: Address): Promise<OwnerCall> => {
+
+    const values = await _resolve(client);
+
+    return {
+        address: target ?? values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: 'unpause',
+        args: [],
+    };
+}
+
+/**
+ * Set the fallback data bundle price ceiling. Pass the result to `schedule`.
+ *
+ * Zero reverts on execution, not on scheduling, so a zero here costs the whole
+ * delay before it fails.
+ *
+ * `target` defaults to the registry.
+ */
+export const _setDefaultDataBundlePriceCapCall = async (client: WalletClient, cap: bigint, target?: Address): Promise<OwnerCall> => {
+
+    const values = await _resolve(client);
+
+    return {
+        address: target ?? values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: 'setDefaultDataBundlePriceCap',
+        args: [cap],
+    };
+}
+
+// ---------------------------------------------------------------------------
 // Admin suspension payloads - the owner's route, aimed at the target contract
 // ---------------------------------------------------------------------------
 

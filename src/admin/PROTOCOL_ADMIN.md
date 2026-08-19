@@ -217,15 +217,26 @@ return an `OwnerCall` instead of sending a transaction.
 | `updateDelayCall(newDelay)` | Change the delay. Still clamped by `minDelayFloor`. |
 | `disableAndNominateCall(target, newAdmin)` | Suspend a contract's admin and nominate its replacement in one operation. |
 
-Two more builders exist for the registry's own owner functions. These are aimed
+Four more builders exist for the registry's own owner functions. These are aimed
 at the registry, not at the timelock:
 
 | Builder | Effect |
 |---|---|
 | `disableAdminCall(target?)` | Suspend the admin key. Defaults to the registry. |
 | `enableAdminCall(target?)` | Lift a suspension. Defaults to the registry. |
+| `unpauseCall(target?)` | Release the protocol pause. Defaults to the registry. |
+| `setDefaultDataBundlePriceCapCall(cap, target?)` | Set the fallback price ceiling in wei. Zero reverts. |
 
-All six go the same route:
+There is no `pauseCall`. Tripping the pause is `onlyESIMWalletAdmin`, so the
+timelock cannot do it at all: that is the backend key's own lever, and the split
+is what stops one hot key both freezing funds and releasing them. `unpauseCall`
+is the scheduled release, and a guardian holding `unpauseInstantly` is the one
+that does not wait.
+
+`setDefaultDataBundlePriceCapCall` rejecting zero is checked on execution, not on
+scheduling, so a zero costs the whole delay before it fails.
+
+All eight go the same route:
 
 ```ts
 const op = await timelock.proposer.schedule(await timelock.disableAdminCall());
@@ -290,9 +301,12 @@ A compromised eSIM wallet admin key, which holds `Registry.pause`:
 
 1. `guardian.disableAdminInstantly()`. Do this first. Until the key is suspended
    it can re-apply the pause after every release.
-2. `guardian.unpauseInstantly(registryAddress)` if it left a pause behind.
-3. Confirm: `admin.registry.adminDisabled()` reads `true`, and
-   `admin.registry.eSIMWalletAdmin()` reads the zero address.
+2. `guardian.unpauseInstantly(registryAddress)` if it left a pause behind. With no
+   guardian key to hand, the scheduled form is `unpauseCall()`, and the protocol
+   stays frozen for the delay.
+3. Confirm: `admin.registry.adminDisabled()` reads `true`,
+   `admin.registry.eSIMWalletAdmin()` reads the zero address, and
+   `admin.registry.paused()` reads `false`.
 4. Hand off to a proposer. Replacing the key is
    `disableAndNominateCall(registry, newAdmin)` and waits out the delay. Lifting
    the suspension on the same key is `enableAdminCall()` and waits too.

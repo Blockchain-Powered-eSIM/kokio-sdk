@@ -20,6 +20,8 @@ import {
     _disableAndNominateCall,
     _disableAdminCall,
     _enableAdminCall,
+    _unpauseCall,
+    _setDefaultDataBundlePriceCapCall,
 } from "../../logic/admin/protocolAdmin.eoa.js";
 import {
     _getMinDelay,
@@ -202,6 +204,14 @@ export class AdminProtocolAdminSubPackage {
 
     enableAdminCall(target?: Address) {
         return _enableAdminCall(this.walletClient, target);
+    }
+
+    unpauseCall(target?: Address) {
+        return _unpauseCall(this.walletClient, target);
+    }
+
+    setDefaultDataBundlePriceCapCall(cap: bigint, target?: Address) {
+        return _setDefaultDataBundlePriceCapCall(this.walletClient, cap, target);
     }
 
     // Operation ids

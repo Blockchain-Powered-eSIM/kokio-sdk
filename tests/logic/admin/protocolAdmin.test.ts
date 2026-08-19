@@ -318,15 +318,16 @@ describe("protocolAdmin self-call payloads", () => {
     });
 });
 
-// The admin suspension payloads. Unlike the self-call group these are aimed at
-// the target contract, so the address is the thing worth pinning.
-describe("protocolAdmin admin suspension payloads", () => {
+// The payloads aimed at the registry rather than the timelock. Unlike the
+// self-call group the address is the thing worth pinning.
+describe("protocolAdmin registry payloads", () => {
     const OTHER = "0x0000000000000000000000000000000000007a61" as Address;
     const client = () => makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
 
     const cases = [
         { label: "disableAdminCall", run: protocolAdmin._disableAdminCall, functionName: "disableAdmin" },
         { label: "enableAdminCall", run: protocolAdmin._enableAdminCall, functionName: "enableAdmin" },
+        { label: "unpauseCall", run: protocolAdmin._unpauseCall, functionName: "unpause" },
     ] as const;
 
     it.each(cases)("$label defaults to the registry, not the timelock", async ({ run, functionName }) => {
@@ -353,5 +354,18 @@ describe("protocolAdmin admin suspension payloads", () => {
         expect(arg.args[2]).toBe(encodeFunctionData({ abi: Registry, functionName: "enableAdmin", args: [] }));
         // Waits like anything else: the delay is the min delay, not zero.
         expect(arg.args[5]).toBe(MIN_DELAY);
+    });
+
+    it("setDefaultDataBundlePriceCapCall carries the cap and defaults to the registry", async () => {
+        const call = await protocolAdmin._setDefaultDataBundlePriceCapCall(client(), 5n * 10n ** 18n);
+
+        expect(call.address).toBe(F.REGISTRY);
+        expect(call.functionName).toBe("setDefaultDataBundlePriceCap");
+        expect(call.args).toEqual([5n * 10n ** 18n]);
+    });
+
+    it("setDefaultDataBundlePriceCapCall aims at an explicit target when given one", async () => {
+        const call = await protocolAdmin._setDefaultDataBundlePriceCapCall(client(), 1n, OTHER);
+        expect(call.address).toBe(OTHER);
     });
 });
