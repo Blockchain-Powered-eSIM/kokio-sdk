@@ -44,6 +44,14 @@ const eoaCases: Array<{
 }> = [
   // deviceWalletFactory.eoa (target = DEVICE_WALLET_FACTORY)
   {
+    // Sent by the incoming owner, not the outgoing one.
+    label: "deviceWalletFactory._acceptOwnership",
+    run: (c) => deviceWalletFactory._acceptOwnership(c),
+    address: F.DEVICE_WALLET_FACTORY,
+    functionName: "acceptOwnership",
+    args: [],
+  },
+  {
     label: "deviceWalletFactory._deployDeviceWalletForUsers",
     run: (c) => deviceWalletFactory._deployDeviceWalletForUsers(c, ["Device_11"], [OWNER_KEY], [1n], [2n], 2n),
     address: F.DEVICE_WALLET_FACTORY,
@@ -73,6 +81,14 @@ const eoaCases: Array<{
     args: [IMPL],
   },
   // eSIMWalletFactory.eoa (target = ESIM_WALLET_FACTORY)
+  {
+    // Sent by the incoming owner, not the outgoing one.
+    label: "eSIMWalletFactory._acceptOwnership",
+    run: (c) => eSIMWalletFactory._acceptOwnership(c),
+    address: F.ESIM_WALLET_FACTORY,
+    functionName: "acceptOwnership",
+    args: [],
+  },
   {
     label: "eSIMWalletFactory._addRegistryAddress",
     run: (c) => eSIMWalletFactory._addRegistryAddress(c, REGISTRY),
@@ -167,6 +183,14 @@ const eoaCases: Array<{
     args: [5n * 10n ** 18n],
   },
   // lazyWalletRegistry.eoa (target = LAZY_WALLET_REGISTRY)
+  {
+    // Sent by the incoming owner, not the outgoing one.
+    label: "lazyWalletRegistry._acceptOwnership",
+    run: (c) => lazyWalletRegistry._acceptOwnership(c),
+    address: F.LAZY_WALLET_REGISTRY,
+    functionName: "acceptOwnership",
+    args: [],
+  },
   {
     label: "lazyWalletRegistry._batchPopulateHistory",
     run: (c) => lazyWalletRegistry._batchPopulateHistory(c, ["Device_11"], [["eid-1"]], [[BUNDLE]]),

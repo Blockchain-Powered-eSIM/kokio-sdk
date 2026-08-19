@@ -26,6 +26,7 @@ import type {
     LazyDeploymentBatch,
     LazyHistoryBatch,
     LazyHistoryCopy,
+    OwnerCall,
     P256Key,
 } from "../../types.js";
 
@@ -448,4 +449,81 @@ export const _setHistoryForLazyWalletAllBatches = async (
     }
 
     return { eSIMWallet, copied, batches, alreadyComplete: false };
+}
+
+// ---------------------------------------------------------------------------
+// Owner payloads - only reachable through schedule
+// ---------------------------------------------------------------------------
+
+// Both are `onlyOwner`, and on the live deployment the owner is the timelock, so
+// they exist as something to schedule rather than to send. Each returns the
+// `OwnerCall` to hand to `protocolAdmin.schedule`.
+
+/**
+ * Offer ownership to a new address. Pass the result to `schedule`.
+ *
+ * Ownable2Step, so the offer changes nothing until the named address calls
+ * `acceptOwnership`. Until then the current owner keeps every power.
+ */
+export const _transferOwnershipCall = async (client: WalletClient, newOwner: Address): Promise<OwnerCall> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return {
+        address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+        abi: LazyWalletRegistry,
+        functionName: 'transferOwnership',
+        args: [newOwner],
+    };
+}
+
+/**
+ * Point the proxy at a new implementation. Builds `upgradeToAndCall`. Pass the
+ * result to `schedule`.
+ *
+ * This contract holds every fiat user's unclaimed purchase history, so a layout
+ * change here strands data that has no other copy. Diff the storage layout
+ * before scheduling. `data` runs on the proxy straight after the swap and is
+ * where a `reinitializer` goes.
+ */
+export const _upgradeCall = async (client: WalletClient, newImplementation: Address, data: Hex = '0x'): Promise<OwnerCall> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return {
+        address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+        abi: LazyWalletRegistry,
+        functionName: 'upgradeToAndCall',
+        args: [newImplementation, data],
+    };
+}
+
+/**
+ * Take ownership after a `transferOwnership` named this client. `msg.sender`
+ * must equal `pendingOwner`, so the `client` is the incoming owner.
+ *
+ * Where the incoming owner is the timelock, use
+ * `protocolAdmin.acceptOwnershipBatch` instead, which accepts for every contract
+ * at once.
+ */
+export const _acceptOwnership = async (client: WalletClient) => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return client.writeContract({
+        address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: LazyWalletRegistry,
+        functionName: 'acceptOwnership',
+        args: []
+    });
 }

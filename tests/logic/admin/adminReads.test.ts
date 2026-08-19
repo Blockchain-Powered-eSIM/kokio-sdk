@@ -34,6 +34,8 @@ const readCases: Array<{
   args: readonly unknown[];
 }> = [
   // deviceWalletFactory.reads (target = DEVICE_WALLET_FACTORY)
+  { label: "deviceWalletFactory._proxiableUUID", run: (c) => deviceWalletFactory._proxiableUUID(c), address: F.DEVICE_WALLET_FACTORY, functionName: "proxiableUUID", args: [] },
+  { label: "deviceWalletFactory._upgradeInterfaceVersion", run: (c) => deviceWalletFactory._upgradeInterfaceVersion(c), address: F.DEVICE_WALLET_FACTORY, functionName: "UPGRADE_INTERFACE_VERSION", args: [] },
   { label: "deviceWalletFactory._eSIMWalletAdmin", run: (c) => deviceWalletFactory._eSIMWalletAdmin(c), address: F.DEVICE_WALLET_FACTORY, functionName: "eSIMWalletAdmin", args: [] },
   { label: "deviceWalletFactory._deviceWalletInfoAdded", run: (c) => deviceWalletFactory._deviceWalletInfoAdded(c, WALLET), address: F.DEVICE_WALLET_FACTORY, functionName: "deviceWalletInfoAdded", args: [WALLET] },
   { label: "deviceWalletFactory._getCurrentDeviceWalletImplementation", run: (c) => deviceWalletFactory._getCurrentDeviceWalletImplementation(c), address: F.DEVICE_WALLET_FACTORY, functionName: "getCurrentDeviceWalletImplementation", args: [] },
@@ -48,6 +50,10 @@ const readCases: Array<{
   { label: "deviceWalletFactory._pendingOwner", run: (c) => deviceWalletFactory._pendingOwner(c), address: F.DEVICE_WALLET_FACTORY, functionName: "pendingOwner", args: [] },
 
   // eSIMWalletFactory.reads (target = ESIM_WALLET_FACTORY)
+  { label: "eSIMWalletFactory._owner", run: (c) => eSIMWalletFactory._owner(c), address: F.ESIM_WALLET_FACTORY, functionName: "owner", args: [] },
+  { label: "eSIMWalletFactory._pendingOwner", run: (c) => eSIMWalletFactory._pendingOwner(c), address: F.ESIM_WALLET_FACTORY, functionName: "pendingOwner", args: [] },
+  { label: "eSIMWalletFactory._proxiableUUID", run: (c) => eSIMWalletFactory._proxiableUUID(c), address: F.ESIM_WALLET_FACTORY, functionName: "proxiableUUID", args: [] },
+  { label: "eSIMWalletFactory._upgradeInterfaceVersion", run: (c) => eSIMWalletFactory._upgradeInterfaceVersion(c), address: F.ESIM_WALLET_FACTORY, functionName: "UPGRADE_INTERFACE_VERSION", args: [] },
   { label: "eSIMWalletFactory._isESIMWalletDeployed", run: (c) => eSIMWalletFactory._isESIMWalletDeployed(c, ESIM), address: F.ESIM_WALLET_FACTORY, functionName: "isESIMWalletDeployed", args: [ESIM] },
   { label: "eSIMWalletFactory._getCurrentESIMWalletImplementation", run: (c) => eSIMWalletFactory._getCurrentESIMWalletImplementation(c), address: F.ESIM_WALLET_FACTORY, functionName: "getCurrentESIMWalletImplementation", args: [] },
 
@@ -81,6 +87,10 @@ const readCases: Array<{
   { label: "registry._entryPoint", run: (c) => registry._entryPoint(c), address: F.REGISTRY, functionName: "entryPoint", args: [] },
 
   // lazyWalletRegistry.reads (target = LAZY_WALLET_REGISTRY)
+  { label: "lazyWalletRegistry._owner", run: (c) => lazyWalletRegistry._owner(c), address: F.LAZY_WALLET_REGISTRY, functionName: "owner", args: [] },
+  { label: "lazyWalletRegistry._pendingOwner", run: (c) => lazyWalletRegistry._pendingOwner(c), address: F.LAZY_WALLET_REGISTRY, functionName: "pendingOwner", args: [] },
+  { label: "lazyWalletRegistry._proxiableUUID", run: (c) => lazyWalletRegistry._proxiableUUID(c), address: F.LAZY_WALLET_REGISTRY, functionName: "proxiableUUID", args: [] },
+  { label: "lazyWalletRegistry._upgradeInterfaceVersion", run: (c) => lazyWalletRegistry._upgradeInterfaceVersion(c), address: F.LAZY_WALLET_REGISTRY, functionName: "UPGRADE_INTERFACE_VERSION", args: [] },
   { label: "lazyWalletRegistry._upgradeManager", run: (c) => lazyWalletRegistry._upgradeManager(c), address: F.LAZY_WALLET_REGISTRY, functionName: "upgradeManager", args: [] },
   { label: "lazyWalletRegistry._eSIMIdentifierToDeviceIdentifier", run: (c) => lazyWalletRegistry._eSIMIdentifierToDeviceIdentifier(c, "eid-1"), address: F.LAZY_WALLET_REGISTRY, functionName: "eSIMIdentifierToDeviceIdentifier", args: ["eid-1"] },
   { label: "lazyWalletRegistry._eSIMIdentifiersAssociatedWithDeviceIdentifier", run: (c) => lazyWalletRegistry._eSIMIdentifiersAssociatedWithDeviceIdentifier(c, "Device_11", 0n), address: F.LAZY_WALLET_REGISTRY, functionName: "eSIMIdentifiersAssociatedWithDeviceIdentifier", args: ["Device_11", 0n] },

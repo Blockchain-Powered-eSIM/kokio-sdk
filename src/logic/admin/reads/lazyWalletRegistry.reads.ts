@@ -1,4 +1,4 @@
-import { WalletClient, publicActions } from "viem";
+import { Address, Hex, WalletClient, publicActions } from "viem";
 import { _getChainSpecificConstants } from "../../constants.js";
 import { LazyWalletRegistry } from "../../../abis/index.js";
 import { DataBundleDetails } from "../../../types.js";
@@ -208,4 +208,76 @@ export const _eSIMIdentifiersAssociatedWithDeviceIdentifier = async (
         functionName: "eSIMIdentifiersAssociatedWithDeviceIdentifier",
         args: [deviceIdentifier, index]
     }) as Promise<string>;
+}
+
+/**
+ * The ERC-1822 storage slot this proxy keeps its implementation in. An upgrade
+ * reverts unless the incoming implementation answers with the same value, which
+ * is what stops a non-UUPS address being installed.
+ */
+export const _proxiableUUID = async (client: WalletClient): Promise<Hex> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+        abi: LazyWalletRegistry,
+        functionName: "proxiableUUID",
+        args: []
+    }) as Promise<Hex>;
+}
+
+/** The OpenZeppelin upgrade interface this proxy speaks, currently `"5.0.0"`. */
+export const _upgradeInterfaceVersion = async (client: WalletClient): Promise<string> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+        abi: LazyWalletRegistry,
+        functionName: "UPGRADE_INTERFACE_VERSION",
+        args: []
+    }) as Promise<string>;
+}
+
+/**
+ * Who holds `onlyOwner` here. On the live deployment this is the
+ * `ProtocolAdmin` timelock, so an owner call sent from an EOA reverts and has to
+ * be scheduled instead.
+ */
+export const _owner = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+        abi: LazyWalletRegistry,
+        functionName: "owner",
+        args: []
+    }) as Promise<Address>;
+}
+
+/**
+ * The address a `transferOwnership` is waiting on. Worth reading before
+ * `protocolAdmin.acceptOwnershipBatch`, which reverts on any target that has not
+ * been offered to the timelock.
+ */
+export const _pendingOwner = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+        abi: LazyWalletRegistry,
+        functionName: "pendingOwner",
+        args: []
+    }) as Promise<Address>;
 }

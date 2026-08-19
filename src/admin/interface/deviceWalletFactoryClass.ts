@@ -1,4 +1,4 @@
-import { Address, WalletClient } from "viem";
+import { Address, Hex, WalletClient } from "viem";
 import { P256Key } from "../../types.js";
 import { _createAccountWithEOA } from "../../logic/deviceWalletFactory.js";
 import {
@@ -6,6 +6,9 @@ import {
     _postCreateAccount,
     _addRegistryAddress,
     _updateDeviceWalletImplementation,
+    _acceptOwnership,
+    _transferOwnershipCall,
+    _upgradeCall,
 } from "../../logic/admin/deviceWalletFactory.eoa.js";
 import {
     _eSIMWalletAdmin,
@@ -19,6 +22,8 @@ import {
     _verifier,
     _owner,
     _pendingOwner,
+    _proxiableUUID,
+    _upgradeInterfaceVersion,
 } from "../../logic/admin/reads/deviceWalletFactory.reads.js";
 
 /**
@@ -104,5 +109,27 @@ export class AdminDeviceWalletFactorySubPackage {
 
     pendingOwner() {
         return _pendingOwner(this.walletClient);
+    }
+
+    proxiableUUID() {
+        return _proxiableUUID(this.walletClient);
+    }
+
+    upgradeInterfaceVersion() {
+        return _upgradeInterfaceVersion(this.walletClient);
+    }
+
+    acceptOwnership() {
+        return _acceptOwnership(this.walletClient);
+    }
+
+    // Owner payloads: hand the result to `protocolAdmin.schedule`
+
+    transferOwnershipCall(newOwner: Address) {
+        return _transferOwnershipCall(this.walletClient, newOwner);
+    }
+
+    upgradeCall(newImplementation: Address, data?: Hex) {
+        return _upgradeCall(this.walletClient, newImplementation, data);
     }
 }

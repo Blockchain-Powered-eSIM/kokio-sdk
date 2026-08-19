@@ -1,4 +1,4 @@
-import { Address, WalletClient, publicActions } from "viem";
+import { Address, Hex, WalletClient, publicActions } from "viem";
 import { _getChainSpecificConstants } from "../../constants.js";
 import { DeviceWalletFactory } from "../../../abis/index.js";
 import { P256Key } from "../../../types.js";
@@ -153,4 +153,38 @@ export const _getCounterFactualAddress = async (
         functionName: "getCounterFactualAddress",
         args: [deviceWalletOwnerKey, deviceUniqueIdentifier, salt]
     }) as Promise<Address>;
+}
+
+/**
+ * The ERC-1822 storage slot this proxy keeps its implementation in. An upgrade
+ * reverts unless the incoming implementation answers with the same value, which
+ * is what stops a non-UUPS address being installed.
+ */
+export const _proxiableUUID = async (client: WalletClient): Promise<Hex> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
+        abi: DeviceWalletFactory,
+        functionName: "proxiableUUID",
+        args: []
+    }) as Promise<Hex>;
+}
+
+/** The OpenZeppelin upgrade interface this proxy speaks, currently `"5.0.0"`. */
+export const _upgradeInterfaceVersion = async (client: WalletClient): Promise<string> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
+        abi: DeviceWalletFactory,
+        functionName: "UPGRADE_INTERFACE_VERSION",
+        args: []
+    }) as Promise<string>;
 }

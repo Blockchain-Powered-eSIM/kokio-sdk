@@ -1,4 +1,4 @@
-import { WalletClient } from "viem";
+import { Address, Hex, WalletClient } from "viem";
 import { DataBundleDetails, P256Key } from "../../types.js";
 import {
     _batchPopulateHistory,
@@ -8,6 +8,9 @@ import {
     _setHistoryForLazyWallet,
     _setHistoryForLazyWalletAllBatches,
     _switchESIMIdentifierToNewDeviceIdentifier,
+    _acceptOwnership,
+    _transferOwnershipCall,
+    _upgradeCall,
 } from "../../logic/admin/lazyWalletRegistry.eoa.js";
 import {
     _upgradeManager,
@@ -22,6 +25,10 @@ import {
     _lazyDeploymentSalt,
     _maxESIMWalletsPerCall,
     _maxHistoryEntriesPerCall,
+    _owner,
+    _pendingOwner,
+    _proxiableUUID,
+    _upgradeInterfaceVersion,
 } from "../../logic/admin/reads/lazyWalletRegistry.reads.js";
 
 /** Thin EOA (eSIMWalletAdmin) wrapper around `LazyWalletRegistry`. */
@@ -153,5 +160,35 @@ export class AdminLazyWalletRegistrySubPackage {
 
     eSIMIdentifiersAssociatedWithDeviceIdentifier(deviceIdentifier: string, index: bigint) {
         return _eSIMIdentifiersAssociatedWithDeviceIdentifier(this.walletClient, deviceIdentifier, index);
+    }
+
+    owner() {
+        return _owner(this.walletClient);
+    }
+
+    pendingOwner() {
+        return _pendingOwner(this.walletClient);
+    }
+
+    proxiableUUID() {
+        return _proxiableUUID(this.walletClient);
+    }
+
+    upgradeInterfaceVersion() {
+        return _upgradeInterfaceVersion(this.walletClient);
+    }
+
+    acceptOwnership() {
+        return _acceptOwnership(this.walletClient);
+    }
+
+    // Owner payloads: hand the result to `protocolAdmin.schedule`
+
+    transferOwnershipCall(newOwner: Address) {
+        return _transferOwnershipCall(this.walletClient, newOwner);
+    }
+
+    upgradeCall(newImplementation: Address, data?: Hex) {
+        return _upgradeCall(this.walletClient, newImplementation, data);
     }
 }
