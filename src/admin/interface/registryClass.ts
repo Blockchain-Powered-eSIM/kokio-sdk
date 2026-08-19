@@ -3,6 +3,8 @@ import {
     _addOrUpdateLazyWalletRegistryAddress,
     _updateVaultAddress,
     _requestAdminUpdate,
+    _disableAdmin,
+    _enableAdmin,
     _acceptAdminUpdate,
     _assignESIMIdentifier,
 } from "../../logic/admin/registry.eoa.js";
@@ -42,6 +44,14 @@ export class AdminRegistrySubPackage {
 
     requestAdminUpdate(newAdmin: Address) {
         return _requestAdminUpdate(this.walletClient, newAdmin);
+    }
+
+    disableAdmin() {
+        return _disableAdmin(this.walletClient);
+    }
+
+    enableAdmin() {
+        return _enableAdmin(this.walletClient);
     }
 
     acceptAdminUpdate() {

@@ -139,6 +139,41 @@ describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia for
   );
 
   it(
+    "disableAdmin suspends the admin without losing its address, and enableAdmin restores it",
+    async () => {
+      const onRecord = await ownerSdk.registry.adminOfRecord();
+      expect(await ownerSdk.registry.adminDisabled()).toBe(false);
+
+      const disabled = (await ownerSdk.registry.disableAdmin()) as Hex;
+      expect((await fork.publicClient.waitForTransactionReceipt({ hash: disabled })).status).toBe("success");
+
+      expect(await ownerSdk.registry.adminDisabled()).toBe(true);
+      // The address survives the suspension, which is what lets it be lifted
+      // without anyone supplying it again.
+      expect(await ownerSdk.registry.adminOfRecord()).toBe(onRecord);
+
+      const enabled = (await ownerSdk.registry.enableAdmin()) as Hex;
+      expect((await fork.publicClient.waitForTransactionReceipt({ hash: enabled })).status).toBe("success");
+
+      expect(await ownerSdk.registry.adminDisabled()).toBe(false);
+      expect(await ownerSdk.registry.adminOfRecord()).toBe(onRecord);
+    },
+    60_000,
+  );
+
+  it(
+    "enableAdmin reverts when the admin was never suspended",
+    async () => {
+      expect(await ownerSdk.registry.adminDisabled()).toBe(false);
+
+      const hash = (await ownerSdk.registry.enableAdmin()) as Hex;
+      const receipt = await fork.publicClient.waitForTransactionReceipt({ hash });
+      expect(receipt.status).toBe("reverted");
+    },
+    60_000,
+  );
+
+  it(
     "requestAdminUpdate is rejected on-chain for a non-owner EOA (access control is real)",
     async () => {
       // Bind KokioAdmin to the funded anvil dev account, which is NOT the owner.

@@ -110,6 +110,20 @@ const eoaCases: Array<{
     args: [NEW_ADMIN],
   },
   {
+    label: "registry._disableAdmin",
+    run: (c) => registry._disableAdmin(c),
+    address: F.REGISTRY,
+    functionName: "disableAdmin",
+    args: [],
+  },
+  {
+    label: "registry._enableAdmin",
+    run: (c) => registry._enableAdmin(c),
+    address: F.REGISTRY,
+    functionName: "enableAdmin",
+    args: [],
+  },
+  {
     label: "registry._acceptAdminUpdate",
     run: (c) => registry._acceptAdminUpdate(c),
     address: F.REGISTRY,

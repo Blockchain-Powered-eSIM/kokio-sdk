@@ -78,6 +78,56 @@ export const _requestAdminUpdate = async (client: WalletClient, newAdmin: Addres
 }
 
 /**
+ * Suspend the admin's powers protocol-wide. `onlyOwner`.
+ *
+ * The address stays on the books as `adminOfRecord`, so lifting the suspension
+ * does not need it supplied again. Reverts if the admin is already suspended,
+ * rather than passing quietly and leaving the caller believing it acted.
+ */
+export const _disableAdmin = async (client: WalletClient) => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return client.writeContract({
+        address: values.factoryAddresses.REGISTRY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: Registry,
+        functionName: 'disableAdmin',
+        args: []
+    });
+}
+
+/**
+ * Give the suspended admin its powers back. `onlyOwner`.
+ *
+ * Does nothing about an outstanding nomination, which keeps the incumbent
+ * powerless on its own. Withdraw that with `_requestAdminUpdate` naming the
+ * incumbent. Reverts if the admin was never suspended.
+ */
+export const _enableAdmin = async (client: WalletClient) => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return client.writeContract({
+        address: values.factoryAddresses.REGISTRY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: Registry,
+        functionName: 'enableAdmin',
+        args: []
+    });
+}
+
+/**
  * Bind an eSIM's unique identifier to its wallet. `onlyESIMWalletAdmin`.
  *
  * The identifier is claimed protocol-wide, so a string already bound to another
