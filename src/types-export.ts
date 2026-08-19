@@ -1,5 +1,6 @@
 export type {
     P256Key,
+    Call,
     WebAuthnSignature,
     P256Credential,
     DataBundleDetails,

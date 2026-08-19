@@ -12,6 +12,22 @@ const { hash } = await kokio.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, 
 await smartAccountClient.waitForUserOperationTransaction({ hash });
 ```
 
+## sendUserOperation
+
+Sends one or more raw calls from this device wallet as a single user
+operation. The escape hatch for anything not named by a method below:
+sending ETH to any address, calling another contract, or interacting with a
+DeFi protocol. A single call encodes to the account's `execute`, several
+batch atomically through `executeBatch`.
+
+```ts
+const hash = await kokio.deviceWallet!.sendUserOperation([
+  { to: recipient, value: parseEther("0.01") },
+]);
+```
+
+Returns: `Promise<Hash>`, the user operation hash.
+
 ## addESIMWallet
 
 Adds an eSIM wallet this device already owns onto the device wallet's list.

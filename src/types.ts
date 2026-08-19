@@ -4,6 +4,17 @@ import type { BundlerClient, SmartAccount } from "viem/account-abstraction";
 export type P256Key = [Hex, Hex];
 
 /**
+ * One call inside a user operation: target, optional ETH value, optional
+ * calldata. A single `Call` encodes to the account's `execute`, several
+ * batch atomically through `executeBatch`.
+ */
+export type Call = {
+    to: Address;
+    value?: bigint;
+    data?: Hex;
+}
+
+/**
  * A call the `ProtocolAdmin` timelock makes on a contract it owns. Same shape as
  * a viem `writeContract`, because that is what it becomes once the delay is served.
  */

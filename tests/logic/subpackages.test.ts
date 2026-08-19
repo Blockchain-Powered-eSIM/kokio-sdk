@@ -182,6 +182,26 @@ describe("sub-package UserOp calldata", () => {
     const arg = (client.sendUserOperation as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(arg.calls[0].value).toBe(500n);
   });
+
+  // The generic escape hatch: raw calls pass through untouched, so this is the
+  // one case that batches to more than one entry.
+  it("deviceWallet._sendUserOperation forwards the calls array as given", async () => {
+    const client = makeMockSmartAccountClient();
+    const calls = [
+      { to: NEW_OWNER, value: 10n },
+      { to: ESIM, data: encodeFunctionData({ abi: ESIMWallet, functionName: "acceptOwnershipTransfer", args: [] }) },
+    ];
+    await deviceWallet._sendUserOperation(client, calls);
+
+    const arg = (client.sendUserOperation as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(arg.account).toBe(client.account);
+    expect(arg.calls).toBe(calls);
+  });
+
+  it("deviceWallet._sendUserOperation throws MISSING_SMART_WALLET without an account", async () => {
+    const client = makeMockSmartAccountClient({ withAccount: false });
+    await expect(deviceWallet._sendUserOperation(client, [{ to: NEW_OWNER, value: 10n }])).rejects.toThrow(/smart wallet/i);
+  });
 });
 
 // `view` functions are `readContract` calls that return the actual value rather

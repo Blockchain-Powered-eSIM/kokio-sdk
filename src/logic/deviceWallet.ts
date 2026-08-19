@@ -1,5 +1,5 @@
 import { Address, encodeFunctionData, getContract, Hex, WalletClient } from "viem";
-import { KokioSmartAccountClient } from "../types.js";
+import { Call, KokioSmartAccountClient } from "../types.js";
 import { DeviceWallet } from "../abis/index.js";
 import { MissingSmartWalletError } from "./errors.js";
 import { P256Key } from "../types.js";
@@ -14,9 +14,29 @@ import { P256Key } from "../types.js";
 //     on its own during `buyDataBundle`.
 //   - execute and executeBatch are what a userOp runs through, so the smart account
 //     client already uses them; calling one directly would nest a userOp inside a userOp.
+//     `_sendUserOperation` below is the generic entry point instead: it hands the smart
+//     account client raw calls, and the account's own `encodeCalls` is what turns those
+//     into `execute` or `executeBatch`, never this file.
 //   - init runs at deploy, and validateUserOp is `onlyEntryPoint`.
 // The functions below are self-callable (target = the device wallet's own address, so
 // msg.sender == self), so they succeed via a userOp.
+
+/**
+ * Send one or more calls from this device wallet as a single user operation.
+ * The only escape hatch on this surface for anything not named below: sending
+ * ETH to any address, calling another contract, moving tokens, interacting
+ * with a DeFi protocol. A lone call encodes to `execute`, several batch
+ * atomically through `executeBatch`.
+ */
+export const _sendUserOperation = async (client: KokioSmartAccountClient, calls: Call[]) => {
+
+    if(!client.account) throw new MissingSmartWalletError();
+
+    return client.sendUserOperation({
+        account: client.account,
+        calls
+    });
+}
 
 export const _toggleAccessToETH = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
 

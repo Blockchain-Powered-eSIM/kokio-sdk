@@ -13,12 +13,13 @@ import {
     _isValidSignature,
     _registry,
     _removeESIMWallet,
+    _sendUserOperation,
     _toggleAccessToETH,
     _transferOwnership,
     _verifier,
     _withdrawDepositTo
 } from "../logic/deviceWallet.js"
-import { KokioSmartAccountClient, P256Key } from "../types.js";
+import { Call, KokioSmartAccountClient, P256Key } from "../types.js";
 
 export class DeviceWalletSubPackage {
 
@@ -30,6 +31,10 @@ export class DeviceWalletSubPackage {
         this.smartAccountClient = smartAccountClient;
         this.walletClient = walletClient;
         this.address = address;
+    }
+
+    sendUserOperation (calls: Call[]) {
+        return _sendUserOperation(this.smartAccountClient, calls);
     }
 
     addDeposit (amount: bigint) {
