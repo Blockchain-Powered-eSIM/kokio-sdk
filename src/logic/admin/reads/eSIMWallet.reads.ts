@@ -28,6 +28,22 @@ export const _eSIMUniqueIdentifier = async (client: WalletClient, eSIMWalletAddr
     }) as Promise<string>;
 }
 
+/**
+ * This wallet's own price ceiling in wei. Zero means it follows the registry's
+ * `defaultDataBundlePriceCap` instead, which is the state a fresh wallet and a
+ * newly handed-over wallet both start in. Worth reading before naming a price on
+ * `buyDataBundle`, since a price over the ceiling reverts.
+ */
+export const _dataBundlePriceCap = async (client: WalletClient, eSIMWalletAddress: Address): Promise<bigint> => {
+
+    return client.extend(publicActions).readContract({
+        address: eSIMWalletAddress,
+        abi: ESIMWallet,
+        functionName: "dataBundlePriceCap",
+        args: []
+    }) as Promise<bigint>;
+}
+
 /** The pending owner proposed via `requestTransferOwnership` (zero if none). */
 export const _newRequestedOwner = async (client: WalletClient, eSIMWalletAddress: Address): Promise<Address> => {
 

@@ -128,6 +128,84 @@ export const _enableAdmin = async (client: WalletClient) => {
 }
 
 /**
+ * Stop the ETH-moving paths on every device wallet and eSIM wallet.
+ * `onlyESIMWalletAdmin`, so this is the one emergency lever the backend key can
+ * pull on its own.
+ *
+ * It cannot release it again: `_unpause` is `onlyOwner`. That split is what stops
+ * a compromised backend key holding user funds. Owners can still spend their own
+ * ETH through their device wallet's `execute`, which a pause never reaches.
+ */
+export const _pause = async (client: WalletClient) => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return client.writeContract({
+        address: values.factoryAddresses.REGISTRY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: Registry,
+        functionName: 'pause',
+        args: []
+    });
+}
+
+/**
+ * Release the pause. `onlyOwner`, not the admin, see `_pause`.
+ *
+ * On the live deployment the owner is the timelock, so this reverts from an EOA.
+ * Schedule `protocolAdmin.unpauseCall` instead, or have a guardian call
+ * `unpauseInstantly` if the wait is not acceptable.
+ */
+export const _unpause = async (client: WalletClient) => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return client.writeContract({
+        address: values.factoryAddresses.REGISTRY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: Registry,
+        functionName: 'unpause',
+        args: []
+    });
+}
+
+/**
+ * Set the price ceiling every eSIM wallet falls back to when it holds none of its
+ * own. `onlyOwner`, deliberately not the admin: the admin names the price on
+ * `buyDataBundle`, so it must not also be able to raise its own limit.
+ *
+ * Zero reverts `ZeroDataBundlePriceCap`, since a zero would read as "no ceiling"
+ * for every wallet without one of its own.
+ */
+export const _setDefaultDataBundlePriceCap = async (client: WalletClient, cap: bigint) => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return client.writeContract({
+        address: values.factoryAddresses.REGISTRY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: Registry,
+        functionName: 'setDefaultDataBundlePriceCap',
+        args: [cap]
+    });
+}
+
+/**
  * Bind an eSIM's unique identifier to its wallet. `onlyESIMWalletAdmin`.
  *
  * The identifier is claimed protocol-wide, so a string already bound to another

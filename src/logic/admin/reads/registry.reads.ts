@@ -64,6 +64,42 @@ export const _adminDisabled = async (client: WalletClient): Promise<boolean> => 
     }) as Promise<boolean>;
 }
 
+/**
+ * Whether the protocol is paused. While true, every ETH-moving path on the
+ * device wallets and eSIM wallets reverts `ProtocolPaused`.
+ */
+export const _paused = async (client: WalletClient): Promise<boolean> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "paused",
+        args: []
+    }) as Promise<boolean>;
+}
+
+/**
+ * The fallback price ceiling in wei, applied to any eSIM wallet holding no cap of
+ * its own. Never zero.
+ */
+export const _defaultDataBundlePriceCap = async (client: WalletClient): Promise<bigint> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "defaultDataBundlePriceCap",
+        args: []
+    }) as Promise<bigint>;
+}
+
 /** The vault EOA recorded in the registry. */
 export const _vault = async (client: WalletClient): Promise<Address> => {
 

@@ -7,6 +7,9 @@ import {
     _enableAdmin,
     _acceptAdminUpdate,
     _assignESIMIdentifier,
+    _pause,
+    _unpause,
+    _setDefaultDataBundlePriceCap,
 } from "../../logic/admin/registry.eoa.js";
 import {
     _owner,
@@ -23,6 +26,8 @@ import {
     _isDeviceWalletValid,
     _isESIMWalletValid,
     _isESIMWalletOnStandby,
+    _paused,
+    _defaultDataBundlePriceCap,
 } from "../../logic/admin/reads/registry.reads.js";
 
 /** Thin EOA (owner) wrapper around `Registry`. */
@@ -60,6 +65,18 @@ export class AdminRegistrySubPackage {
 
     assignESIMIdentifier(eSIMWalletAddress: Address, eSIMUniqueIdentifier: string) {
         return _assignESIMIdentifier(this.walletClient, eSIMWalletAddress, eSIMUniqueIdentifier);
+    }
+
+    pause() {
+        return _pause(this.walletClient);
+    }
+
+    unpause() {
+        return _unpause(this.walletClient);
+    }
+
+    setDefaultDataBundlePriceCap(cap: bigint) {
+        return _setDefaultDataBundlePriceCap(this.walletClient, cap);
     }
 
     // Reads: public storage getters, including the inherited RegistryHelper mappings
@@ -118,5 +135,13 @@ export class AdminRegistrySubPackage {
 
     isESIMWalletOnStandby(eSIMWallet: Address) {
         return _isESIMWalletOnStandby(this.walletClient, eSIMWallet);
+    }
+
+    paused() {
+        return _paused(this.walletClient);
+    }
+
+    defaultDataBundlePriceCap() {
+        return _defaultDataBundlePriceCap(this.walletClient);
     }
 }

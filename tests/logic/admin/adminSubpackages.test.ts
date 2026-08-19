@@ -137,6 +137,27 @@ const eoaCases: Array<{
     functionName: "assignESIMIdentifier",
     args: [ESIM, "eid-1"],
   },
+  {
+    label: "registry._pause",
+    run: (c) => registry._pause(c),
+    address: F.REGISTRY,
+    functionName: "pause",
+    args: [],
+  },
+  {
+    label: "registry._unpause",
+    run: (c) => registry._unpause(c),
+    address: F.REGISTRY,
+    functionName: "unpause",
+    args: [],
+  },
+  {
+    label: "registry._setDefaultDataBundlePriceCap",
+    run: (c) => registry._setDefaultDataBundlePriceCap(c, 5n * 10n ** 18n),
+    address: F.REGISTRY,
+    functionName: "setDefaultDataBundlePriceCap",
+    args: [5n * 10n ** 18n],
+  },
   // lazyWalletRegistry.eoa (target = LAZY_WALLET_REGISTRY)
   {
     label: "lazyWalletRegistry._batchPopulateHistory",

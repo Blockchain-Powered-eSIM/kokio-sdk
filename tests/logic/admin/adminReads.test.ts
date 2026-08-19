@@ -57,6 +57,8 @@ const readCases: Array<{
   { label: "registry._isDeviceWalletValid", run: (c) => registry._isDeviceWalletValid(c, WALLET), address: F.REGISTRY, functionName: "isDeviceWalletValid", args: [WALLET] },
   { label: "registry._isESIMWalletValid", run: (c) => registry._isESIMWalletValid(c, ESIM), address: F.REGISTRY, functionName: "isESIMWalletValid", args: [ESIM] },
   { label: "registry._isESIMWalletOnStandby", run: (c) => registry._isESIMWalletOnStandby(c, ESIM), address: F.REGISTRY, functionName: "isESIMWalletOnStandby", args: [ESIM] },
+  { label: "registry._paused", run: (c) => registry._paused(c), address: F.REGISTRY, functionName: "paused", args: [] },
+  { label: "registry._defaultDataBundlePriceCap", run: (c) => registry._defaultDataBundlePriceCap(c), address: F.REGISTRY, functionName: "defaultDataBundlePriceCap", args: [] },
 
   // lazyWalletRegistry.reads (target = LAZY_WALLET_REGISTRY)
   { label: "lazyWalletRegistry._upgradeManager", run: (c) => lazyWalletRegistry._upgradeManager(c), address: F.LAZY_WALLET_REGISTRY, functionName: "upgradeManager", args: [] },
@@ -82,6 +84,7 @@ const readCases: Array<{
   { label: "eSIMWallet._eSIMUniqueIdentifier", run: (c) => eSIMWallet._eSIMUniqueIdentifier(c, ESIM), address: ESIM, functionName: "eSIMUniqueIdentifier", args: [] },
   { label: "eSIMWallet._newRequestedOwner", run: (c) => eSIMWallet._newRequestedOwner(c, ESIM), address: ESIM, functionName: "newRequestedOwner", args: [] },
   { label: "eSIMWallet._owner", run: (c) => eSIMWallet._owner(c, ESIM), address: ESIM, functionName: "owner", args: [] },
+  { label: "eSIMWallet._dataBundlePriceCap", run: (c) => eSIMWallet._dataBundlePriceCap(c, ESIM), address: ESIM, functionName: "dataBundlePriceCap", args: [] },
 ];
 
 describe("admin readContract calls", () => {
