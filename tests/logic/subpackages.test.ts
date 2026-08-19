@@ -9,6 +9,7 @@ import {
   ESIMWallet,
   ESIMWalletFactory,
   P256Verifier,
+  Registry,
 } from "../../src/abis/index.js";
 import type { DataBundleDetails, WebAuthnSignature } from "../../src/types.js";
 
@@ -23,6 +24,8 @@ import * as p256Verifier from "../../src/logic/P256Verifier.js";
 const WALLET = "0x00000000000000000000000000000000000dead1" as Address;
 const ESIM = "0x00000000000000000000000000000000000e51a1" as Address;
 const NEW_OWNER = "0x0000000000000000000000000000000000ce7701" as Address;
+// The smart account the mock client signs as, i.e. the device wallet sending the userOp.
+const ACCOUNT = "0x000000000000000000000000000000000000acc7" as Address;
 const OWNER_KEY: [Hex, Hex] = [
   "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C291",
   "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F1",
@@ -128,6 +131,20 @@ const userOpCases: Array<{
     run: (c) => eSIMWalletFactory._deployESIMWalletWithUserOp(c, WALLET, 1n),
     target: F.ESIM_WALLET_FACTORY,
     data: encodeFunctionData({ abi: ESIMWalletFactory, functionName: "deployESIMWallet", args: [WALLET, 1n] }),
+  },
+  // registry.ts - `onlyDeviceWallet`, so msg.sender is the device wallet sending the userOp
+  {
+    // The registry only accepts the caller as the new holder, so the SDK fills it in.
+    label: "registry._bindESIMWallet",
+    run: (c) => registry._bindESIMWallet(c, ESIM),
+    target: F.REGISTRY,
+    data: encodeFunctionData({ abi: Registry, functionName: "bindESIMWallet", args: [ESIM, ACCOUNT] }),
+  },
+  {
+    label: "registry._toggleESIMWalletStandbyStatus",
+    run: (c) => registry._toggleESIMWalletStandbyStatus(c, ESIM, true),
+    target: F.REGISTRY,
+    data: encodeFunctionData({ abi: Registry, functionName: "toggleESIMWalletStandbyStatus", args: [ESIM, true] }),
   },
 ];
 
@@ -308,6 +325,16 @@ const readCases: Array<{
     functionName: "isDeviceIdentifierAlreadyUsed",
     args: ["Device_11"],
   },
+  { label: "registry._paused", run: (c) => registry._paused(c), address: F.REGISTRY, functionName: "paused", args: [] },
+  { label: "registry._requireNotPaused", run: (c) => registry._requireNotPaused(c), address: F.REGISTRY, functionName: "requireNotPaused", args: [] },
+  { label: "registry._isESIMWalletValid", run: (c) => registry._isESIMWalletValid(c, ESIM), address: F.REGISTRY, functionName: "isESIMWalletValid", args: [ESIM] },
+  { label: "registry._isESIMWalletOnStandby", run: (c) => registry._isESIMWalletOnStandby(c, ESIM), address: F.REGISTRY, functionName: "isESIMWalletOnStandby", args: [ESIM] },
+  { label: "registry._isDeviceWalletValid", run: (c) => registry._isDeviceWalletValid(c, WALLET), address: F.REGISTRY, functionName: "isDeviceWalletValid", args: [WALLET] },
+  { label: "registry._uniqueIdentifierToDeviceWallet", run: (c) => registry._uniqueIdentifierToDeviceWallet(c, "Device_11"), address: F.REGISTRY, functionName: "uniqueIdentifierToDeviceWallet", args: ["Device_11"] },
+  { label: "registry._isESIMIdentifierClaimed", run: (c) => registry._isESIMIdentifierClaimed(c, "eid-1"), address: F.REGISTRY, functionName: "isESIMIdentifierClaimed", args: ["eid-1"] },
+  { label: "registry._eSIMWalletForIdentifier", run: (c) => registry._eSIMWalletForIdentifier(c, "eid-1"), address: F.REGISTRY, functionName: "eSIMWalletForIdentifier", args: ["eid-1"] },
+  { label: "registry._defaultDataBundlePriceCap", run: (c) => registry._defaultDataBundlePriceCap(c), address: F.REGISTRY, functionName: "defaultDataBundlePriceCap", args: [] },
+  { label: "registry._requireDeviceIdentifierNotReserved", run: (c) => registry._requireDeviceIdentifierNotReserved(c, "Device_11"), address: F.REGISTRY, functionName: "requireDeviceIdentifierNotReserved", args: ["Device_11"] },
   {
     label: "p256Verifier._verifySignature",
     run: (c) => p256Verifier._verifySignature(c, "0x1234", true, WEBAUTHN_SIG, 10n, 20n),
