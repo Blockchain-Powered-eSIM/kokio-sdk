@@ -80,6 +80,50 @@ export const _operationIdBatch = async (client: WalletClient, calls: readonly Ow
     }) as Promise<Hex>;
 }
 
+/**
+ * The id for a payload built outside this SDK. `_scheduleRaw` hands back only a
+ * transaction hash, so this is the only way to get the id that `cancel`,
+ * `getTimestamp` and the `isOperation*` reads need.
+ */
+export const _operationIdRaw = async (
+    client: WalletClient,
+    target: Address,
+    value: bigint,
+    payload: Hex,
+    predecessor: Hex,
+    salt: Hex
+): Promise<Hex> => {
+
+    const values = await _resolve(client);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.PROTOCOL_ADMIN,
+        abi: ProtocolAdmin,
+        functionName: "hashOperation",
+        args: [target, value, payload, predecessor, salt]
+    }) as Promise<Hex>;
+}
+
+/** The id for a raw batch. Same reason as `_operationIdRaw`. */
+export const _operationIdBatchRaw = async (
+    client: WalletClient,
+    targets: readonly Address[],
+    callValues: readonly bigint[],
+    payloads: readonly Hex[],
+    predecessor: Hex,
+    salt: Hex
+): Promise<Hex> => {
+
+    const values = await _resolve(client);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.PROTOCOL_ADMIN,
+        abi: ProtocolAdmin,
+        functionName: "hashOperationBatch",
+        args: [targets, callValues, payloads, predecessor, salt]
+    }) as Promise<Hex>;
+}
+
 // ---------------------------------------------------------------------------
 // Scheduling - PROPOSER_ROLE
 // ---------------------------------------------------------------------------

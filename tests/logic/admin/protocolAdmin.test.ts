@@ -129,6 +129,45 @@ describe("protocolAdmin schedule", () => {
     });
 });
 
+// A payload scheduled through _scheduleRaw has no id attached, so the raw id
+// helpers are the only route to cancelling or inspecting one.
+describe("protocolAdmin raw operation ids", () => {
+    it("hashes a raw payload with the same arguments it was scheduled with", async () => {
+        const client = scheduleClient();
+
+        const id = await protocolAdmin._operationIdRaw(client, F.REGISTRY, 1n, "0xdead", ZERO32, SALT);
+
+        expect(id).toBe(OP_ID);
+        const arg = (client.readContract as ReturnType<typeof vi.fn>).mock.calls[0][0];
+        expect(arg.address).toBe(PA);
+        expect(arg.functionName).toBe("hashOperation");
+        expect(arg.args).toEqual([F.REGISTRY, 1n, "0xdead", ZERO32, SALT]);
+    });
+
+    it("hashes a raw batch with hashOperationBatch", async () => {
+        const client = scheduleClient();
+
+        const id = await protocolAdmin._operationIdBatchRaw(
+            client, [F.REGISTRY, F.DEVICE_WALLET_FACTORY], [1n, 0n], ["0xdead", "0xbeef"], ZERO32, SALT
+        );
+
+        expect(id).toBe(OP_ID);
+        const arg = (client.readContract as ReturnType<typeof vi.fn>).mock.calls[0][0];
+        expect(arg.functionName).toBe("hashOperationBatch");
+        expect(arg.args).toEqual([[F.REGISTRY, F.DEVICE_WALLET_FACTORY], [1n, 0n], ["0xdead", "0xbeef"], ZERO32, SALT]);
+    });
+
+    it("agrees with the owner-call id helper for the same payload", async () => {
+        const client = scheduleClient();
+
+        await protocolAdmin._operationId(client, VAULT_CALL, { salt: SALT });
+        await protocolAdmin._operationIdRaw(client, F.REGISTRY, 0n, VAULT_PAYLOAD, ZERO32, SALT);
+
+        const calls = (client.readContract as ReturnType<typeof vi.fn>).mock.calls;
+        expect(calls[0][0].args).toEqual(calls[1][0].args);
+    });
+});
+
 describe("protocolAdmin execute", () => {
     const OPERATION: ScheduledOperation = {
         hash: "0xwritehash",

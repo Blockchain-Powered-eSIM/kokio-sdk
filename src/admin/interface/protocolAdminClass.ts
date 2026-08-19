@@ -2,6 +2,8 @@ import { Address, Hex, WalletClient } from "viem";
 import {
     _operationId,
     _operationIdBatch,
+    _operationIdRaw,
+    _operationIdBatchRaw,
     _schedule,
     _scheduleBatch,
     _scheduleRaw,
@@ -222,6 +224,14 @@ export class AdminProtocolAdminSubPackage {
 
     operationIdBatch(calls: readonly OwnerCall[], opts?: OperationOptions) {
         return _operationIdBatch(this.walletClient, calls, opts);
+    }
+
+    operationIdRaw(target: Address, value: bigint, payload: Hex, predecessor: Hex, salt: Hex) {
+        return _operationIdRaw(this.walletClient, target, value, payload, predecessor, salt);
+    }
+
+    operationIdBatchRaw(targets: readonly Address[], values: readonly bigint[], payloads: readonly Hex[], predecessor: Hex, salt: Hex) {
+        return _operationIdBatchRaw(this.walletClient, targets, values, payloads, predecessor, salt);
     }
 
     // Reads
