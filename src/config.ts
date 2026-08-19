@@ -32,6 +32,9 @@ export class Kokio {
     rpId: string;
     pimlicoAPIKey: string;
     gasPolicyId: string;
+    smartAccountClient?: KokioSmartAccountClient;
+    deviceWalletAddress?: Address;
+    eSIMWalletAddress?: Address;
 
     private _constants: ConstantsSubPackage;
 
@@ -58,6 +61,9 @@ export class Kokio {
         this.rpId = rpId;
         this.pimlicoAPIKey = pimlicoAPIKey;
         this.gasPolicyId = gasPolicyId;
+        this.smartAccountClient = smartAccountClient;
+        this.deviceWalletAddress = deviceWalletAddress;
+        this.eSIMWalletAddress = eSIMWalletAddress;
 
         this._constants = new ConstantsSubPackage(this.viemWalletClient, this.pimlicoAPIKey);
 
@@ -81,5 +87,38 @@ export class Kokio {
      */
     get constants(): Promise<KokioConstants> {
         return this._constants.load();
+    }
+
+    /**
+     * Bind a `DeviceWallet` instance address after construction and (re)wire
+     * the `deviceWallet` surface to it. Returns `this` for chaining.
+     *
+     * Needs a `smartAccountClient` already on this instance - every write on
+     * `deviceWallet` sends a user operation through it. Without one,
+     * `deviceWallet` stays `undefined`, same as when no address is passed to
+     * the constructor.
+     */
+    setDeviceWalletAddress(deviceWalletAddress: Address): this {
+        this.deviceWalletAddress = deviceWalletAddress;
+        this.deviceWallet = this.smartAccountClient
+            ? new DeviceWalletSubPackage(this.viemWalletClient, this.smartAccountClient, deviceWalletAddress)
+            : undefined;
+        return this;
+    }
+
+    /**
+     * Bind an `ESIMWallet` instance address after construction and (re)wire
+     * the `eSIMWallet` surface to it. Returns `this` for chaining.
+     *
+     * A user holding several eSIM wallets can call this to switch which one
+     * `kokio.eSIMWallet` acts on, without re-creating `Kokio`. Same
+     * `smartAccountClient` requirement as {@link setDeviceWalletAddress}.
+     */
+    setESIMWalletAddress(eSIMWalletAddress: Address): this {
+        this.eSIMWalletAddress = eSIMWalletAddress;
+        this.eSIMWallet = this.smartAccountClient
+            ? new ESIMWalletSubPackage(this.smartAccountClient, eSIMWalletAddress)
+            : undefined;
+        return this;
     }
 }

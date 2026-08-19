@@ -90,6 +90,21 @@ The contract surfaces (`deviceWallet`, `eSIMWallet`, `deviceWalletFactory`,
 twice. Instance surfaces (`deviceWallet`, `eSIMWallet`) also need their contract
 address. They stay `undefined` until you pass it.
 
+A device wallet often holds more than one eSIM wallet, and the app needs to
+switch which one it is acting on without resolving the smart account again.
+Bind a new instance address with a setter and keep using the same `Kokio`
+reference:
+
+```ts
+session.setESIMWalletAddress(anotherESIMWalletAddress);
+const hash = await session.eSIMWallet!.buyDataBundle({ dataBundleID, dataBundlePrice });
+```
+
+`setDeviceWalletAddress` and `setESIMWalletAddress` each mutate the instance
+and return `this`, so they can be chained. Both need a `smartAccountClient`
+already on the instance; without one the corresponding surface stays
+`undefined`, same as when no address is passed to the constructor.
+
 The passkey signing path depends on
 [`react-native-passkey`](https://github.com/f-23/react-native-passkey) and runs
 only on a device or simulator that supports WebAuthn. It is not available in a

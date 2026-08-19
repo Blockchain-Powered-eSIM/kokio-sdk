@@ -4,9 +4,11 @@
 
 Wraps one eSIM wallet, the contract that holds a single eSIM's purchase
 history and price cap. Only present once `Kokio` has both a
-`smartAccountClient` and an `eSIMWalletAddress`. Writes here need the
-device wallet that owns this eSIM wallet to be the signer, which is exactly
-what a passkey user operation already is.
+`smartAccountClient` and an `eSIMWalletAddress`, set on the constructor or
+bound afterwards with `kokio.setESIMWalletAddress(address)` - the way to
+switch which eSIM wallet a user with several of them is currently acting on.
+Writes here need the device wallet that owns this eSIM wallet to be the
+signer, which is exactly what a passkey user operation already is.
 
 ```ts
 const { hash } = await kokio.eSIMWallet!.buyDataBundle({ dataBundleID, dataBundlePrice });

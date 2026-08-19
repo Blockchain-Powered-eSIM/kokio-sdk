@@ -4,8 +4,9 @@
 
 Wraps one user's device wallet, the ERC-4337 smart account a passkey owns.
 Only present once `Kokio` has both a `smartAccountClient` and a
-`deviceWalletAddress`. Every write here sends a user operation signed by the
-passkey.
+`deviceWalletAddress`, set on the constructor or bound afterwards with
+`kokio.setDeviceWalletAddress(address)`. Every write here sends a user
+operation signed by the passkey.
 
 ```ts
 const { hash } = await kokio.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, true);
