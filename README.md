@@ -16,6 +16,10 @@ actually needs.
 | `Kokio` | `kokio-sdk` | Passkey (WebAuthn P-256) via user operations | Mobile app |
 | `KokioAdmin` | `kokio-sdk/admin` | Admin / owner EOA via direct transactions | Backend server |
 
+This README covers setup and the common flows. For every method on every
+surface, with a code example and return type, see the
+[full SDK reference](docs/README.md).
+
 ## Installation
 
 ```sh
