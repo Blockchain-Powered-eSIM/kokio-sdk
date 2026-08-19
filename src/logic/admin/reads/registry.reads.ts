@@ -453,3 +453,37 @@ export const _requireDeviceIdentifierNotReserved = async (client: WalletClient, 
         args: [deviceUniqueIdentifier]
     });
 }
+
+/**
+ * The ERC-1822 storage slot this proxy keeps its implementation in. An upgrade
+ * reverts unless the incoming implementation answers with the same value, which
+ * is what stops a non-UUPS address being installed.
+ */
+export const _proxiableUUID = async (client: WalletClient): Promise<Hex> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "proxiableUUID",
+        args: []
+    }) as Promise<Hex>;
+}
+
+/** The OpenZeppelin upgrade interface this proxy speaks, currently `"5.0.0"`. */
+export const _upgradeInterfaceVersion = async (client: WalletClient): Promise<string> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "UPGRADE_INTERFACE_VERSION",
+        args: []
+    }) as Promise<string>;
+}

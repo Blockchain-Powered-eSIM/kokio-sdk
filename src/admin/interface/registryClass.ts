@@ -10,6 +10,9 @@ import {
     _pause,
     _unpause,
     _setDefaultDataBundlePriceCap,
+    _acceptOwnership,
+    _transferOwnershipCall,
+    _upgradeCall,
 } from "../../logic/admin/registry.eoa.js";
 import {
     _owner,
@@ -38,6 +41,8 @@ import {
     _eSIMWalletFactory,
     _entryPoint,
     _requireNotPaused,
+    _proxiableUUID,
+    _upgradeInterfaceVersion,
 } from "../../logic/admin/reads/registry.reads.js";
 
 /** Thin EOA (owner) wrapper around `Registry`. */
@@ -87,6 +92,20 @@ export class AdminRegistrySubPackage {
 
     setDefaultDataBundlePriceCap(cap: bigint) {
         return _setDefaultDataBundlePriceCap(this.walletClient, cap);
+    }
+
+    acceptOwnership() {
+        return _acceptOwnership(this.walletClient);
+    }
+
+    // Owner payloads: hand the result to `protocolAdmin.schedule`
+
+    transferOwnershipCall(newOwner: Address) {
+        return _transferOwnershipCall(this.walletClient, newOwner);
+    }
+
+    upgradeCall(newImplementation: Address, data?: Hex) {
+        return _upgradeCall(this.walletClient, newImplementation, data);
     }
 
     // Reads: public storage getters, including the inherited RegistryHelper mappings
@@ -193,5 +212,13 @@ export class AdminRegistrySubPackage {
 
     entryPoint() {
         return _entryPoint(this.walletClient);
+    }
+
+    proxiableUUID() {
+        return _proxiableUUID(this.walletClient);
+    }
+
+    upgradeInterfaceVersion() {
+        return _upgradeInterfaceVersion(this.walletClient);
     }
 }

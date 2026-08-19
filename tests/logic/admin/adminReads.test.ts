@@ -53,6 +53,8 @@ const readCases: Array<{
 
   // registry.reads (target = REGISTRY)
   { label: "registry._eSIMWalletAdmin", run: (c) => registry._eSIMWalletAdmin(c), address: F.REGISTRY, functionName: "eSIMWalletAdmin", args: [] },
+  { label: "registry._proxiableUUID", run: (c) => registry._proxiableUUID(c), address: F.REGISTRY, functionName: "proxiableUUID", args: [] },
+  { label: "registry._upgradeInterfaceVersion", run: (c) => registry._upgradeInterfaceVersion(c), address: F.REGISTRY, functionName: "UPGRADE_INTERFACE_VERSION", args: [] },
   { label: "registry._adminOfRecord", run: (c) => registry._adminOfRecord(c), address: F.REGISTRY, functionName: "adminOfRecord", args: [] },
   { label: "registry._adminDisabled", run: (c) => registry._adminDisabled(c), address: F.REGISTRY, functionName: "adminDisabled", args: [] },
   { label: "registry._newRequestedAdmin", run: (c) => registry._newRequestedAdmin(c), address: F.REGISTRY, functionName: "newRequestedAdmin", args: [] },

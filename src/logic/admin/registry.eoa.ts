@@ -1,7 +1,8 @@
-import { Address, WalletClient } from "viem";
+import { Address, Hex, WalletClient } from "viem";
 import { _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError } from "../errors.js";
 import { Registry } from "../../abis/index.js";
+import type { OwnerCall } from "../../types.js";
 
 // Admin-EOA logic for `Registry`. Most of this is `onlyOwner`, so the `client`
 // must carry the owner EOA. `_acceptAdminUpdate` is the nominee's own call and
@@ -254,4 +255,87 @@ export const _acceptAdminUpdate = async (client: WalletClient) => {
         functionName: 'acceptAdminUpdate',
         args: []
     });
+}
+
+/**
+ * Take ownership after a `transferOwnership` named this client. The chain
+ * requires `msg.sender` to equal `pendingOwner`, so the `client` is the incoming
+ * owner, not the outgoing one.
+ *
+ * Permissionless in the sense that it needs no role, so where the incoming owner
+ * is the timelock this is not the call to use: `protocolAdmin.acceptOwnershipBatch`
+ * accepts for every contract at once and needs no delay.
+ */
+export const _acceptOwnership = async (client: WalletClient) => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return client.writeContract({
+        address: values.factoryAddresses.REGISTRY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: Registry,
+        functionName: 'acceptOwnership',
+        args: []
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Owner payloads - only reachable through schedule
+// ---------------------------------------------------------------------------
+
+// Both are `onlyOwner`, and on the live deployment the owner is the timelock, so
+// they exist as something to schedule rather than to send. Each returns the
+// `OwnerCall` to hand to `protocolAdmin.schedule`.
+
+/**
+ * Offer ownership to a new address. Pass the result to `schedule`.
+ *
+ * Ownable2Step, so the offer alone changes nothing: the named address has to
+ * call `acceptOwnership` before it holds anything. Until then the current owner
+ * keeps every power. Naming an address that cannot call back leaves the
+ * ownership where it is rather than stranding it.
+ */
+export const _transferOwnershipCall = async (client: WalletClient, newOwner: Address): Promise<OwnerCall> => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return {
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: 'transferOwnership',
+        args: [newOwner],
+    };
+}
+
+/**
+ * Point the proxy at a new implementation. Builds `upgradeToAndCall`. Pass the
+ * result to `schedule`.
+ *
+ * `data` runs on the proxy straight after the swap, in the same transaction, and
+ * is where a `reinitializer` goes. Leave it empty when the new implementation
+ * needs no setup.
+ *
+ * There is no undo. The implementation is checked for a matching `proxiableUUID`
+ * and nothing else, so an address that answers correctly but cannot upgrade
+ * again ends the proxy's life. Diff the storage layout before scheduling.
+ */
+export const _upgradeCall = async (client: WalletClient, newImplementation: Address, data: Hex = '0x'): Promise<OwnerCall> => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return {
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: 'upgradeToAndCall',
+        args: [newImplementation, data],
+    };
 }

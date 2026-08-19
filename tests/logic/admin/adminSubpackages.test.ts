@@ -89,6 +89,14 @@ const eoaCases: Array<{
   },
   // registry.eoa (target = REGISTRY)
   {
+    // Sent by the incoming owner, not the outgoing one.
+    label: "registry._acceptOwnership",
+    run: (c) => registry._acceptOwnership(c),
+    address: F.REGISTRY,
+    functionName: "acceptOwnership",
+    args: [],
+  },
+  {
     label: "registry._addOrUpdateLazyWalletRegistryAddress",
     run: (c) => registry._addOrUpdateLazyWalletRegistryAddress(c, LAZY),
     address: F.REGISTRY,
