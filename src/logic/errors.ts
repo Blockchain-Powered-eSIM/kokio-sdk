@@ -1,4 +1,18 @@
-import { BaseError, ContractFunctionRevertedError, decodeErrorResult, Hex, isHex, WalletClient } from "viem";
+import {
+    Abi,
+    Account,
+    BaseError,
+    Chain,
+    ContractFunctionArgs,
+    ContractFunctionName,
+    ContractFunctionRevertedError,
+    decodeErrorResult,
+    Hex,
+    isHex,
+    WalletClient,
+    WriteContractParameters,
+    WriteContractReturnType,
+} from "viem";
 import {
     DeviceWallet,
     DeviceWalletFactory,
@@ -262,11 +276,20 @@ export const toContractRevertError = (err: unknown): ContractRevertError | null 
  * `client.writeContract`, but a recognised on-chain revert comes back as a
  * ContractRevertError instead of viem's raw error chain. Anything else -
  * network failures, an unrecognised revert selector - is rethrown as-is.
+ *
+ * Mirrors `WalletClient["writeContract"]`'s own generics rather than reading
+ * them off `Parameters<...>`, since that would collapse the per-call overload
+ * (e.g. a payable function's `value` field) to a single, wrong shape.
  */
-export const writeContractOrThrow = async (
-    client: Pick<WalletClient, "writeContract">,
-    request: Parameters<WalletClient["writeContract"]>[0],
-): ReturnType<WalletClient["writeContract"]> => {
+export const writeContractOrThrow = async <
+    const abi extends Abi | readonly unknown[],
+    functionName extends ContractFunctionName<abi, "payable" | "nonpayable">,
+    args extends ContractFunctionArgs<abi, "payable" | "nonpayable", functionName>,
+    chainOverride extends Chain | undefined = undefined,
+>(
+    client: WalletClient,
+    request: WriteContractParameters<abi, functionName, args, Chain | undefined, Account | undefined, chainOverride>,
+): Promise<WriteContractReturnType> => {
     try {
         return await client.writeContract(request);
     } catch (err) {
