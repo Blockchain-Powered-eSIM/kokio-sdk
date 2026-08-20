@@ -1,6 +1,6 @@
 import { Address, Hex, WalletClient, encodeFunctionData, publicActions } from "viem";
 import { _getChainSpecificConstants } from "../constants.js";
-import { MissingEOAWalletError } from "../errors.js";
+import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { ProtocolAdmin, Registry } from "../../abis/index.js";
 import type {
     OperationOptions,
@@ -165,7 +165,7 @@ export const _schedule = async (
         args: [target, value, payload, predecessor, salt]
     }) as Hex;
 
-    const hash = await client.writeContract({
+    const hash = await writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -217,7 +217,7 @@ export const _scheduleBatch = async (
         args: [targets, callValues, payloads, predecessor, salt]
     }) as Hex;
 
-    const hash = await client.writeContract({
+    const hash = await writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -257,7 +257,7 @@ export const _scheduleRaw = async (
         args: [target, value, payload, predecessor, salt]
     }) as Hex;
 
-    const hash = await client.writeContract({
+    const hash = await writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -287,7 +287,7 @@ export const _execute = async (client: WalletClient, operation: ScheduledOperati
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -305,7 +305,7 @@ export const _executeBatch = async (client: WalletClient, operation: ScheduledBa
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -330,7 +330,7 @@ export const _executeRaw = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -355,7 +355,7 @@ export const _cancel = async (client: WalletClient, id: Hex) => {
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -381,7 +381,7 @@ export const _unpauseInstantly = async (client: WalletClient, target: Address) =
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -404,7 +404,7 @@ export const _revokeCancellersInstantly = async (client: WalletClient, accounts:
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -430,7 +430,7 @@ export const _disableAdminInstantly = async (client: WalletClient, target?: Addr
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -455,7 +455,7 @@ export const _acceptOwnershipBatch = async (client: WalletClient, targets: reado
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
@@ -475,7 +475,7 @@ export const _renounceRole = async (client: WalletClient, role: Hex, account: Ad
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
         account: client.account.address,
