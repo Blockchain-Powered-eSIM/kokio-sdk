@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { encodeErrorResult, toHex } from "viem";
+import { BaseError, ContractFunctionRevertedError, encodeErrorResult, toHex } from "viem";
 import {
     KokioError,
     NullOrUndefinedValueError,
@@ -11,6 +11,7 @@ import {
     CounterfactualMismatchError,
     ContractRevertError,
     decodeContractRevert,
+    toContractRevertError,
 } from "../../src/logic/errors.js";
 import { DeviceWalletFactory } from "../../src/abis/index.js";
 
@@ -95,5 +96,31 @@ describe("ContractRevertError", () => {
         const err = new ContractRevertError("0xdeadbeef");
         expect(err.decoded).toBeNull();
         expect(err.message).toMatch(/unrecognised data 0xdeadbeef/);
+    });
+});
+
+describe("toContractRevertError", () => {
+    it("decodes the ContractFunctionRevertedError buried in viem's error chain", () => {
+        const data = encodeErrorResult({ abi: DeviceWalletFactory, errorName: "FailedCall" });
+        const revert = new ContractFunctionRevertedError({
+            abi: DeviceWalletFactory,
+            data,
+            functionName: "postCreateAccount",
+        });
+        // writeContract wraps the revert in further BaseErrors before it reaches the caller.
+        const thrown = new BaseError("The contract function reverted", { cause: revert });
+
+        const err = toContractRevertError(thrown);
+        expect(err).toBeInstanceOf(ContractRevertError);
+        expect(err?.decoded?.errorName).toBe("FailedCall");
+        expect(err?.data).toBe(data);
+    });
+
+    it("returns null for an error that isn't a viem BaseError", () => {
+        expect(toContractRevertError(new Error("network down"))).toBeNull();
+    });
+
+    it("returns null for a BaseError with no revert in its cause chain", () => {
+        expect(toContractRevertError(new BaseError("timed out"))).toBeNull();
     });
 });
