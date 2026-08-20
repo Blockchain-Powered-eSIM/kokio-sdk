@@ -1,6 +1,6 @@
 import { Address, Hex, WalletClient } from "viem";
 import { _getChainSpecificConstants } from "../constants.js";
-import { MissingEOAWalletError } from "../errors.js";
+import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { DeviceWalletFactory } from "../../abis/index.js";
 import { OwnerCall, P256Key } from "../../types.js";
 
@@ -37,7 +37,7 @@ export const _deployDeviceWalletForUsers = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
         account: client.account.address,
@@ -67,7 +67,7 @@ export const _postCreateAccount = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
         account: client.account.address,
@@ -86,7 +86,7 @@ export const _addRegistryAddress = async (client: WalletClient, registryContract
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
         account: client.account.address,
@@ -105,7 +105,7 @@ export const _updateDeviceWalletImplementation = async (client: WalletClient, ne
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
         account: client.account.address,
@@ -182,7 +182,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
         account: client.account.address,

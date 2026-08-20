@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
-import { type Address, type Hex } from "viem";
+import { BaseError, ContractFunctionRevertedError, encodeErrorResult, type Address, type Hex } from "viem";
 
 import { makeMockWalletClient } from "../../utils/mockClient.js";
 import { baseSepoliaFactoryAddresses } from "../../../src/logic/constants.js";
+import { ContractRevertError } from "../../../src/logic/errors.js";
+import { Registry } from "../../../src/abis/index.js";
 import type { DataBundleDetails } from "../../../src/types.js";
 
 import * as deviceWalletFactory from "../../../src/logic/admin/deviceWalletFactory.eoa.js";
@@ -284,5 +286,27 @@ describe("admin-EOA writeContract calls", () => {
   it.each(eoaCases)("$label throws MISSING_EOA_WALLET without an account", async ({ run }) => {
     const client = makeMockWalletClient({ chainId: CHAIN_ID });
     await expect(run(client)).rejects.toThrow(/EOA/i);
+  });
+
+  // The exact call the README documents: `admin.registry.requestAdminUpdate`
+  // caught as a ContractRevertError.
+  it("registry._requestAdminUpdate throws ContractRevertError when the chain reverts", async () => {
+    const data = encodeErrorResult({
+      abi: Registry,
+      errorName: "OwnableUnauthorizedAccount",
+      args: [EOA],
+    });
+    const client = makeMockWalletClient({
+      chainId: CHAIN_ID,
+      account: EOA,
+      write: () => {
+        const revert = new ContractFunctionRevertedError({ abi: Registry, data, functionName: "requestAdminUpdate" });
+        throw new BaseError("The contract function reverted", { cause: revert });
+      },
+    });
+
+    const err = await registry._requestAdminUpdate(client, NEW_ADMIN).catch((e) => e);
+    expect(err).toBeInstanceOf(ContractRevertError);
+    expect(err.decoded?.errorName).toBe("OwnableUnauthorizedAccount");
   });
 });

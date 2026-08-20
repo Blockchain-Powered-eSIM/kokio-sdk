@@ -1,6 +1,6 @@
 import { Address, WalletClient } from "viem";
 import { _getChainSpecificConstants } from "../constants.js";
-import { MissingEOAWalletError } from "../errors.js";
+import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { DeviceWallet } from "../../abis/index.js";
 
 // Admin-EOA logic targeting a specific `DeviceWallet` instance (its address is
@@ -28,7 +28,7 @@ export const _deployESIMWallet = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: deviceWalletAddress,
         chain: values.chain,
         account: client.account.address,
@@ -53,7 +53,7 @@ export const _addDeposit = async (client: WalletClient, deviceWalletAddress: Add
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: deviceWalletAddress,
         chain: values.chain,
         account: client.account.address,

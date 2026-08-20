@@ -1,6 +1,6 @@
 import { Address, Hex, WalletClient } from "viem";
 import { _getChainSpecificConstants } from "../constants.js";
-import { MissingEOAWalletError } from "../errors.js";
+import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { ESIMWalletFactory } from "../../abis/index.js";
 import type { OwnerCall } from "../../types.js";
 
@@ -25,7 +25,7 @@ export const _addRegistryAddress = async (client: WalletClient, registryContract
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
         chain: values.chain,
         account: client.account.address,
@@ -44,7 +44,7 @@ export const _updateESIMWalletImplementation = async (client: WalletClient, eSIM
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
         chain: values.chain,
         account: client.account.address,
@@ -120,7 +120,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
         chain: values.chain,
         account: client.account.address,

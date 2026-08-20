@@ -1,4 +1,18 @@
-import { decodeErrorResult, Hex, isHex } from "viem";
+import {
+    Abi,
+    Account,
+    BaseError,
+    Chain,
+    ContractFunctionArgs,
+    ContractFunctionName,
+    ContractFunctionRevertedError,
+    decodeErrorResult,
+    Hex,
+    isHex,
+    WalletClient,
+    WriteContractParameters,
+    WriteContractReturnType,
+} from "viem";
 import {
     DeviceWallet,
     DeviceWalletFactory,
@@ -244,3 +258,41 @@ export class ContractRevertError extends KokioError {
         this.decoded = decoded;
     }
 }
+
+/**
+ * Pulls a ContractRevertError out of an error thrown by viem, or `null` if it
+ * isn't a revert viem could decode a selector for.
+ */
+export const toContractRevertError = (err: unknown): ContractRevertError | null => {
+    if (!(err instanceof BaseError)) return null;
+
+    const revert = err.walk((e) => e instanceof ContractFunctionRevertedError);
+    if (!(revert instanceof ContractFunctionRevertedError) || !revert.raw) return null;
+
+    return new ContractRevertError(revert.raw);
+};
+
+/**
+ * `client.writeContract`, but a recognised on-chain revert comes back as a
+ * ContractRevertError instead of viem's raw error chain. Anything else -
+ * network failures, an unrecognised revert selector - is rethrown as-is.
+ *
+ * Mirrors `WalletClient["writeContract"]`'s own generics rather than reading
+ * them off `Parameters<...>`, since that would collapse the per-call overload
+ * (e.g. a payable function's `value` field) to a single, wrong shape.
+ */
+export const writeContractOrThrow = async <
+    const abi extends Abi | readonly unknown[],
+    functionName extends ContractFunctionName<abi, "payable" | "nonpayable">,
+    args extends ContractFunctionArgs<abi, "payable" | "nonpayable", functionName>,
+    chainOverride extends Chain | undefined = undefined,
+>(
+    client: WalletClient,
+    request: WriteContractParameters<abi, functionName, args, Chain | undefined, Account | undefined, chainOverride>,
+): Promise<WriteContractReturnType> => {
+    try {
+        return await client.writeContract(request);
+    } catch (err) {
+        throw toContractRevertError(err) ?? err;
+    }
+};

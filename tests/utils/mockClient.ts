@@ -21,8 +21,10 @@ export const makeMockWalletClient = (opts: {
   receipts?: Array<{ logs: unknown[] }>;
   /** What `simulateContract` does. Throw from here to exercise a revert path. */
   simulate?: () => unknown;
+  /** What `writeContract` does. Throw from here to exercise a revert path. */
+  write?: () => unknown;
 }): WalletClient => {
-  const { chainId, url = "https://rpc.test.invalid", account, readResult = "0xreadresult", reads, receipts, simulate } = opts;
+  const { chainId, url = "https://rpc.test.invalid", account, readResult = "0xreadresult", reads, receipts, simulate, write } = opts;
 
   // Each write gets its own hash so a test driving several batches can tell them
   // apart and check the order they were sent in.
@@ -38,7 +40,7 @@ export const makeMockWalletClient = (opts: {
     getChainId: async () => chainId,
     transport: { url },
     account: account ? { address: account, type: "json-rpc" } : undefined,
-    writeContract: vi.fn(async () => (receipts ? nextHash() : "0xwritehash")),
+    writeContract: vi.fn(async () => (write ? write() : (receipts ? nextHash() : "0xwritehash"))),
     readContract: vi.fn(async ({ functionName }: { functionName: string }) =>
       reads && functionName in reads ? reads[functionName] : readResult),
     waitForTransactionReceipt: vi.fn(async () => {

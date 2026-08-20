@@ -17,6 +17,7 @@ import {
     MissingBatchEventError,
     MissingEOAWalletError,
     StalledBatchError,
+    writeContractOrThrow,
 } from "../errors.js";
 import { LazyWalletRegistry, Registry } from "../../abis/index.js";
 import { _eSIMWalletsDeployed, _lazyDeployedESIMWallet } from "./reads/lazyWalletRegistry.reads.js";
@@ -87,7 +88,7 @@ export const _batchPopulateHistory = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -119,7 +120,7 @@ export const _deployLazyWalletAndSetESIMIdentifier = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -149,7 +150,7 @@ export const _deployMoreESIMWalletsForLazyDevice = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -176,7 +177,7 @@ export const _setHistoryForLazyWallet = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -198,7 +199,7 @@ export const _switchESIMIdentifierToNewDeviceIdentifier = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -518,7 +519,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
         account: client.account.address,
