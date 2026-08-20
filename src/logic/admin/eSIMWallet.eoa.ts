@@ -1,6 +1,6 @@
 import { Address, WalletClient } from "viem";
 import { _getChainSpecificConstants } from "../constants.js";
-import { MissingEOAWalletError } from "../errors.js";
+import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { ESIMWallet } from "../../abis/index.js";
 import { DataBundleDetails } from "../../types.js";
 
@@ -27,7 +27,7 @@ export const _buyDataBundle = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: eSIMWalletAddress,
         chain: values.chain,
         account: client.account.address,

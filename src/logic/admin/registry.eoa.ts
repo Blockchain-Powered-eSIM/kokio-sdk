@@ -1,6 +1,6 @@
 import { Address, Hex, WalletClient } from "viem";
 import { _getChainSpecificConstants } from "../constants.js";
-import { MissingEOAWalletError } from "../errors.js";
+import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { Registry } from "../../abis/index.js";
 import type { OwnerCall } from "../../types.js";
 
@@ -22,7 +22,7 @@ export const _addOrUpdateLazyWalletRegistryAddress = async (client: WalletClient
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -41,7 +41,7 @@ export const _updateVaultAddress = async (client: WalletClient, newVaultAddress:
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -68,7 +68,7 @@ export const _requestAdminUpdate = async (client: WalletClient, newAdmin: Addres
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -93,7 +93,7 @@ export const _disableAdmin = async (client: WalletClient) => {
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -118,7 +118,7 @@ export const _enableAdmin = async (client: WalletClient) => {
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -145,7 +145,7 @@ export const _pause = async (client: WalletClient) => {
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -170,7 +170,7 @@ export const _unpause = async (client: WalletClient) => {
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -196,7 +196,7 @@ export const _setDefaultDataBundlePriceCap = async (client: WalletClient, cap: b
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -224,7 +224,7 @@ export const _assignESIMIdentifier = async (
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -247,7 +247,7 @@ export const _acceptAdminUpdate = async (client: WalletClient) => {
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
@@ -274,7 +274,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
 
     if (!client.account) throw new MissingEOAWalletError();
 
-    return client.writeContract({
+    return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
         account: client.account.address,
