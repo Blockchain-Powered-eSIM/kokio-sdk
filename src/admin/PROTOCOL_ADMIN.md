@@ -366,5 +366,15 @@ that does not wait. Every other grant or revoke is a scheduled operation.
 | `TimelockUnexpectedOperationState` | Executing before the delay, executing twice, or scheduling a call that already has this id. Pass a salt. |
 | `AdminAlreadyDisabled` / `AdminNotDisabled` | The suspension is already in the state you asked for. Both refuse a no-op rather than passing quietly. |
 
-`decodeContractRevert` is exported from `kokio-sdk/admin` for turning a raw revert
-into one of these.
+Every write in this module throws `ContractRevertError` when the chain reverts
+with one of these, decoded and ready to read:
+
+```ts
+try {
+  await admin.protocolAdmin.executor.execute(operation);
+} catch (err) {
+  if (err instanceof ContractRevertError) {
+    console.error(err.decoded?.errorName, err.decoded?.args);
+  }
+}
+```
