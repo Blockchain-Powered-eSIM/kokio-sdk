@@ -1,4 +1,4 @@
-import { decodeErrorResult, Hex, isHex } from "viem";
+import { BaseError, ContractFunctionRevertedError, decodeErrorResult, Hex, isHex, WalletClient } from "viem";
 import {
     DeviceWallet,
     DeviceWalletFactory,
@@ -244,3 +244,32 @@ export class ContractRevertError extends KokioError {
         this.decoded = decoded;
     }
 }
+
+/**
+ * Pulls a ContractRevertError out of an error thrown by viem, or `null` if it
+ * isn't a revert viem could decode a selector for.
+ */
+export const toContractRevertError = (err: unknown): ContractRevertError | null => {
+    if (!(err instanceof BaseError)) return null;
+
+    const revert = err.walk((e) => e instanceof ContractFunctionRevertedError);
+    if (!(revert instanceof ContractFunctionRevertedError) || !revert.raw) return null;
+
+    return new ContractRevertError(revert.raw);
+};
+
+/**
+ * `client.writeContract`, but a recognised on-chain revert comes back as a
+ * ContractRevertError instead of viem's raw error chain. Anything else -
+ * network failures, an unrecognised revert selector - is rethrown as-is.
+ */
+export const writeContractOrThrow = async (
+    client: Pick<WalletClient, "writeContract">,
+    request: Parameters<WalletClient["writeContract"]>[0],
+): ReturnType<WalletClient["writeContract"]> => {
+    try {
+        return await client.writeContract(request);
+    } catch (err) {
+        throw toContractRevertError(err) ?? err;
+    }
+};
