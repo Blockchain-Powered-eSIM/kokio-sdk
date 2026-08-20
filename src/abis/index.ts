@@ -7,6 +7,7 @@ import P256Verifier from './P256Verifier.js';
 import Registry from './Registry.js';
 import RegistryHelper from './RegistryHelper.js';
 import BeaconProxy from './BeaconProxy.js';
+import ProtocolAdmin from './ProtocolAdmin.js';
 
 export {
     DeviceWallet,
@@ -17,5 +18,6 @@ export {
     P256Verifier,
     Registry,
     RegistryHelper,
-    BeaconProxy
+    BeaconProxy,
+    ProtocolAdmin
 }

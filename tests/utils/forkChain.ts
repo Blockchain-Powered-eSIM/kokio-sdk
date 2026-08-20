@@ -1,3 +1,7 @@
+// Loaded here rather than per suite: every fork test reaches the chain through
+// this module, and a missing BASE_SEPOLIA_RPC_URL silently falls back to the
+// public endpoint, which is rate limited enough to fail the fork on startup.
+import "dotenv/config";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import {
   createPublicClient,
@@ -13,41 +17,44 @@ import {
 } from "viem";
 import { baseSepolia } from "viem/chains";
 
-import { DeviceWalletFactory } from "../../src/abis/index.js";
+import { DeviceWalletFactory, Registry } from "../../src/abis/index.js";
 import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 
-/**
- * Local Base Sepolia fork harness for the opt-in scenario tier.
- *
- * Instead of writing to live Base Sepolia with real funded keys + a Pimlico
- * bundler, each session spins up a local `anvil` fork. A fork carries the real
- * deployed contracts and (via `--chain-id 84532`) reports the Base Sepolia chain
- * id, so the SDK resolves the real factory addresses and runs unmodified. No
- * secret keys are needed: `anvil` impersonates the real on-chain admin, and
- * UserOps are submitted by a funded anvil account calling `EntryPoint.handleOps`
- * directly (no external bundler).
- */
+// Local Base Sepolia fork harness for the opt-in scenario tier.
+//
+// Instead of writing to live Base Sepolia with real funded keys + a Pimlico
+// bundler, each session spins up a local `anvil` fork. A fork carries the real
+// deployed contracts and (via `--chain-id 84532`) reports the Base Sepolia chain
+// id, so the SDK resolves the real factory addresses and runs unmodified. No
+// secret keys are needed: `anvil` impersonates the real on-chain admin, and
+// UserOps are submitted by a funded anvil account calling `EntryPoint.handleOps`
+// directly (no external bundler).
 
-/** The public Base Sepolia endpoint the fork pulls state from when no RPC is configured. */
+// The public Base Sepolia endpoint the fork pulls state from when no RPC is configured.
 const DEFAULT_FORK_RPC = "https://sepolia.base.org";
 
-/**
- * HTTP request timeout for the fork clients. A fork fetches upstream state lazily,
- * so a single write that touches many contracts or storage slots can spend well
- * over viem's 10s default waiting on the (rate-limited) public endpoint. Give it
- * room so those calls do not time out mid-execution.
- */
+// HTTP request timeout for the fork clients. A fork fetches upstream state lazily,
+// so a single write that touches many contracts or storage slots can spend well
+// over viem's 10s default waiting on the (rate-limited) public endpoint. Give it
+// room so those calls do not time out mid-execution.
 const FORK_HTTP_TIMEOUT = 90_000;
 
-/** Shared transport options for every client bound to the fork. */
+// Shared transport options for every client bound to the fork.
 const forkTransport = (rpcUrl: string) => http(rpcUrl, { timeout: FORK_HTTP_TIMEOUT });
 
 /**
  * The `anvil` binary to run. Defaults to whatever is on PATH, overridable via
- * `ANVIL_BIN` - useful when a newer Foundry lives outside PATH (a recent anvil
- * is required so the fork serves the RIP-7212 P256 precompile at 0x100).
+ * `ANVIL_BIN` - useful when a newer Foundry lives outside PATH.
  */
 export const getAnvilBin = (): string => process.env.ANVIL_BIN ?? "anvil";
+
+// Base Sepolia answers at 0x100, so signature verification there runs the RIP-7212
+// precompile and never reaches the FreshCryptoLib fallback. A fork does not inherit
+// that: anvil decides its own precompile set from the hardfork, and on the default
+// it serves nothing at 0x100, so every P256 verification silently takes the fallback
+// and costs about 30x what production costs. Pinning `osaka` puts the precompile back
+// and is what makes a fork measurement mean anything.
+const FORK_HARDFORK = "osaka";
 
 /** True when the resolved `anvil` binary is runnable (Foundry installed). */
 export const anvilInstalled = (): boolean => {
@@ -89,29 +96,52 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  */
 export const startFork = async (port = 8545): Promise<Fork> => {
   const upstream = getForkUpstreamRpc();
-  const proc: ChildProcess = spawn(
-    getAnvilBin(),
-    ["--fork-url", upstream, "--port", String(port), "--chain-id", "84532", "--silent"],
-    { stdio: "ignore" },
-  );
-
   const rpcUrl = `http://127.0.0.1:${port}`;
   const publicClient = createPublicClient({ chain: baseSepolia, transport: forkTransport(rpcUrl) });
 
-  // Poll until the fork is serving requests (fork state fetch can take a moment).
-  const deadline = Date.now() + 30_000;
-  for (;;) {
-    try {
-      if ((await publicClient.getChainId()) === baseSepolia.id) break;
-    } catch {
-      // not up yet
+  // anvil reads upstream state to build its genesis, so a rate-limited or
+  // briefly unhealthy endpoint makes it exit before it ever serves a request.
+  // That is transient, and each suite in the tier starts its own fork, so one
+  // retry is what keeps a run from failing on someone else's traffic.
+  const attempt = async (): Promise<ChildProcess | null> => {
+    const proc: ChildProcess = spawn(
+      getAnvilBin(),
+      [
+        "--fork-url", upstream,
+        "--port", String(port),
+        "--chain-id", "84532",
+        "--hardfork", FORK_HARDFORK,
+        "--silent",
+      ],
+      { stdio: "ignore" },
+    );
+
+    let exited = false;
+    proc.once("exit", () => { exited = true; });
+
+    const deadline = Date.now() + 30_000;
+    for (;;) {
+      try {
+        if ((await publicClient.getChainId()) === baseSepolia.id) return proc;
+      } catch {
+        // not up yet
+      }
+      // Nothing to wait for once the process is gone: anvil gave up on upstream.
+      if (exited) return null;
+      if (Date.now() > deadline) {
+        proc.kill("SIGKILL");
+        return null;
+      }
+      await sleep(250);
     }
-    if (Date.now() > deadline) {
-      proc.kill("SIGKILL");
-      throw new Error(`anvil fork did not become ready within 30s (upstream: ${upstream})`);
-    }
-    await sleep(250);
+  };
+
+  let proc = await attempt();
+  if (!proc) {
+    await sleep(5_000);
+    proc = await attempt();
   }
+  if (!proc) throw new Error(`anvil fork did not become ready within 30s (upstream: ${upstream})`);
 
   const testClient = createTestClient({ chain: baseSepolia, mode: "anvil", transport: forkTransport(rpcUrl) });
 
@@ -134,12 +164,23 @@ export const startFork = async (port = 8545): Promise<Fork> => {
 };
 
 /**
- * Impersonate the factory's real on-chain `eSIMWalletAdmin` and return a wallet
- * client that acts as it. The admin address is read from the deployed factory,
- * funded, and impersonated - so admin-gated writes succeed with no private key.
- * The returned client's `account` is a bare JSON-RPC address, so the SDK's
- * `writeContract` routes through `eth_sendTransaction` (anvil signs it).
+ * Fund an address and return a wallet client that acts as it, so gated writes
+ * succeed with no private key. The client's `account` is a bare JSON-RPC address,
+ * so the SDK's `writeContract` routes through `eth_sendTransaction` (anvil signs
+ * it). Works for contract addresses too, which is how the owner is reached.
  */
+export const impersonate = async (fork: Fork, address: Address): Promise<WalletClient> => {
+  await fork.testClient.impersonateAccount({ address });
+  await fork.testClient.setBalance({ address, value: parseEther("100") });
+
+  return createWalletClient({
+    account: address,
+    chain: baseSepolia,
+    transport: forkTransport(fork.rpcUrl),
+  });
+};
+
+/** Impersonate the factory's real on-chain `eSIMWalletAdmin`. */
 export const impersonateAdmin = async (fork: Fork): Promise<{ admin: Address; client: WalletClient }> => {
   const factory = getContract({
     abi: DeviceWalletFactory,
@@ -149,14 +190,22 @@ export const impersonateAdmin = async (fork: Fork): Promise<{ admin: Address; cl
 
   const admin = (await factory.read.eSIMWalletAdmin()) as Address;
 
-  await fork.testClient.impersonateAccount({ address: admin });
-  await fork.testClient.setBalance({ address: admin, value: parseEther("100") });
+  return { admin, client: await impersonate(fork, admin) };
+};
 
-  const client = createWalletClient({
-    account: admin,
-    chain: baseSepolia,
-    transport: forkTransport(fork.rpcUrl),
+/**
+ * Impersonate the registry's owner, which holds admin rotation and the vault
+ * setter. On the live deployment this is the ProtocolAdmin contract, so the
+ * calls it makes here skip that contract's own scheduling.
+ */
+export const impersonateRegistryOwner = async (fork: Fork): Promise<{ owner: Address; client: WalletClient }> => {
+  const registry = getContract({
+    abi: Registry,
+    address: baseSepoliaFactoryAddresses.REGISTRY,
+    client: fork.publicClient,
   });
 
-  return { admin, client };
+  const owner = (await registry.read.owner()) as Address;
+
+  return { owner, client: await impersonate(fork, owner) };
 };

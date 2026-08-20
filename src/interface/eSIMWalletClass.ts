@@ -2,20 +2,23 @@ import { Address } from "viem";
 import {
     _acceptOwnershipTransfer,
     _buyDataBundle,
+    _dataBundlePriceCap,
+    _deviceWallet,
     _owner,
     _requestTransferOwnership,
     _sendETHToDeviceWallet,
-    _setESIMUniqueIdentifier
+    _setDataBundlePriceCap,
+    _transactionHistory
 } from "../logic/eSIMWallet.js"
 import { DataBundleDetails } from "../types";
-import { SmartAccountClient } from "@aa-sdk/core";
+import { KokioSmartAccountClient } from "../types.js";
 
 export class ESIMWalletSubPackage {
 
-    client: SmartAccountClient;
+    client: KokioSmartAccountClient;
     address;
 
-    constructor(client: SmartAccountClient, address: Address) {
+    constructor(client: KokioSmartAccountClient, address: Address) {
         this.client = client;
         this.address = address;
     }
@@ -26,6 +29,14 @@ export class ESIMWalletSubPackage {
 
     buyDataBundle (dataBundleDetails: DataBundleDetails) {
         return _buyDataBundle(this.client, this.address, dataBundleDetails);
+    }
+
+    dataBundlePriceCap () {
+        return _dataBundlePriceCap(this.client, this.address);
+    }
+
+    deviceWallet () {
+        return _deviceWallet(this.client, this.address);
     }
 
     owner () {
@@ -40,7 +51,11 @@ export class ESIMWalletSubPackage {
         return _sendETHToDeviceWallet(this.client, this.address, amount);
     }
 
-    setESIMUniqueIdentifier (eSIMUniqueIdentifier: string) {
-        return _setESIMUniqueIdentifier(this.client, this.address, eSIMUniqueIdentifier);
+    setDataBundlePriceCap (cap: bigint) {
+        return _setDataBundlePriceCap(this.client, this.address, cap);
+    }
+
+    transactionHistory (index: bigint) {
+        return _transactionHistory(this.client, this.address, index);
     }
 }

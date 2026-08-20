@@ -1,730 +1,1250 @@
 const LazyWalletRegistry = [
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "target",
-                "type": "address"
-            }
-        ],
-        "name": "AddressEmptyCode",
-        "type": "error"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "implementation",
-                "type": "address"
-            }
-        ],
-        "name": "ERC1967InvalidImplementation",
-        "type": "error"
-    },
-    {
+        "type": "function",
+        "name": "MAX_ESIM_WALLETS_PER_CALL",
         "inputs": [],
-        "name": "ERC1967NonPayable",
-        "type": "error"
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "view"
     },
     {
+        "type": "function",
+        "name": "MAX_HISTORY_ENTRIES_PER_CALL",
         "inputs": [],
-        "name": "FailedInnerCall",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "InvalidInitialization",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "NotInitializing",
-        "type": "error"
-    },
-    {
-        "inputs": [
+        "outputs": [
             {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
+                "name": "",
+                "type": "uint256",
+                "internalType": "uint256"
             }
         ],
-        "name": "OwnableInvalidOwner",
-        "type": "error"
+        "stateMutability": "view"
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
-        "name": "OwnableUnauthorizedAccount",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "UUPSUnauthorizedCallContext",
-        "type": "error"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "bytes32",
-                "name": "slot",
-                "type": "bytes32"
-            }
-        ],
-        "name": "UUPSUnsupportedProxiableUUID",
-        "type": "error"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_oldDeviceIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_eSIMIdentifier",
-                "type": "string"
-            }
-        ],
-        "name": "DataBundleDetailsDeletedFromOldDeviceIdentifier",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_newDeviceIdentifier",
-                "type": "string"
-            },
-            {
-                "components": [
-                    {
-                        "internalType": "string",
-                        "name": "dataBundleID",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "dataBundlePrice",
-                        "type": "uint256"
-                    }
-                ],
-                "indexed": false,
-                "internalType": "struct DataBundleDetails[]",
-                "name": "_newDataBundleDetails",
-                "type": "tuple[]"
-            }
-        ],
-        "name": "DataBundleDetailsTransferredToNewDeviceIdentifier",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_deviceUniqueIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string[]",
-                "name": "_eSIMUniqueIdentifiers",
-                "type": "string[]"
-            },
-            {
-                "components": [
-                    {
-                        "internalType": "string",
-                        "name": "dataBundleID",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "dataBundlePrice",
-                        "type": "uint256"
-                    }
-                ],
-                "indexed": false,
-                "internalType": "struct DataBundleDetails[]",
-                "name": "_dataBundleDetails",
-                "type": "tuple[]"
-            }
-        ],
-        "name": "DataUpdatedForDevice",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_eSIMUniqueIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_deviceUniqueIdentifier",
-                "type": "string"
-            }
-        ],
-        "name": "ESIMBindedWithDevice",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_newDeviceIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_eSIMIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string[]",
-                "name": "_eSIMIdentifierOfNewDevice",
-                "type": "string[]"
-            }
-        ],
-        "name": "ESIMIdentifierAddedToNewDeviceIdentifier",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_oldDeviceIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_eSIMIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string[]",
-                "name": "_eSIMIdentifierOfOldDevice",
-                "type": "string[]"
-            }
-        ],
-        "name": "ESIMIdentifierRemovedFromOldDeviceIdentifier",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_eSIMIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_oldDeviceIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "currentDeviceIdentifier",
-                "type": "string"
-            }
-        ],
-        "name": "ESIMIdentifierSwitchedToNewDeviceIdentifier",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "uint64",
-                "name": "version",
-                "type": "uint64"
-            }
-        ],
-        "name": "Initialized",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "bytes32[2]",
-                "name": "_deviceOwnerPublicKey",
-                "type": "bytes32[2]"
-            },
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "deviceWallet",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_deviceUniqueIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "address[]",
-                "name": "eSIMWallets",
-                "type": "address[]"
-            },
-            {
-                "indexed": false,
-                "internalType": "string[]",
-                "name": "_eSIMUniqueIdentifiers",
-                "type": "string[]"
-            }
-        ],
-        "name": "LazyWalletDeployed",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_eSIMIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_oldDeviceIdentifier",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_newDeviceIdentifier",
-                "type": "string"
-            }
-        ],
-        "name": "NewDeviceIdentifierAssociatedWithESIMIdentifier",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "previousOwner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "newOwner",
-                "type": "address"
-            }
-        ],
-        "name": "OwnershipTransferStarted",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "previousOwner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "newOwner",
-                "type": "address"
-            }
-        ],
-        "name": "OwnershipTransferred",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "implementation",
-                "type": "address"
-            }
-        ],
-        "name": "Upgraded",
-        "type": "event"
-    },
-    {
-        "inputs": [],
+        "type": "function",
         "name": "UPGRADE_INTERFACE_VERSION",
+        "inputs": [],
         "outputs": [
             {
-                "internalType": "string",
                 "name": "",
-                "type": "string"
+                "type": "string",
+                "internalType": "string"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
+        "stateMutability": "view"
     },
     {
-        "inputs": [],
+        "type": "function",
         "name": "acceptOwnership",
+        "inputs": [],
         "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        "stateMutability": "nonpayable"
     },
     {
+        "type": "function",
+        "name": "batchPopulateHistory",
         "inputs": [
             {
-                "internalType": "string[]",
                 "name": "_deviceUniqueIdentifiers",
-                "type": "string[]"
+                "type": "string[]",
+                "internalType": "string[]"
             },
             {
-                "internalType": "string[][]",
                 "name": "_eSIMUniqueIdentifiers",
-                "type": "string[][]"
+                "type": "string[][]",
+                "internalType": "string[][]"
             },
             {
+                "name": "_dataBundleDetails",
+                "type": "tuple[][]",
+                "internalType": "struct DataBundleDetails[][]",
                 "components": [
                     {
-                        "internalType": "string",
                         "name": "dataBundleID",
-                        "type": "string"
+                        "type": "string",
+                        "internalType": "string"
                     },
                     {
-                        "internalType": "uint256",
                         "name": "dataBundlePrice",
-                        "type": "uint256"
+                        "type": "uint256",
+                        "internalType": "uint256"
                     }
-                ],
-                "internalType": "struct DataBundleDetails[][]",
-                "name": "_dataBundleDetails",
-                "type": "tuple[][]"
+                ]
             }
         ],
-        "name": "batchPopulateHistory",
         "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        "stateMutability": "nonpayable"
     },
     {
-        "inputs": [
-            {
-                "internalType": "bytes32[2]",
-                "name": "_deviceOwnerPublicKey",
-                "type": "bytes32[2]"
-            },
-            {
-                "internalType": "string",
-                "name": "_deviceUniqueIdentifier",
-                "type": "string"
-            },
-            {
-                "internalType": "uint256",
-                "name": "_salt",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "_depositAmount",
-                "type": "uint256"
-            }
-        ],
+        "type": "function",
         "name": "deployLazyWalletAndSetESIMIdentifier",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            },
-            {
-                "internalType": "address[]",
-                "name": "",
-                "type": "address[]"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
         "inputs": [
             {
-                "internalType": "string",
-                "name": "deviceIdentifier",
-                "type": "string"
+                "name": "_deviceOwnerPublicKey",
+                "type": "bytes32[2]",
+                "internalType": "bytes32[2]"
             },
             {
-                "internalType": "string",
-                "name": "eSIMIdentifier",
-                "type": "string"
-            },
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "name": "deviceIdentifierToESIMDetails",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "dataBundleID",
-                "type": "string"
-            },
-            {
-                "internalType": "uint256",
-                "name": "dataBundlePrice",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "eSIMIdentifier",
-                "type": "string"
-            }
-        ],
-        "name": "eSIMIdentifierToDeviceIdentifier",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "deviceIdentifier",
-                "type": "string"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "deviceIdentifier",
-                "type": "string"
-            },
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "name": "eSIMIdentifiersAssociatedWithDeviceIdentifier",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "associatedESIMIdentifiers",
-                "type": "string"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_registry",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_upgradeManager",
-                "type": "address"
-            }
-        ],
-        "name": "initialize",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
                 "name": "_deviceUniqueIdentifier",
-                "type": "string"
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "_salt",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "_depositAmount",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "_maxWallets",
+                "type": "uint256",
+                "internalType": "uint256"
             }
         ],
-        "name": "isLazyWalletDeployed",
         "outputs": [
             {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
+                "name": "deviceWallet",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "eSIMWallets",
+                "type": "address[]",
+                "internalType": "address[]"
+            },
+            {
+                "name": "remaining",
+                "type": "uint256",
+                "internalType": "uint256"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
+        "stateMutability": "payable"
     },
     {
-        "inputs": [],
+        "type": "function",
+        "name": "deployMoreESIMWalletsForLazyDevice",
+        "inputs": [
+            {
+                "name": "_deviceUniqueIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "_maxWallets",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "eSIMWallets",
+                "type": "address[]",
+                "internalType": "address[]"
+            },
+            {
+                "name": "remaining",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "deviceIdentifierToESIMDetails",
+        "inputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "dataBundleID",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "dataBundlePrice",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "eSIMIdentifierToDeviceIdentifier",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "eSIMIdentifiersAssociatedWithDeviceIdentifier",
+        "inputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "associatedESIMIdentifiers",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "eSIMWalletsDeployed",
+        "inputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "deployed",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "historyEntriesCopied",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "copied",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "initialize",
+        "inputs": [
+            {
+                "name": "_registry",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "_upgradeManager",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "isDeviceIdentifierReserved",
+        "inputs": [
+            {
+                "name": "_deviceUniqueIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool",
+                "internalType": "bool"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "isESIMIdentifierReserved",
+        "inputs": [
+            {
+                "name": "_eSIMUniqueIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool",
+                "internalType": "bool"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "lazyDeployedESIMWallet",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "eSIMWallet",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "lazyDeploymentSalt",
+        "inputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "baseSalt",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "owner",
+        "inputs": [],
         "outputs": [
             {
-                "internalType": "address",
                 "name": "",
-                "type": "address"
+                "type": "address",
+                "internalType": "address"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
+        "stateMutability": "view"
     },
     {
-        "inputs": [],
+        "type": "function",
         "name": "pendingOwner",
+        "inputs": [],
         "outputs": [
             {
-                "internalType": "address",
                 "name": "",
-                "type": "address"
+                "type": "address",
+                "internalType": "address"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
+        "stateMutability": "view"
     },
     {
-        "inputs": [],
+        "type": "function",
         "name": "proxiableUUID",
+        "inputs": [],
         "outputs": [
             {
-                "internalType": "bytes32",
                 "name": "",
-                "type": "bytes32"
+                "type": "bytes32",
+                "internalType": "bytes32"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
+        "stateMutability": "view"
     },
     {
-        "inputs": [],
+        "type": "function",
         "name": "registry",
+        "inputs": [],
         "outputs": [
             {
-                "internalType": "contract Registry",
                 "name": "",
-                "type": "address"
+                "type": "address",
+                "internalType": "contract Registry"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
+        "stateMutability": "view"
     },
     {
-        "inputs": [],
+        "type": "function",
         "name": "renounceOwnership",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "_eSIMIdentifier",
-                "type": "string"
-            },
-            {
-                "internalType": "string",
-                "name": "_oldDeviceIdentifier",
-                "type": "string"
-            },
-            {
-                "internalType": "string",
-                "name": "_newDeviceIdentifier",
-                "type": "string"
-            }
-        ],
-        "name": "switchESIMIdentifierToNewDeviceIdentifier",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "newOwner",
-                "type": "address"
-            }
-        ],
-        "name": "transferOwnership",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
         "inputs": [],
-        "name": "upgradeManager",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+        "outputs": [],
+        "stateMutability": "pure"
     },
     {
+        "type": "function",
+        "name": "setHistoryForLazyWallet",
         "inputs": [
             {
-                "internalType": "address",
-                "name": "newImplementation",
-                "type": "address"
+                "name": "_eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
             },
             {
-                "internalType": "bytes",
-                "name": "data",
-                "type": "bytes"
+                "name": "_maxEntries",
+                "type": "uint256",
+                "internalType": "uint256"
             }
         ],
-        "name": "upgradeToAndCall",
+        "outputs": [
+            {
+                "name": "copied",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "remaining",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "switchESIMIdentifierToNewDeviceIdentifier",
+        "inputs": [
+            {
+                "name": "_eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "_oldDeviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "_newDeviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool",
+                "internalType": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "transferOwnership",
+        "inputs": [
+            {
+                "name": "newOwner",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
         "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "upgradeManager",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "upgradeToAndCall",
+        "inputs": [
+            {
+                "name": "newImplementation",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "data",
+                "type": "bytes",
+                "internalType": "bytes"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "payable"
+    },
+    {
+        "type": "event",
+        "name": "DataBundleDetailsDeletedFromOldDeviceIdentifier",
+        "inputs": [
+            {
+                "name": "_oldDeviceIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_eSIMIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "DataBundleDetailsTransferredToNewDeviceIdentifier",
+        "inputs": [
+            {
+                "name": "_newDeviceIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_newDataBundleDetails",
+                "type": "tuple[]",
+                "indexed": false,
+                "internalType": "struct DataBundleDetails[]",
+                "components": [
+                    {
+                        "name": "dataBundleID",
+                        "type": "string",
+                        "internalType": "string"
+                    },
+                    {
+                        "name": "dataBundlePrice",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "DataUpdatedForDevice",
+        "inputs": [
+            {
+                "name": "_deviceUniqueIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_eSIMUniqueIdentifiers",
+                "type": "string[]",
+                "indexed": false,
+                "internalType": "string[]"
+            },
+            {
+                "name": "_dataBundleDetails",
+                "type": "tuple[]",
+                "indexed": false,
+                "internalType": "struct DataBundleDetails[]",
+                "components": [
+                    {
+                        "name": "dataBundleID",
+                        "type": "string",
+                        "internalType": "string"
+                    },
+                    {
+                        "name": "dataBundlePrice",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "ESIMBindedWithDevice",
+        "inputs": [
+            {
+                "name": "_eSIMUniqueIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_deviceUniqueIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "ESIMIdentifierAddedToNewDeviceIdentifier",
+        "inputs": [
+            {
+                "name": "_newDeviceIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_eSIMIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_eSIMIdentifierOfNewDevice",
+                "type": "string[]",
+                "indexed": false,
+                "internalType": "string[]"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "ESIMIdentifierRemovedFromOldDeviceIdentifier",
+        "inputs": [
+            {
+                "name": "_oldDeviceIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_eSIMIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_eSIMIdentifierOfOldDevice",
+                "type": "string[]",
+                "indexed": false,
+                "internalType": "string[]"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "ESIMIdentifierSwitchedToNewDeviceIdentifier",
+        "inputs": [
+            {
+                "name": "_eSIMIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_oldDeviceIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "currentDeviceIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "Initialized",
+        "inputs": [
+            {
+                "name": "version",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "LazyESIMWalletsDeployed",
+        "inputs": [
+            {
+                "name": "_deviceUniqueIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_deviceWallet",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_eSIMWallets",
+                "type": "address[]",
+                "indexed": false,
+                "internalType": "address[]"
+            },
+            {
+                "name": "_eSIMUniqueIdentifiers",
+                "type": "string[]",
+                "indexed": false,
+                "internalType": "string[]"
+            },
+            {
+                "name": "_remaining",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "LazyHistoryCopied",
+        "inputs": [
+            {
+                "name": "_eSIMIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_eSIMWallet",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_copied",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            },
+            {
+                "name": "_remaining",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "LazyWalletDeployed",
+        "inputs": [
+            {
+                "name": "_deviceOwnerPublicKey",
+                "type": "bytes32[2]",
+                "indexed": false,
+                "internalType": "bytes32[2]"
+            },
+            {
+                "name": "deviceWallet",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_deviceUniqueIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "eSIMWallets",
+                "type": "address[]",
+                "indexed": false,
+                "internalType": "address[]"
+            },
+            {
+                "name": "_eSIMUniqueIdentifiers",
+                "type": "string[]",
+                "indexed": false,
+                "internalType": "string[]"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "NewDeviceIdentifierAssociatedWithESIMIdentifier",
+        "inputs": [
+            {
+                "name": "_eSIMIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_oldDeviceIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_newDeviceIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "OwnershipTransferStarted",
+        "inputs": [
+            {
+                "name": "previousOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "newOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "OwnershipTransferred",
+        "inputs": [
+            {
+                "name": "previousOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "newOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "Upgraded",
+        "inputs": [
+            {
+                "name": "implementation",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "error",
+        "name": "AddressEmptyCode",
+        "inputs": [
+            {
+                "name": "target",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "AllESIMWalletsDeployed",
+        "inputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ArrayLengthMismatch",
+        "inputs": [
+            {
+                "name": "expected",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "actual",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "CannotSwitchToTheSameDevice",
+        "inputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "DepositDoesNotMatchValue",
+        "inputs": [
+            {
+                "name": "depositAmount",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "value",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ERC1967InvalidImplementation",
+        "inputs": [
+            {
+                "name": "implementation",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ERC1967NonPayable",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "ESIMBoundToADifferentDevice",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "boundDeviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ESIMIdentifierAlreadyClaimed",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "eSIMWallet",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ESIMIdentifierNotFound",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ESIMWalletNotLazyDeployed",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "EmptyDeviceIdentifier",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "EmptyESIMIdentifier",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "FailedCall",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "HistoryAlreadyCopied",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "IdentifierTooLong",
+        "inputs": [
+            {
+                "name": "identifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "maxLength",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "InvalidInitialization",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "LazyWalletAlreadyDeployed",
+        "inputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "LazyWalletNotDeployed",
+        "inputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "NoESIMIdentifiersForDevice",
+        "inputs": [
+            {
+                "name": "deviceIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "NotInitializing",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "OnlyESIMWalletAdmin",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "OwnableInvalidOwner",
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "OwnableUnauthorizedAccount",
+        "inputs": [
+            {
+                "name": "account",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "OwnershipCannotBeRenounced",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "SaltTooHigh",
+        "inputs": [
+            {
+                "name": "salt",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "count",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "TooManyESIMWallets",
+        "inputs": [
+            {
+                "name": "requested",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "maxPerCall",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "TooManyHistoryEntries",
+        "inputs": [
+            {
+                "name": "requested",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "maxPerCall",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "UUPSUnauthorizedCallContext",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "UUPSUnsupportedProxiableUUID",
+        "inputs": [
+            {
+                "name": "slot",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "UnknownESIMIdentifier",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ZeroAddress",
+        "inputs": [
+            {
+                "name": "parameter",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
     }
 ] as const;
 

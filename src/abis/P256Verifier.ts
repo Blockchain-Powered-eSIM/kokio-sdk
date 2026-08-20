@@ -1,74 +1,74 @@
 const P256Verifier = [
     {
+        "type": "function",
+        "name": "verifySignature",
         "inputs": [
             {
-                "internalType": "bytes",
                 "name": "message",
-                "type": "bytes"
+                "type": "bytes",
+                "internalType": "bytes"
             },
             {
-                "internalType": "bool",
                 "name": "requireUserVerification",
-                "type": "bool"
+                "type": "bool",
+                "internalType": "bool"
             },
             {
+                "name": "webAuthnSignature",
+                "type": "tuple",
+                "internalType": "struct WebAuthnSignature",
                 "components": [
                     {
-                        "internalType": "bytes",
                         "name": "authenticatorData",
-                        "type": "bytes"
+                        "type": "bytes",
+                        "internalType": "bytes"
                     },
                     {
-                        "internalType": "string",
                         "name": "clientDataJSON",
-                        "type": "string"
+                        "type": "string",
+                        "internalType": "string"
                     },
                     {
-                        "internalType": "uint256",
                         "name": "challengeIndex",
-                        "type": "uint256"
+                        "type": "uint256",
+                        "internalType": "uint256"
                     },
                     {
-                        "internalType": "uint256",
                         "name": "typeIndex",
-                        "type": "uint256"
+                        "type": "uint256",
+                        "internalType": "uint256"
                     },
                     {
-                        "internalType": "uint256",
                         "name": "r",
-                        "type": "uint256"
+                        "type": "uint256",
+                        "internalType": "uint256"
                     },
                     {
-                        "internalType": "uint256",
                         "name": "s",
-                        "type": "uint256"
+                        "type": "uint256",
+                        "internalType": "uint256"
                     }
-                ],
-                "internalType": "struct WebAuthnSignature",
-                "name": "webAuthnSignature",
-                "type": "tuple"
+                ]
             },
             {
-                "internalType": "uint256",
                 "name": "x",
-                "type": "uint256"
+                "type": "uint256",
+                "internalType": "uint256"
             },
             {
-                "internalType": "uint256",
                 "name": "y",
-                "type": "uint256"
+                "type": "uint256",
+                "internalType": "uint256"
             }
         ],
-        "name": "verifySignature",
         "outputs": [
             {
-                "internalType": "bool",
                 "name": "",
-                "type": "bool"
+                "type": "bool",
+                "internalType": "bool"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
+        "stateMutability": "view"
     }
 ] as const;
 

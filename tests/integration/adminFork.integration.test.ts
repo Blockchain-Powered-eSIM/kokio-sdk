@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
-import { getContract, toHex, zeroHash, type Address, type Hex } from "viem";
+import { getAddress, getContract, toHex, zeroAddress, zeroHash, type Address, type Hex } from "viem";
 import { p256 } from "@noble/curves/nist.js";
 
 // `createSmartAccount.ts` (pulled in transitively) statically imports
@@ -12,13 +12,19 @@ import { KokioAdmin } from "../../src/admin/config-admin.js";
 import { DeviceWalletFactory } from "../../src/abis/index.js";
 import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import type { P256Key } from "../../src/types.js";
-import { forkAvailable, impersonateAdmin, startFork, type Fork } from "../utils/forkChain.js";
+import {
+  forkAvailable,
+  impersonateAdmin,
+  impersonateRegistryOwner,
+  startFork,
+  type Fork,
+} from "../utils/forkChain.js";
 
-// Well-formed P256 key fixture (NIST P-256 base point) - createAccount only
-// requires a well-formed key, not a registered one.
+// The NIST P-256 base point. It has to be a real curve point: the factory runs
+// every deploy path through an on-curve check and rejects anything else.
 const OWNER_KEY: P256Key = [
-  "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C291",
-  "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F1",
+  "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296",
+  "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5",
 ];
 
 // A fresh, unique P256 public key (uncompressed X/Y). The factory registers each
@@ -36,22 +42,26 @@ const readCounterfactual = (fork: Fork, uid: string, ownerKey: P256Key, salt: bi
     client: fork.publicClient,
   }).read.getCounterFactualAddress([ownerKey, uid, salt]) as Promise<Address>;
 
-/**
- * EOA-admin write scenarios against a local Base Sepolia fork. The real on-chain
- * `eSIMWalletAdmin` is impersonated (no private key), so `KokioAdmin`'s
- * access-controlled writes actually land on the forked deployment. Skips cleanly
- * unless INTEGRATION=1 and Foundry (`anvil`) is installed.
- */
+// EOA-admin write scenarios against a local Base Sepolia fork. The real on-chain
+// `eSIMWalletAdmin` is impersonated (no private key), so `KokioAdmin`'s
+// access-controlled writes actually land on the forked deployment. Skips cleanly
+// unless INTEGRATION=1 and Foundry (`anvil`) is installed.
 describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia fork", () => {
   let fork: Fork;
   let admin: Address;
+  let owner: Address;
   let adminSdk: KokioAdmin;
+  let ownerSdk: KokioAdmin;
 
   beforeAll(async () => {
     fork = await startFork(8545);
-    const impersonated = await impersonateAdmin(fork);
-    admin = impersonated.admin;
-    adminSdk = new KokioAdmin(impersonated.client);
+    const impersonatedAdmin = await impersonateAdmin(fork);
+    admin = impersonatedAdmin.admin;
+    adminSdk = new KokioAdmin(impersonatedAdmin.client);
+
+    const impersonatedOwner = await impersonateRegistryOwner(fork);
+    owner = impersonatedOwner.owner;
+    ownerSdk = new KokioAdmin(impersonatedOwner.client);
   }, 60_000);
 
   afterAll(async () => {
@@ -108,33 +118,73 @@ describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia for
   );
 
   it(
-    "requestAdminUpdate succeeds as the impersonated admin",
+    "requestAdminUpdate nominates on the registry and puts the role dormant",
     async () => {
-      // A non-zero proposed admin distinct from the current one.
+      // A non-zero nominee distinct from the incumbent.
       const newAdmin = "0x000000000000000000000000000000000000a11c" as Address;
+      expect(await ownerSdk.registry.eSIMWalletAdmin()).toBe(admin);
 
-      const hash = (await adminSdk.deviceWalletFactory.requestAdminUpdate(newAdmin)) as Hex;
+      const hash = (await ownerSdk.registry.requestAdminUpdate(newAdmin)) as Hex;
       const receipt = await fork.publicClient.waitForTransactionReceipt({ hash });
       expect(receipt.status).toBe("success");
       // The gated call emitted a log (AdminUpdateRequested) rather than reverting.
       expect(receipt.logs.length).toBeGreaterThan(0);
       expect(receipt.logs[0].topics[0]).not.toBe(zeroHash);
+
+      expect(await ownerSdk.registry.newRequestedAdmin()).toBe(getAddress(newAdmin));
+      // The nomination strips the incumbent until the nominee accepts.
+      expect(await ownerSdk.registry.eSIMWalletAdmin()).toBe(zeroAddress);
     },
     60_000,
   );
 
   it(
-    "requestAdminUpdate is rejected on-chain for a non-admin EOA (access control is real)",
+    "disableAdmin suspends the admin without losing its address, and enableAdmin restores it",
     async () => {
-      // Bind KokioAdmin to the funded anvil dev account, which is NOT the admin.
-      const nonAdminSdk = new KokioAdmin(fork.funded);
-      expect(fork.funded.account?.address).not.toBe(admin);
+      const onRecord = await ownerSdk.registry.adminOfRecord();
+      expect(await ownerSdk.registry.adminDisabled()).toBe(false);
+
+      const disabled = (await ownerSdk.registry.disableAdmin()) as Hex;
+      expect((await fork.publicClient.waitForTransactionReceipt({ hash: disabled })).status).toBe("success");
+
+      expect(await ownerSdk.registry.adminDisabled()).toBe(true);
+      // The address survives the suspension, which is what lets it be lifted
+      // without anyone supplying it again.
+      expect(await ownerSdk.registry.adminOfRecord()).toBe(onRecord);
+
+      const enabled = (await ownerSdk.registry.enableAdmin()) as Hex;
+      expect((await fork.publicClient.waitForTransactionReceipt({ hash: enabled })).status).toBe("success");
+
+      expect(await ownerSdk.registry.adminDisabled()).toBe(false);
+      expect(await ownerSdk.registry.adminOfRecord()).toBe(onRecord);
+    },
+    60_000,
+  );
+
+  it(
+    "enableAdmin reverts when the admin was never suspended",
+    async () => {
+      expect(await ownerSdk.registry.adminDisabled()).toBe(false);
+
+      const hash = (await ownerSdk.registry.enableAdmin()) as Hex;
+      const receipt = await fork.publicClient.waitForTransactionReceipt({ hash });
+      expect(receipt.status).toBe("reverted");
+    },
+    60_000,
+  );
+
+  it(
+    "requestAdminUpdate is rejected on-chain for a non-owner EOA (access control is real)",
+    async () => {
+      // Bind KokioAdmin to the funded anvil dev account, which is NOT the owner.
+      const nonOwnerSdk = new KokioAdmin(fork.funded);
+      expect(fork.funded.account?.address).not.toBe(owner);
 
       // The EOA logic sends via a bare-address account (`eth_sendTransaction`),
-      // so anvil mines the tx and returns a hash even though `onlyAdmin` reverts
+      // so anvil mines the tx and returns a hash even though `onlyOwner` reverts
       // it - the access-control failure surfaces as a reverted receipt, not a
       // thrown promise.
-      const hash = (await nonAdminSdk.deviceWalletFactory.requestAdminUpdate(
+      const hash = (await nonOwnerSdk.registry.requestAdminUpdate(
         "0x000000000000000000000000000000000000beef" as Address,
       )) as Hex;
       const receipt = await fork.publicClient.waitForTransactionReceipt({ hash });

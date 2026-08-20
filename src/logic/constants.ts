@@ -19,6 +19,25 @@ export const ZERO = BigInt('0');
 
 export const SIGNATURE_VALIDITY_SECONDS = 180; // 3 minutes validity
 
+// Gas estimation runs before a passkey signature exists, so the account hands the
+// bundler "0x" as a stub. Account4337 rejects any signature of 39 bytes or fewer
+// before it reaches the P256 verifier, so the bundler measures an early return and
+// prices calldata that is 519 bytes short of the real thing. Both estimates come
+// back too low and an operation sized from them is refused, so both are padded.
+//
+// Measured on Base Sepolia: verification estimated at 33,703 gas against a floor of
+// 76,628, and preVerificationGas 11,536 lower than the same operation carrying a
+// real-length signature.
+
+// Unused verification gas is refunded in full, unlike callGasLimit, so headroom
+// here only raises the prefund the sponsor has to post and costs nothing when it
+// goes unspent.
+export const STUB_VERIFICATION_GAS_PAD = BigInt(60_000);
+
+// preVerificationGas is charged whether or not it is used, so this stays close to
+// the measured shortfall.
+export const STUB_PRE_VERIFICATION_GAS_PAD = BigInt(15_000);
+
 export enum CHAIN_ID  {
     MAINNET = 1,
     SEPOLIA = 11155111,
@@ -54,14 +73,17 @@ export interface chainSpecifcConstants {
     customErrors: typeof customErrors;
 }
 
+// Cleared: the deployment here targets EntryPoint v0.7, which this SDK no longer
+// speaks. Refill only after a redeploy on v0.8.
 export const sepoliaFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0x63005d8214533fC7209678Aa39F7b9b0b51a7bcB',
-    ESIM_WALLET_FACTORY: '0xB4473979ff8cE4e09161B08f74EEb66BD7718076',
-    LAZY_WALLET_REGISTRY: '0x8a1E53b903efcc6b252CE4bD3b255202318505Ef',
-    REGISTRY: '0xCa447f5C75C57f6C59027304A5Fb5A09F0E005c9',
-    ENTRY_POINT: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
-    SENDER_CREATOR: '0xefc2c1444ebcc4db75e7613d20c6a62ff67a167c',
-    P256VERIFIER: '0xF04f3b3935aD461D17d4a8a78E7ea21d4a61AEb1'
+    DEVICE_WALLET_FACTORY: '0x',
+    ESIM_WALLET_FACTORY: '0x',
+    LAZY_WALLET_REGISTRY: '0x',
+    REGISTRY: '0x',
+    ENTRY_POINT: '0x',
+    SENDER_CREATOR: '0x',
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const mainnetFactoryAddresses: Record<string, Address> = {
@@ -71,7 +93,8 @@ export const mainnetFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const optimismMainnetFactoryAddresses: Record<string, Address> = {
@@ -81,17 +104,20 @@ export const optimismMainnetFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
+// Cleared for the same reason as Sepolia: a v0.7 deployment this SDK cannot use.
 export const optimismSepoliaFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0x243cCdE6a56b0Ba740E067f39896772748E20fFD',
-    ESIM_WALLET_FACTORY: '0x8444bF9C39F01e4B092e42DC11695C61f8B93957',
-    LAZY_WALLET_REGISTRY: '0x3F14D060074B174B0784056bDe5e0f8970D25ff1',
-    REGISTRY: '0x96dA9cE92D2C09f7b3ADE01260608e9079f16d12',
-    ENTRY_POINT: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
-    SENDER_CREATOR: '0xefc2c1444ebcc4db75e7613d20c6a62ff67a167c',
-    P256VERIFIER: '0x3c15a78046838481788613A9F111F972B562623C'
+    DEVICE_WALLET_FACTORY: '0x',
+    ESIM_WALLET_FACTORY: '0x',
+    LAZY_WALLET_REGISTRY: '0x',
+    REGISTRY: '0x',
+    ENTRY_POINT: '0x',
+    SENDER_CREATOR: '0x',
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const baseMainnetFactoryAddresses: Record<string, Address> = {
@@ -101,17 +127,19 @@ export const baseMainnetFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const baseSepoliaFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0xB4473979ff8cE4e09161B08f74EEb66BD7718076',
-    ESIM_WALLET_FACTORY: '0x63005d8214533fC7209678Aa39F7b9b0b51a7bcB',
-    LAZY_WALLET_REGISTRY: '0x8a1E53b903efcc6b252CE4bD3b255202318505Ef',
-    REGISTRY: '0xCa447f5C75C57f6C59027304A5Fb5A09F0E005c9',
-    ENTRY_POINT: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
-    SENDER_CREATOR: '0xefc2c1444ebcc4db75e7613d20c6a62ff67a167c',
-    P256VERIFIER: '0xF04f3b3935aD461D17d4a8a78E7ea21d4a61AEb1'
+    DEVICE_WALLET_FACTORY: '0xB006c7066C89a5d7Bfc229e9fb0bADf96c8F979f',
+    ESIM_WALLET_FACTORY: '0x13998C0bb7433c51cE5101922B12EE69F459699A',
+    LAZY_WALLET_REGISTRY: '0x394177c5cc4762b897c37de1820259B75993e033',
+    REGISTRY: '0x89e386E3251692F21a2E9048A46518AdC2A5Cb4A',
+    ENTRY_POINT: '0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108',
+    SENDER_CREATOR: '0x449ED7C3e6Fee6a97311d4b55475DF59C44AdD33',
+    P256VERIFIER: '0x625561429bD99d647956ccBCA4eBf762aaA142c5',
+    PROTOCOL_ADMIN: '0x77A1D6f27462c34BF038832d9Cff6b3E94a9Fe6F'
 }
 
 export const arbitrumOneFactoryAddresses: Record<string, Address> = {
@@ -121,7 +149,8 @@ export const arbitrumOneFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const arbitrumSepoliaFactoryAddresses: Record<string, Address> = {
@@ -131,7 +160,8 @@ export const arbitrumSepoliaFactoryAddresses: Record<string, Address> = {
     REGISTRY: '0x',
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x'
+    P256VERIFIER: '0x',
+    PROTOCOL_ADMIN: '0x'
 }
 
 export const customErrors: Record<string, string> = {

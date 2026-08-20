@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { type Address, type Hex } from "viem";
 
 import { makeMockWalletClient } from "../../utils/mockClient.js";
-import { sepoliaFactoryAddresses } from "../../../src/logic/constants.js";
+import { baseSepoliaFactoryAddresses } from "../../../src/logic/constants.js";
 import type { DataBundleDetails } from "../../../src/types.js";
 
 import * as deviceWalletFactory from "../../../src/logic/admin/deviceWalletFactory.eoa.js";
@@ -27,15 +27,13 @@ const OWNER_KEY: [Hex, Hex] = [
 ];
 const BUNDLE: DataBundleDetails = { dataBundleID: "bundle-1", dataBundlePrice: 1000n };
 
-const F = sepoliaFactoryAddresses;
-const CHAIN_ID = 11155111;
+const F = baseSepoliaFactoryAddresses;
+const CHAIN_ID = 84532;
 
-/**
- * Every admin-EOA logic call. Each row asserts the SDK issues a `writeContract`
- * with the expected address / functionName / args (and `value` for payable
- * calls), matching the on-chain signature. `value: undefined` documents the
- * non-payable calls where viem is passed no msg.value.
- */
+// Every admin-EOA logic call. Each row asserts the SDK issues a `writeContract`
+// with the expected address / functionName / args (and `value` for payable
+// calls), matching the on-chain signature. `value: undefined` documents the
+// non-payable calls where viem is passed no msg.value.
 const eoaCases: Array<{
   label: string;
   run: (c: ReturnType<typeof makeMockWalletClient>) => Promise<unknown>;
@@ -46,6 +44,14 @@ const eoaCases: Array<{
 }> = [
   // deviceWalletFactory.eoa (target = DEVICE_WALLET_FACTORY)
   {
+    // Sent by the incoming owner, not the outgoing one.
+    label: "deviceWalletFactory._acceptOwnership",
+    run: (c) => deviceWalletFactory._acceptOwnership(c),
+    address: F.DEVICE_WALLET_FACTORY,
+    functionName: "acceptOwnership",
+    args: [],
+  },
+  {
     label: "deviceWalletFactory._deployDeviceWalletForUsers",
     run: (c) => deviceWalletFactory._deployDeviceWalletForUsers(c, ["Device_11"], [OWNER_KEY], [1n], [2n], 2n),
     address: F.DEVICE_WALLET_FACTORY,
@@ -55,10 +61,10 @@ const eoaCases: Array<{
   },
   {
     label: "deviceWalletFactory._postCreateAccount",
-    run: (c) => deviceWalletFactory._postCreateAccount(c, WALLET, "Device_11", OWNER_KEY),
+    run: (c) => deviceWalletFactory._postCreateAccount(c, WALLET, "Device_11", OWNER_KEY, 1n),
     address: F.DEVICE_WALLET_FACTORY,
     functionName: "postCreateAccount",
-    args: [WALLET, "Device_11", OWNER_KEY],
+    args: [WALLET, "Device_11", OWNER_KEY, 1n],
   },
   {
     label: "deviceWalletFactory._addRegistryAddress",
@@ -68,27 +74,6 @@ const eoaCases: Array<{
     args: [REGISTRY],
   },
   {
-    label: "deviceWalletFactory._updateVaultAddress",
-    run: (c) => deviceWalletFactory._updateVaultAddress(c, VAULT),
-    address: F.DEVICE_WALLET_FACTORY,
-    functionName: "updateVaultAddress",
-    args: [VAULT],
-  },
-  {
-    label: "deviceWalletFactory._requestAdminUpdate",
-    run: (c) => deviceWalletFactory._requestAdminUpdate(c, NEW_ADMIN),
-    address: F.DEVICE_WALLET_FACTORY,
-    functionName: "requestAdminUpdate",
-    args: [NEW_ADMIN],
-  },
-  {
-    label: "deviceWalletFactory._acceptAdminUpdate",
-    run: (c) => deviceWalletFactory._acceptAdminUpdate(c),
-    address: F.DEVICE_WALLET_FACTORY,
-    functionName: "acceptAdminUpdate",
-    args: [],
-  },
-  {
     label: "deviceWalletFactory._updateDeviceWalletImplementation",
     run: (c) => deviceWalletFactory._updateDeviceWalletImplementation(c, IMPL),
     address: F.DEVICE_WALLET_FACTORY,
@@ -96,6 +81,14 @@ const eoaCases: Array<{
     args: [IMPL],
   },
   // eSIMWalletFactory.eoa (target = ESIM_WALLET_FACTORY)
+  {
+    // Sent by the incoming owner, not the outgoing one.
+    label: "eSIMWalletFactory._acceptOwnership",
+    run: (c) => eSIMWalletFactory._acceptOwnership(c),
+    address: F.ESIM_WALLET_FACTORY,
+    functionName: "acceptOwnership",
+    args: [],
+  },
   {
     label: "eSIMWalletFactory._addRegistryAddress",
     run: (c) => eSIMWalletFactory._addRegistryAddress(c, REGISTRY),
@@ -112,13 +105,92 @@ const eoaCases: Array<{
   },
   // registry.eoa (target = REGISTRY)
   {
+    // Sent by the incoming owner, not the outgoing one.
+    label: "registry._acceptOwnership",
+    run: (c) => registry._acceptOwnership(c),
+    address: F.REGISTRY,
+    functionName: "acceptOwnership",
+    args: [],
+  },
+  {
     label: "registry._addOrUpdateLazyWalletRegistryAddress",
     run: (c) => registry._addOrUpdateLazyWalletRegistryAddress(c, LAZY),
     address: F.REGISTRY,
     functionName: "addOrUpdateLazyWalletRegistryAddress",
     args: [LAZY],
   },
+  {
+    label: "registry._updateVaultAddress",
+    run: (c) => registry._updateVaultAddress(c, VAULT),
+    address: F.REGISTRY,
+    functionName: "updateVaultAddress",
+    args: [VAULT],
+  },
+  {
+    label: "registry._requestAdminUpdate",
+    run: (c) => registry._requestAdminUpdate(c, NEW_ADMIN),
+    address: F.REGISTRY,
+    functionName: "requestAdminUpdate",
+    args: [NEW_ADMIN],
+  },
+  {
+    label: "registry._disableAdmin",
+    run: (c) => registry._disableAdmin(c),
+    address: F.REGISTRY,
+    functionName: "disableAdmin",
+    args: [],
+  },
+  {
+    label: "registry._enableAdmin",
+    run: (c) => registry._enableAdmin(c),
+    address: F.REGISTRY,
+    functionName: "enableAdmin",
+    args: [],
+  },
+  {
+    label: "registry._acceptAdminUpdate",
+    run: (c) => registry._acceptAdminUpdate(c),
+    address: F.REGISTRY,
+    functionName: "acceptAdminUpdate",
+    args: [],
+  },
+  {
+    label: "registry._assignESIMIdentifier",
+    run: (c) => registry._assignESIMIdentifier(c, ESIM, "eid-1"),
+    address: F.REGISTRY,
+    functionName: "assignESIMIdentifier",
+    args: [ESIM, "eid-1"],
+  },
+  {
+    label: "registry._pause",
+    run: (c) => registry._pause(c),
+    address: F.REGISTRY,
+    functionName: "pause",
+    args: [],
+  },
+  {
+    label: "registry._unpause",
+    run: (c) => registry._unpause(c),
+    address: F.REGISTRY,
+    functionName: "unpause",
+    args: [],
+  },
+  {
+    label: "registry._setDefaultDataBundlePriceCap",
+    run: (c) => registry._setDefaultDataBundlePriceCap(c, 5n * 10n ** 18n),
+    address: F.REGISTRY,
+    functionName: "setDefaultDataBundlePriceCap",
+    args: [5n * 10n ** 18n],
+  },
   // lazyWalletRegistry.eoa (target = LAZY_WALLET_REGISTRY)
+  {
+    // Sent by the incoming owner, not the outgoing one.
+    label: "lazyWalletRegistry._acceptOwnership",
+    run: (c) => lazyWalletRegistry._acceptOwnership(c),
+    address: F.LAZY_WALLET_REGISTRY,
+    functionName: "acceptOwnership",
+    args: [],
+  },
   {
     label: "lazyWalletRegistry._batchPopulateHistory",
     run: (c) => lazyWalletRegistry._batchPopulateHistory(c, ["Device_11"], [["eid-1"]], [[BUNDLE]]),
@@ -129,11 +201,25 @@ const eoaCases: Array<{
   {
     // payable: contract requires depositAmount == msg.value, so value mirrors the arg.
     label: "lazyWalletRegistry._deployLazyWalletAndSetESIMIdentifier",
-    run: (c) => lazyWalletRegistry._deployLazyWalletAndSetESIMIdentifier(c, OWNER_KEY, "Device_11", 1n, 2n),
+    run: (c) => lazyWalletRegistry._deployLazyWalletAndSetESIMIdentifier(c, OWNER_KEY, "Device_11", 1n, 2n, 20n),
     address: F.LAZY_WALLET_REGISTRY,
     functionName: "deployLazyWalletAndSetESIMIdentifier",
-    args: [OWNER_KEY, "Device_11", 1n, 2n],
+    args: [OWNER_KEY, "Device_11", 1n, 2n, 20n],
     value: 2n,
+  },
+  {
+    label: "lazyWalletRegistry._deployMoreESIMWalletsForLazyDevice",
+    run: (c) => lazyWalletRegistry._deployMoreESIMWalletsForLazyDevice(c, "Device_11", 10n),
+    address: F.LAZY_WALLET_REGISTRY,
+    functionName: "deployMoreESIMWalletsForLazyDevice",
+    args: ["Device_11", 10n],
+  },
+  {
+    label: "lazyWalletRegistry._setHistoryForLazyWallet",
+    run: (c) => lazyWalletRegistry._setHistoryForLazyWallet(c, "eid-1", 25n),
+    address: F.LAZY_WALLET_REGISTRY,
+    functionName: "setHistoryForLazyWallet",
+    args: ["eid-1", 25n],
   },
   {
     label: "lazyWalletRegistry._switchESIMIdentifierToNewDeviceIdentifier",
@@ -144,18 +230,20 @@ const eoaCases: Array<{
   },
   // deviceWallet.eoa (target = device wallet instance address)
   {
+    // The contract reverts on a `true`, so the SDK hardcodes the `false`.
     label: "deviceWallet._deployESIMWallet",
-    run: (c) => deviceWallet._deployESIMWallet(c, WALLET, true, 7n),
+    run: (c) => deviceWallet._deployESIMWallet(c, WALLET, 7n),
     address: WALLET,
     functionName: "deployESIMWallet",
-    args: [true, 7n],
+    args: [false, 7n],
   },
   {
-    label: "deviceWallet._setESIMUniqueIdentifierForAnESIMWallet",
-    run: (c) => deviceWallet._setESIMUniqueIdentifierForAnESIMWallet(c, WALLET, ESIM, "eid-1"),
+    label: "deviceWallet._addDeposit",
+    run: (c) => deviceWallet._addDeposit(c, WALLET, 500n),
     address: WALLET,
-    functionName: "setESIMUniqueIdentifierForAnESIMWallet",
-    args: [ESIM, "eid-1"],
+    functionName: "addDeposit",
+    args: [],
+    value: 500n,
   },
   // eSIMWallet.eoa (target = eSIM instance address)
   {

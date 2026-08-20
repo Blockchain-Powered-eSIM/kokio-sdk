@@ -97,6 +97,95 @@ export class CounterfactualMismatchError extends KokioError {
     }
 }
 
+/**
+ * A batch size outside what the contract accepts. Both paginated calls refuse a
+ * request above their cap rather than clamping it, so this is caught locally to
+ * save the caller a reverted transaction.
+ */
+export class BatchSizeOutOfRangeError extends KokioError {
+    readonly requested: bigint;
+    readonly max: bigint;
+
+    constructor(what: string, requested: bigint, max: bigint) {
+        super(
+            "BATCH_SIZE_OUT_OF_RANGE",
+            `${what} must be between 1 and ${max}, got ${requested}.`,
+        );
+        this.requested = requested;
+        this.max = max;
+    }
+}
+
+/**
+ * A deposit was passed to a lazy deployment that turned out to be a resume. Only
+ * the first batch is payable and it already took the deposit, so carrying on
+ * would fund the device with less than the caller asked for.
+ */
+export class DepositOnResumeError extends KokioError {
+    readonly deviceUniqueIdentifier: string;
+    readonly depositAmount: bigint;
+
+    constructor(deviceUniqueIdentifier: string, depositAmount: bigint) {
+        super(
+            "DEPOSIT_ON_RESUME",
+            `Device ${deviceUniqueIdentifier} is already part-deployed, so its deposit was taken by ` +
+                `the first batch. Retry with a deposit of 0 rather than ${depositAmount}.`,
+        );
+        this.deviceUniqueIdentifier = deviceUniqueIdentifier;
+        this.depositAmount = depositAmount;
+    }
+}
+
+/**
+ * History was aimed at an eSIM this registry never deployed a wallet for. That
+ * lookup is the whole authorisation on chain, so it cannot be worked around.
+ */
+export class ESIMWalletNotLazyDeployedError extends KokioError {
+    readonly eSIMIdentifier: string;
+
+    constructor(eSIMIdentifier: string) {
+        super(
+            "ESIM_WALLET_NOT_LAZY_DEPLOYED",
+            `No lazily deployed eSIM wallet for identifier ${eSIMIdentifier}.`,
+        );
+        this.eSIMIdentifier = eSIMIdentifier;
+    }
+}
+
+/**
+ * A batch landed but its receipt carried no event from the lazy registry. The
+ * loop reads its position from that event, so it cannot continue without one.
+ */
+export class MissingBatchEventError extends KokioError {
+    readonly hash: Hex;
+
+    constructor(eventName: string, hash: Hex) {
+        super(
+            "MISSING_BATCH_EVENT",
+            `Transaction ${hash} emitted no ${eventName} event from the lazy registry.`,
+        );
+        this.hash = hash;
+    }
+}
+
+/**
+ * A batch reported work outstanding but did none of it. Nothing on chain should
+ * produce this; it stops the loop rather than letting it spin.
+ */
+export class StalledBatchError extends KokioError {
+    readonly hash: Hex;
+    readonly remaining: bigint;
+
+    constructor(hash: Hex, remaining: bigint) {
+        super(
+            "STALLED_BATCH",
+            `Transaction ${hash} made no progress with ${remaining} still outstanding.`,
+        );
+        this.hash = hash;
+        this.remaining = remaining;
+    }
+}
+
 // Every ABI that can surface a custom error from an on-chain revert. viem's
 // `decodeErrorResult` walks each ABI's `error` fragments to match the 4-byte
 // selector in the revert data.

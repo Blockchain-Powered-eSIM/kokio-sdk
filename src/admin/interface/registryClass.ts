@@ -1,7 +1,25 @@
 import { Address, Hex, WalletClient } from "viem";
-import { _addOrUpdateLazyWalletRegistryAddress } from "../../logic/admin/registry.eoa.js";
 import {
+    _addOrUpdateLazyWalletRegistryAddress,
+    _updateVaultAddress,
+    _requestAdminUpdate,
+    _disableAdmin,
+    _enableAdmin,
+    _acceptAdminUpdate,
+    _assignESIMIdentifier,
+    _pause,
+    _unpause,
+    _setDefaultDataBundlePriceCap,
+    _acceptOwnership,
+    _transferOwnershipCall,
+    _upgradeCall,
+} from "../../logic/admin/registry.eoa.js";
+import {
+    _owner,
     _eSIMWalletAdmin,
+    _adminOfRecord,
+    _adminDisabled,
+    _newRequestedAdmin,
     _vault,
     _upgradeManager,
     _lazyWalletRegistry,
@@ -11,6 +29,20 @@ import {
     _isDeviceWalletValid,
     _isESIMWalletValid,
     _isESIMWalletOnStandby,
+    _paused,
+    _defaultDataBundlePriceCap,
+    _isDeviceIdentifierAlreadyUsed,
+    _isESIMIdentifierClaimed,
+    _eSIMWalletForIdentifier,
+    _claimedESIMIdentifiers,
+    _requireDeviceIdentifierNotReserved,
+    _pendingOwner,
+    _deviceWalletFactory,
+    _eSIMWalletFactory,
+    _entryPoint,
+    _requireNotPaused,
+    _proxiableUUID,
+    _upgradeInterfaceVersion,
 } from "../../logic/admin/reads/registry.reads.js";
 
 /** Thin EOA (owner) wrapper around `Registry`. */
@@ -26,10 +58,76 @@ export class AdminRegistrySubPackage {
         return _addOrUpdateLazyWalletRegistryAddress(this.walletClient, lazyWalletRegistry);
     }
 
+    updateVaultAddress(newVaultAddress: Address) {
+        return _updateVaultAddress(this.walletClient, newVaultAddress);
+    }
+
+    requestAdminUpdate(newAdmin: Address) {
+        return _requestAdminUpdate(this.walletClient, newAdmin);
+    }
+
+    disableAdmin() {
+        return _disableAdmin(this.walletClient);
+    }
+
+    enableAdmin() {
+        return _enableAdmin(this.walletClient);
+    }
+
+    acceptAdminUpdate() {
+        return _acceptAdminUpdate(this.walletClient);
+    }
+
+    assignESIMIdentifier(eSIMWalletAddress: Address, eSIMUniqueIdentifier: string) {
+        return _assignESIMIdentifier(this.walletClient, eSIMWalletAddress, eSIMUniqueIdentifier);
+    }
+
+    pause() {
+        return _pause(this.walletClient);
+    }
+
+    unpause() {
+        return _unpause(this.walletClient);
+    }
+
+    setDefaultDataBundlePriceCap(cap: bigint) {
+        return _setDefaultDataBundlePriceCap(this.walletClient, cap);
+    }
+
+    acceptOwnership() {
+        return _acceptOwnership(this.walletClient);
+    }
+
+    // Owner payloads: hand the result to `protocolAdmin.schedule`
+
+    transferOwnershipCall(newOwner: Address) {
+        return _transferOwnershipCall(this.walletClient, newOwner);
+    }
+
+    upgradeCall(newImplementation: Address, data?: Hex) {
+        return _upgradeCall(this.walletClient, newImplementation, data);
+    }
+
     // Reads: public storage getters, including the inherited RegistryHelper mappings
+
+    owner() {
+        return _owner(this.walletClient);
+    }
 
     eSIMWalletAdmin() {
         return _eSIMWalletAdmin(this.walletClient);
+    }
+
+    adminOfRecord() {
+        return _adminOfRecord(this.walletClient);
+    }
+
+    adminDisabled() {
+        return _adminDisabled(this.walletClient);
+    }
+
+    newRequestedAdmin() {
+        return _newRequestedAdmin(this.walletClient);
     }
 
     vault() {
@@ -66,5 +164,61 @@ export class AdminRegistrySubPackage {
 
     isESIMWalletOnStandby(eSIMWallet: Address) {
         return _isESIMWalletOnStandby(this.walletClient, eSIMWallet);
+    }
+
+    paused() {
+        return _paused(this.walletClient);
+    }
+
+    defaultDataBundlePriceCap() {
+        return _defaultDataBundlePriceCap(this.walletClient);
+    }
+
+    isDeviceIdentifierAlreadyUsed(deviceUniqueIdentifier: string) {
+        return _isDeviceIdentifierAlreadyUsed(this.walletClient, deviceUniqueIdentifier);
+    }
+
+    isESIMIdentifierClaimed(eSIMUniqueIdentifier: string) {
+        return _isESIMIdentifierClaimed(this.walletClient, eSIMUniqueIdentifier);
+    }
+
+    eSIMWalletForIdentifier(eSIMUniqueIdentifier: string) {
+        return _eSIMWalletForIdentifier(this.walletClient, eSIMUniqueIdentifier);
+    }
+
+    claimedESIMIdentifiers(hashOfESIMIdentifier: Hex) {
+        return _claimedESIMIdentifiers(this.walletClient, hashOfESIMIdentifier);
+    }
+
+    requireDeviceIdentifierNotReserved(deviceUniqueIdentifier: string) {
+        return _requireDeviceIdentifierNotReserved(this.walletClient, deviceUniqueIdentifier);
+    }
+
+    requireNotPaused() {
+        return _requireNotPaused(this.walletClient);
+    }
+
+    pendingOwner() {
+        return _pendingOwner(this.walletClient);
+    }
+
+    deviceWalletFactory() {
+        return _deviceWalletFactory(this.walletClient);
+    }
+
+    eSIMWalletFactory() {
+        return _eSIMWalletFactory(this.walletClient);
+    }
+
+    entryPoint() {
+        return _entryPoint(this.walletClient);
+    }
+
+    proxiableUUID() {
+        return _proxiableUUID(this.walletClient);
+    }
+
+    upgradeInterfaceVersion() {
+        return _upgradeInterfaceVersion(this.walletClient);
     }
 }

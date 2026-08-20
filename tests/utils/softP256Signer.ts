@@ -4,25 +4,23 @@ import { isoBase64URL } from "@simplewebauthn/server/helpers";
 
 import type { P256Key, WebAuthnSignature } from "../../src/types.js";
 
-/**
- * Test-only software replacement for the native passkey `_stamp`.
- *
- * The mobile SDK signs a userOp by calling an on-device passkey, which returns a
- * WebAuthn assertion (`authenticatorData`, `clientDataJSON`, `r`, `s`). That
- * native call can't run in Node, so this signer holds a software P-256 keypair
- * and produces an assertion with the *exact* shape the SDK's `_encodeSignature`
- * and the deployed `WebAuthn.sol` verifier expect. Everything downstream - the
- * `_encodeSignature` envelope, low-s handling, on-chain `P256Verifier` - is the
- * real path; only the key custody is software instead of a secure enclave.
- *
- * NEVER import this from `src/`. It exists purely to drive fork-based userOp
- * scenarios without a real authenticator.
- */
+// Test-only software replacement for the native passkey `_stamp`.
+//
+// The mobile SDK signs a userOp by calling an on-device passkey, which returns a
+// WebAuthn assertion (`authenticatorData`, `clientDataJSON`, `r`, `s`). That
+// native call can't run in Node, so this signer holds a software P-256 keypair
+// and produces an assertion with the *exact* shape the SDK's `_encodeSignature`
+// and the deployed `WebAuthn.sol` verifier expect. Everything downstream - the
+// `_encodeSignature` envelope, low-s handling, on-chain `P256Verifier` - is the
+// real path; only the key custody is software instead of a secure enclave.
+//
+// NEVER import this from `src/`. It exists purely to drive fork-based userOp
+// scenarios without a real authenticator.
 
-/** Origin baked into `clientDataJSON`. `WebAuthn.sol` deliberately does not check origin. */
+// Origin baked into `clientDataJSON`. `WebAuthn.sol` deliberately does not check origin.
 const ORIGIN = "https://kokio.test";
 
-/** WebAuthn flags byte: User Present (0x01) | User Verified (0x04); the contract requires both. */
+// WebAuthn flags byte: User Present (0x01) | User Verified (0x04); the contract requires both.
 const FLAGS_UP_UV = 0x05;
 
 export interface SoftSigner {
@@ -35,7 +33,7 @@ export interface SoftSigner {
   stamp: (payload: Hex) => WebAuthnSignature;
 }
 
-/** rpId hashed into `authenticatorData`; `WebAuthn.sol` does not verify it, so any value works. */
+// rpId hashed into `authenticatorData`; `WebAuthn.sol` does not verify it, so any value works.
 const authenticatorData = (rpId: string): Uint8Array => {
   const rpIdHash = sha256(new TextEncoder().encode(rpId), "bytes");
   const out = new Uint8Array(37);

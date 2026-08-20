@@ -12,9 +12,9 @@ entry points can share the same underlying calls.
    themselves.
    - [interface/](interface/) for the mobile surface.
    - [admin/interface/](admin/interface/) for the admin surface.
-3. **Logic functions** are free functions that do the actual work with viem and
-   `@aa-sdk/core` (encode call data, send user operations or transactions, read
-   state). See [logic/](logic/).
+3. **Logic functions** are free functions that do the actual work with viem
+   (encode call data, send user operations or transactions, read state). See
+   [logic/](logic/).
 
 Supporting files:
 

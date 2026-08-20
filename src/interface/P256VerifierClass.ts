@@ -1,15 +1,14 @@
-import { Address, Hex, WalletClient } from "viem";
+import { Hex } from "viem";
 import {
     _verifySignature
 } from "../logic/P256Verifier.js"
-import { WebAuthnSignature } from "../types";
-import { SmartAccountClient } from "@aa-sdk/core";
+import { WebAuthnSignature, KokioSmartAccountClient } from "../types.js";
 
 export class P256VerifierSubPackage {
 
-    client: SmartAccountClient;
+    client: KokioSmartAccountClient;
 
-    constructor(client: SmartAccountClient) {
+    constructor(client: KokioSmartAccountClient) {
         this.client = client;
     }
 

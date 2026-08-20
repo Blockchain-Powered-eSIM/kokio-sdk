@@ -1,487 +1,628 @@
 const ESIMWallet = [
     {
-        "inputs": [],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
+        "type": "receive",
+        "stateMutability": "payable"
     },
     {
-        "inputs": [],
-        "name": "FailedToTransfer",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "InvalidInitialization",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "NotInitializing",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "OnlyDeviceWallet",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "OnlyDeviceWalletOrESIMWalletAdmin",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "OnlyRegistry",
-        "type": "error"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            }
-        ],
-        "name": "OwnableInvalidOwner",
-        "type": "error"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
-        "name": "OwnableUnauthorizedAccount",
-        "type": "error"
-    },
-    {
-        "inputs": [],
-        "name": "ReentrancyGuardReentrantCall",
-        "type": "error"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_dataBundleID",
-                "type": "string"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "_dataBundlePrice",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "_ethFromUser",
-                "type": "uint256"
-            }
-        ],
-        "name": "DataBundleBought",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "string",
-                "name": "_eSIMUniqueIdentifier",
-                "type": "string"
-            }
-        ],
-        "name": "ESIMUniqueIdentifierInitialised",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_eSIMWalletAddress",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_deviceWalletAddress",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_owner",
-                "type": "address"
-            }
-        ],
-        "name": "ESIMWalletDeployed",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_recipient",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "_amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "ETHSent",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
-                "internalType": "uint64",
-                "name": "version",
-                "type": "uint64"
-            }
-        ],
-        "name": "Initialized",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_currentOwner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_newOwner",
-                "type": "address"
-            }
-        ],
-        "name": "OwnershipTransferRequested",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_currentOwner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_revokedOwner",
-                "type": "address"
-            }
-        ],
-        "name": "OwnershipTransferRevoked",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "previousOwner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "newOwner",
-                "type": "address"
-            }
-        ],
-        "name": "OwnershipTransferred",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "string",
-                        "name": "dataBundleID",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "dataBundlePrice",
-                        "type": "uint256"
-                    }
-                ],
-                "indexed": false,
-                "internalType": "struct DataBundleDetails[]",
-                "name": "_dataBundleDetails",
-                "type": "tuple[]"
-            }
-        ],
-        "name": "TransactionHistoryPopulated",
-        "type": "event"
-    },
-    {
-        "inputs": [],
+        "type": "function",
         "name": "acceptOwnershipTransfer",
+        "inputs": [],
         "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        "stateMutability": "nonpayable"
     },
     {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "string",
-                        "name": "dataBundleID",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "dataBundlePrice",
-                        "type": "uint256"
-                    }
-                ],
-                "internalType": "struct DataBundleDetails",
-                "name": "_dataBundleDetail",
-                "type": "tuple"
-            }
-        ],
+        "type": "function",
         "name": "buyDataBundle",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "deviceWallet",
-        "outputs": [
-            {
-                "internalType": "contract DeviceWallet",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "eSIMUniqueIdentifier",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "eSIMWalletFactory",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "_eSIMWalletFactoryAddress",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_deviceWalletAddress",
-                "type": "address"
-            }
-        ],
-        "name": "initialize",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "newRequestedOwner",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "owner",
-        "outputs": [
-            {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
+                "name": "_dataBundleDetail",
+                "type": "tuple",
+                "internalType": "struct DataBundleDetails",
                 "components": [
                     {
-                        "internalType": "string",
                         "name": "dataBundleID",
-                        "type": "string"
+                        "type": "string",
+                        "internalType": "string"
                     },
                     {
-                        "internalType": "uint256",
                         "name": "dataBundlePrice",
-                        "type": "uint256"
+                        "type": "uint256",
+                        "internalType": "uint256"
                     }
-                ],
-                "internalType": "struct DataBundleDetails[]",
-                "name": "_dataBundleDetails",
-                "type": "tuple[]"
+                ]
             }
         ],
-        "name": "populateHistory",
         "outputs": [
             {
-                "internalType": "bool",
                 "name": "",
-                "type": "bool"
+                "type": "bool",
+                "internalType": "bool"
             }
         ],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        "stateMutability": "payable"
     },
     {
+        "type": "function",
+        "name": "dataBundlePriceCap",
         "inputs": [],
-        "name": "renounceOwnership",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_newOwner",
-                "type": "address"
-            }
-        ],
-        "name": "requestTransferOwnership",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "_amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "sendETHToDeviceWallet",
         "outputs": [
             {
-                "internalType": "uint256",
                 "name": "",
-                "type": "uint256"
+                "type": "uint256",
+                "internalType": "uint256"
             }
         ],
-        "stateMutability": "nonpayable",
-        "type": "function"
+        "stateMutability": "view"
     },
     {
-        "inputs": [
-            {
-                "internalType": "string",
-                "name": "_eSIMUniqueIdentifier",
-                "type": "string"
-            }
-        ],
-        "name": "setESIMUniqueIdentifier",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "name": "transactionHistory",
+        "type": "function",
+        "name": "deviceWallet",
+        "inputs": [],
         "outputs": [
             {
-                "internalType": "string",
-                "name": "dataBundleID",
-                "type": "string"
+                "name": "",
+                "type": "address",
+                "internalType": "contract DeviceWallet"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "eSIMUniqueIdentifier",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "eSIMWalletFactory",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "initialize",
+        "inputs": [
+            {
+                "name": "_eSIMWalletFactoryAddress",
+                "type": "address",
+                "internalType": "address"
             },
             {
-                "internalType": "uint256",
-                "name": "dataBundlePrice",
-                "type": "uint256"
+                "name": "_deviceWalletAddress",
+                "type": "address",
+                "internalType": "address"
             }
         ],
-        "stateMutability": "view",
-        "type": "function"
+        "outputs": [],
+        "stateMutability": "nonpayable"
     },
     {
+        "type": "function",
+        "name": "newRequestedOwner",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "owner",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "populateHistory",
         "inputs": [
             {
-                "internalType": "address",
-                "name": "",
-                "type": "address"
+                "name": "_dataBundleDetails",
+                "type": "tuple[]",
+                "internalType": "struct DataBundleDetails[]",
+                "components": [
+                    {
+                        "name": "dataBundleID",
+                        "type": "string",
+                        "internalType": "string"
+                    },
+                    {
+                        "name": "dataBundlePrice",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
             }
         ],
-        "name": "transferOwnership",
-        "outputs": [],
-        "stateMutability": "pure",
-        "type": "function"
+        "outputs": [
+            {
+                "name": "",
+                "type": "bool",
+                "internalType": "bool"
+            }
+        ],
+        "stateMutability": "nonpayable"
     },
     {
-        "stateMutability": "payable",
-        "type": "receive"
+        "type": "function",
+        "name": "renounceOwnership",
+        "inputs": [],
+        "outputs": [],
+        "stateMutability": "pure"
+    },
+    {
+        "type": "function",
+        "name": "requestTransferOwnership",
+        "inputs": [
+            {
+                "name": "_newOwner",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "sendETHToDeviceWallet",
+        "inputs": [
+            {
+                "name": "_amount",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "setDataBundlePriceCap",
+        "inputs": [
+            {
+                "name": "_cap",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "setESIMUniqueIdentifier",
+        "inputs": [
+            {
+                "name": "_eSIMUniqueIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "transactionHistory",
+        "inputs": [
+            {
+                "name": "",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "dataBundleID",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "dataBundlePrice",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "transferOwnership",
+        "inputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "pure"
+    },
+    {
+        "type": "event",
+        "name": "DataBundleBought",
+        "inputs": [
+            {
+                "name": "_dataBundleID",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            },
+            {
+                "name": "_dataBundlePrice",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            },
+            {
+                "name": "_ethFromUser",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "DataBundlePriceCapUpdated",
+        "inputs": [
+            {
+                "name": "_cap",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "ESIMUniqueIdentifierInitialised",
+        "inputs": [
+            {
+                "name": "_eSIMUniqueIdentifier",
+                "type": "string",
+                "indexed": false,
+                "internalType": "string"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "ESIMWalletDeployed",
+        "inputs": [
+            {
+                "name": "_eSIMWalletAddress",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_deviceWalletAddress",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_owner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "ETHSent",
+        "inputs": [
+            {
+                "name": "_recipient",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_amount",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "Initialized",
+        "inputs": [
+            {
+                "name": "version",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "OwnershipTransferRequested",
+        "inputs": [
+            {
+                "name": "_currentOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_newOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "OwnershipTransferRevoked",
+        "inputs": [
+            {
+                "name": "_currentOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_revokedOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "OwnershipTransferred",
+        "inputs": [
+            {
+                "name": "previousOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "newOwner",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "TransactionHistoryPopulated",
+        "inputs": [
+            {
+                "name": "_dataBundleDetails",
+                "type": "tuple[]",
+                "indexed": false,
+                "internalType": "struct DataBundleDetails[]",
+                "components": [
+                    {
+                        "name": "dataBundleID",
+                        "type": "string",
+                        "internalType": "string"
+                    },
+                    {
+                        "name": "dataBundlePrice",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            },
+            {
+                "name": "_totalEntries",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "error",
+        "name": "DataBundlePriceAboveCap",
+        "inputs": [
+            {
+                "name": "price",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "cap",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ESIMIdentifierAlreadySet",
+        "inputs": [
+            {
+                "name": "eSIMUniqueIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "EmptyDataBundleID",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "EmptyESIMIdentifier",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "FailedToTransfer",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "InsufficientBalance",
+        "inputs": [
+            {
+                "name": "balance",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "amount",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "InvalidInitialization",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "NotADeviceWallet",
+        "inputs": [
+            {
+                "name": "account",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "NotInitializing",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "OnlyDeviceWallet",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "OnlyDeviceWalletOrESIMWalletAdmin",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "OnlyRegistry",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "OnlyRequestedOwner",
+        "inputs": [
+            {
+                "name": "newRequestedOwner",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "OwnableInvalidOwner",
+        "inputs": [
+            {
+                "name": "owner",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "OwnableUnauthorizedAccount",
+        "inputs": [
+            {
+                "name": "account",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "OwnershipCannotBeRenounced",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "ReentrancyGuardReentrantCall",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "UseAcceptOwnershipTransfer",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "ZeroAddress",
+        "inputs": [
+            {
+                "name": "parameter",
+                "type": "string",
+                "internalType": "string"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ZeroDataBundlePrice",
+        "inputs": []
     }
 ] as const;
 

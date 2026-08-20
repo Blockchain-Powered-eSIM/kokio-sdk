@@ -40,16 +40,14 @@ const OWNER_KEY: P256Key = [
 const DEVICE_UID = "kokio-sdk-integration-fixture";
 const SALT = 0n;
 
-/**
- * Opt-in, read-only parity checks against LIVE Base Sepolia. Skips cleanly when
- * BASE_SEPOLIA_RPC_URL is unset (CI / offline), so it never turns the default
- * `npm test` red. Run with `npm run test:integration`.
- *
- * Purpose: unit tests run entirely on mocked clients, so the SDK's hand-mirrored
- * on-chain encodings (CREATE2 counterfactual, ABIs, factory addresses) can drift
- * from what is actually deployed while staying green locally. These checks catch
- * "green locally, broken on-chain" before shipping.
- */
+// Opt-in, read-only parity checks against LIVE Base Sepolia. Skips cleanly when
+// BASE_SEPOLIA_RPC_URL is unset (CI / offline), so it never turns the default
+// `npm test` red. Run with `npm run test:integration`.
+//
+// Purpose: unit tests run entirely on mocked clients, so the SDK's hand-mirrored
+// on-chain encodings (CREATE2 counterfactual, ABIs, factory addresses) can drift
+// from what is actually deployed while staying green locally. These checks catch
+// "green locally, broken on-chain" before shipping.
 describe.skipIf(!hasRpc())("Base Sepolia - live read-only parity", () => {
   // Built lazily in beforeAll - the describe callback still runs when the suite
   // is skipped, and eager construction would call getRpcUrl() (which throws

@@ -4,6 +4,7 @@ import { AdminDeviceWalletFactorySubPackage } from "./interface/deviceWalletFact
 import { AdminESIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass.js";
 import { AdminRegistrySubPackage } from "./interface/registryClass.js";
 import { AdminLazyWalletRegistrySubPackage } from "./interface/lazyWalletRegistryClass.js";
+import { AdminProtocolAdminSubPackage } from "./interface/protocolAdminClass.js";
 import { AdminDeviceWalletSubPackage } from "./interface/deviceWalletClass.js";
 import { AdminESIMWalletSubPackage } from "./interface/eSIMWalletClass.js";
 
@@ -23,6 +24,10 @@ export {
     decodeContractRevert,
 } from "../logic/errors.js";
 export type { DecodedRevert } from "../logic/errors.js";
+
+// `getOperationState` answers with this, and comparing against it needs the enum
+// at runtime rather than only in the types.
+export { OperationState } from "../logic/admin/reads/protocolAdmin.reads.js";
 
 /**
  * EOA-only entry point for the NodeJS backend.
@@ -53,6 +58,7 @@ export class KokioAdmin {
     eSIMWalletFactory: AdminESIMWalletFactorySubPackage;
     registry: AdminRegistrySubPackage;
     lazyWalletRegistry: AdminLazyWalletRegistrySubPackage;
+    protocolAdmin: AdminProtocolAdminSubPackage;
 
     // Instance-scoped surfaces - undefined until their address is known.
     deviceWallet?: AdminDeviceWalletSubPackage;
@@ -69,6 +75,7 @@ export class KokioAdmin {
         this.eSIMWalletFactory = new AdminESIMWalletFactorySubPackage(walletClient);
         this.registry = new AdminRegistrySubPackage(walletClient);
         this.lazyWalletRegistry = new AdminLazyWalletRegistrySubPackage(walletClient);
+        this.protocolAdmin = new AdminProtocolAdminSubPackage(walletClient);
 
         this.deviceWallet = deviceWalletAddress ? new AdminDeviceWalletSubPackage(walletClient, deviceWalletAddress) : undefined;
         this.eSIMWallet = eSIMWalletAddress ? new AdminESIMWalletSubPackage(walletClient, eSIMWalletAddress) : undefined;
@@ -124,6 +131,7 @@ export class KokioAdmin {
         this.eSIMWalletFactory = new AdminESIMWalletFactorySubPackage(walletClient);
         this.registry = new AdminRegistrySubPackage(walletClient);
         this.lazyWalletRegistry = new AdminLazyWalletRegistrySubPackage(walletClient);
+        this.protocolAdmin = new AdminProtocolAdminSubPackage(walletClient);
 
         this.deviceWallet = this.deviceWalletAddress ? new AdminDeviceWalletSubPackage(walletClient, this.deviceWalletAddress) : undefined;
         this.eSIMWallet = this.eSIMWalletAddress ? new AdminESIMWalletSubPackage(walletClient, this.eSIMWalletAddress) : undefined;
