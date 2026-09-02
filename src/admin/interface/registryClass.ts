@@ -1,4 +1,5 @@
 import { Address, Hex, WalletClient } from "viem";
+import { DataBundleDetails } from "../../types.js";
 import {
     _addOrUpdateLazyWalletRegistryAddress,
     _updateVaultAddress,
@@ -7,6 +8,7 @@ import {
     _enableAdmin,
     _acceptAdminUpdate,
     _assignESIMIdentifier,
+    _recordSettledPurchase,
     _pause,
     _unpause,
     _setDefaultPriceCapUSDCents,
@@ -31,6 +33,8 @@ import {
     _isESIMWalletOnStandby,
     _paused,
     _defaultPriceCapUSDCents,
+    _paymentAdapter,
+    _usedPaymentReferences,
     _isDeviceIdentifierAlreadyUsed,
     _isESIMIdentifierClaimed,
     _eSIMWalletForIdentifier,
@@ -76,6 +80,16 @@ export class AdminRegistrySubPackage {
 
     acceptAdminUpdate() {
         return _acceptAdminUpdate(this.walletClient);
+    }
+
+    recordSettledPurchase(
+        eSIMWalletAddress: Address,
+        dataBundleDetail: DataBundleDetails,
+        asset: Hex,
+        tokenAmount: bigint,
+        paymentReference: Hex
+    ) {
+        return _recordSettledPurchase(this.walletClient, eSIMWalletAddress, dataBundleDetail, asset, tokenAmount, paymentReference);
     }
 
     assignESIMIdentifier(eSIMWalletAddress: Address, eSIMUniqueIdentifier: string) {
@@ -172,6 +186,14 @@ export class AdminRegistrySubPackage {
 
     defaultPriceCapUSDCents() {
         return _defaultPriceCapUSDCents(this.walletClient);
+    }
+
+    paymentAdapter() {
+        return _paymentAdapter(this.walletClient);
+    }
+
+    usedPaymentReferences(scopedReference: Hex) {
+        return _usedPaymentReferences(this.walletClient, scopedReference);
     }
 
     isDeviceIdentifierAlreadyUsed(deviceUniqueIdentifier: string) {

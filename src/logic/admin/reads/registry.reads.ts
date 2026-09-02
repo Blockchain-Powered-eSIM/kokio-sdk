@@ -499,3 +499,37 @@ export const _upgradeInterfaceVersion = async (client: WalletClient): Promise<st
         args: []
     }) as Promise<string>;
 }
+
+/** The payment adapter this registry currently points at. */
+export const _paymentAdapter = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "paymentAdapter",
+        args: []
+    }) as Promise<Address>;
+}
+
+/**
+ * Whether a payment reference has already been spent for an eSIM wallet.
+ * Scoped per wallet: pass the same `keccak256(abi.encode(eSIMWallet, paymentReference))`
+ * the contract keys `usedPaymentReferences` by, not the bare reference.
+ */
+export const _usedPaymentReferences = async (client: WalletClient, scopedReference: Hex): Promise<boolean> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "usedPaymentReferences",
+        args: [scopedReference]
+    }) as Promise<boolean>;
+}

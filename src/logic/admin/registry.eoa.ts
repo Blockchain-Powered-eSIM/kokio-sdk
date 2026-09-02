@@ -2,7 +2,7 @@ import { Address, Hex, WalletClient } from "viem";
 import { _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { Registry } from "../../abis/index.js";
-import type { OwnerCall } from "../../types.js";
+import type { DataBundleDetails, OwnerCall } from "../../types.js";
 
 // Admin-EOA logic for `Registry`. Most of this is `onlyOwner`, so the `client`
 // must carry the owner EOA. `_acceptAdminUpdate` is the nominee's own call and
@@ -231,6 +231,40 @@ export const _assignESIMIdentifier = async (
         abi: Registry,
         functionName: 'assignESIMIdentifier',
         args: [eSIMWalletAddress, eSIMUniqueIdentifier]
+    });
+}
+
+/**
+ * Record a data bundle paid for outside the protocol - a card or an external
+ * wallet, never the device wallet. `onlyESIMWalletAdmin`. No money moves here:
+ * `_dataBundleDetail.settlement` must be `ExternalWallet` or `Fiat` (the
+ * contract reverts `SettlementNotAsserted` on `DeviceWallet`, since this call
+ * never sees a transfer to prove it), and `_tokenAmount` is recorded for
+ * offchain matching but never checked against `_dataBundleDetail.priceUSDCents`.
+ * `_paymentReference` is spendable once per eSIM wallet.
+ */
+export const _recordSettledPurchase = async (
+    client: WalletClient,
+    eSIMWalletAddress: Address,
+    dataBundleDetail: DataBundleDetails,
+    asset: Hex,
+    tokenAmount: bigint,
+    paymentReference: Hex
+) => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return writeContractOrThrow(client, {
+        address: values.factoryAddresses.REGISTRY,
+        chain: values.chain,
+        account: client.account.address,
+        abi: Registry,
+        functionName: 'recordSettledPurchase',
+        args: [eSIMWalletAddress, dataBundleDetail, asset, tokenAmount, paymentReference]
     });
 }
 

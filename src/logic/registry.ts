@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData } from "viem";
+import { Address, Hex, encodeFunctionData } from "viem";
 import { _getChainSpecificConstants } from "./constants.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { Registry } from "../abis/index.js";
@@ -258,6 +258,40 @@ export const _defaultPriceCapUSDCents = async (client: KokioSmartAccountClient):
         functionName: "defaultPriceCapUSDCents",
         args: []
     }) as Promise<bigint>;
+}
+
+/** The payment adapter this registry currently points at. */
+export const _paymentAdapter = async (client: KokioSmartAccountClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "paymentAdapter",
+        args: []
+    }) as Promise<Address>;
+}
+
+/**
+ * Whether a payment reference has already been spent for an eSIM wallet.
+ * Scoped per wallet: pass the same `keccak256(abi.encode(eSIMWallet, paymentReference))`
+ * the contract keys `usedPaymentReferences` by, not the bare reference.
+ */
+export const _usedPaymentReferences = async (client: KokioSmartAccountClient, scopedReference: Hex): Promise<boolean> => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "usedPaymentReferences",
+        args: [scopedReference]
+    }) as Promise<boolean>;
 }
 
 /**
