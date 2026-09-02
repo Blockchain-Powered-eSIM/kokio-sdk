@@ -11,7 +11,7 @@ import {
   P256Verifier,
   Registry,
 } from "../../src/abis/index.js";
-import type { DataBundleDetails, WebAuthnSignature } from "../../src/types.js";
+import { Settlement, type DataBundleDetails, type WebAuthnSignature } from "../../src/types.js";
 
 import * as deviceWallet from "../../src/logic/deviceWallet.js";
 import * as deviceWalletFactory from "../../src/logic/deviceWalletFactory.js";
@@ -24,6 +24,7 @@ import * as p256Verifier from "../../src/logic/P256Verifier.js";
 const WALLET = "0x00000000000000000000000000000000000dead1" as Address;
 const ESIM = "0x00000000000000000000000000000000000e51a1" as Address;
 const NEW_OWNER = "0x0000000000000000000000000000000000ce7701" as Address;
+const TOKEN = "0x0000000000000000000000000000000000706b31" as Address;
 // The smart account the mock client signs as, i.e. the device wallet sending the userOp.
 const ACCOUNT = "0x000000000000000000000000000000000000acc7" as Address;
 const OWNER_KEY: [Hex, Hex] = [
@@ -32,9 +33,12 @@ const OWNER_KEY: [Hex, Hex] = [
 ];
 const MESSAGE_HASH = "0x00000000000000000000000000000000000000000000000000000000000000a1" as Hex;
 const BUNDLE: DataBundleDetails = {
-  dataBundleID: "bundle-1",
-  dataBundlePrice: 1000n,
+  id: "0x0000000000000000000000000000000000000000000000000000000000000001" as Hex,
+  priceUSDCents: 1000n,
+  settlement: Settlement.DeviceWallet,
 };
+const ASSET = "0x5553444300000000000000000000000000000000000000000000000000000000" as Hex;
+const PAYMENT_REFERENCE = "0x000000000000000000000000000000000000000000000000000000000000ee11" as Hex;
 const WEBAUTHN_SIG: WebAuthnSignature = {
   authenticatorData: "0x1122",
   clientDataJSON: '{"type":"webauthn.get","challenge":"abc"}',
@@ -59,10 +63,10 @@ const userOpCases: Array<{
 }> = [
   // deviceWallet.ts - self-callable via `execute` (msg.sender == the device wallet)
   {
-    label: "deviceWallet._toggleAccessToETH",
-    run: (c) => deviceWallet._toggleAccessToETH(c, WALLET, ESIM, true),
+    label: "deviceWallet._toggleAccessToFunds",
+    run: (c) => deviceWallet._toggleAccessToFunds(c, WALLET, ESIM, true),
     target: WALLET,
-    data: encodeFunctionData({ abi: DeviceWallet, functionName: "toggleAccessToETH", args: [ESIM, true] }),
+    data: encodeFunctionData({ abi: DeviceWallet, functionName: "toggleAccessToFunds", args: [ESIM, true] }),
   },
   {
     // The contract reverts on a `true`, so the SDK hardcodes the `false`.
@@ -103,10 +107,20 @@ const userOpCases: Array<{
   },
   // eSIMWallet.ts - the eSIM wallet's owner IS the device-wallet sender (onlyDeviceWallet)
   {
-    label: "eSIMWallet._buyDataBundle",
-    run: (c) => eSIMWallet._buyDataBundle(c, ESIM, BUNDLE),
+    label: "eSIMWallet._buyDataBundleWithToken",
+    run: (c) => eSIMWallet._buyDataBundleWithToken(c, ESIM, BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE),
     target: ESIM,
-    data: encodeFunctionData({ abi: ESIMWallet, functionName: "buyDataBundle", args: [BUNDLE] }),
+    data: encodeFunctionData({
+      abi: ESIMWallet,
+      functionName: "buyDataBundleWithToken",
+      args: [BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE],
+    }),
+  },
+  {
+    label: "eSIMWallet._sendTokenToDeviceWallet",
+    run: (c) => eSIMWallet._sendTokenToDeviceWallet(c, ESIM, TOKEN, 3n),
+    target: ESIM,
+    data: encodeFunctionData({ abi: ESIMWallet, functionName: "sendTokenToDeviceWallet", args: [TOKEN, 3n] }),
   },
   {
     label: "eSIMWallet._requestTransferOwnership",
@@ -121,10 +135,10 @@ const userOpCases: Array<{
     data: encodeFunctionData({ abi: ESIMWallet, functionName: "acceptOwnershipTransfer", args: [] }),
   },
   {
-    label: "eSIMWallet._setDataBundlePriceCap",
-    run: (c) => eSIMWallet._setDataBundlePriceCap(c, ESIM, 5n * 10n ** 18n),
+    label: "eSIMWallet._setPriceCapUSDCents",
+    run: (c) => eSIMWallet._setPriceCapUSDCents(c, ESIM, 50_000n),
     target: ESIM,
-    data: encodeFunctionData({ abi: ESIMWallet, functionName: "setDataBundlePriceCap", args: [5n * 10n ** 18n] }),
+    data: encodeFunctionData({ abi: ESIMWallet, functionName: "setPriceCapUSDCents", args: [50_000n] }),
   },
   {
     label: "eSIMWallet._sendETHToDeviceWallet",
@@ -243,10 +257,10 @@ const readCases: Array<{
     args: [ESIM],
   },
   {
-    label: "deviceWallet._canPullETH",
-    run: (c) => deviceWallet._canPullETH(c, WALLET, ESIM),
+    label: "deviceWallet._canPullFunds",
+    run: (c) => deviceWallet._canPullFunds(c, WALLET, ESIM),
     address: WALLET,
-    functionName: "canPullETH",
+    functionName: "canPullFunds",
     args: [ESIM],
   },
   {
@@ -292,10 +306,10 @@ const readCases: Array<{
     args: [],
   },
   {
-    label: "eSIMWallet._dataBundlePriceCap",
-    run: (c) => eSIMWallet._dataBundlePriceCap(c, ESIM),
+    label: "eSIMWallet._priceCapUSDCents",
+    run: (c) => eSIMWallet._priceCapUSDCents(c, ESIM),
     address: ESIM,
-    functionName: "dataBundlePriceCap",
+    functionName: "priceCapUSDCents",
     args: [],
   },
   {
@@ -367,7 +381,7 @@ const readCases: Array<{
   { label: "registry._uniqueIdentifierToDeviceWallet", run: (c) => registry._uniqueIdentifierToDeviceWallet(c, "Device_11"), address: F.REGISTRY, functionName: "uniqueIdentifierToDeviceWallet", args: ["Device_11"] },
   { label: "registry._isESIMIdentifierClaimed", run: (c) => registry._isESIMIdentifierClaimed(c, "eid-1"), address: F.REGISTRY, functionName: "isESIMIdentifierClaimed", args: ["eid-1"] },
   { label: "registry._eSIMWalletForIdentifier", run: (c) => registry._eSIMWalletForIdentifier(c, "eid-1"), address: F.REGISTRY, functionName: "eSIMWalletForIdentifier", args: ["eid-1"] },
-  { label: "registry._defaultDataBundlePriceCap", run: (c) => registry._defaultDataBundlePriceCap(c), address: F.REGISTRY, functionName: "defaultDataBundlePriceCap", args: [] },
+  { label: "registry._defaultPriceCapUSDCents", run: (c) => registry._defaultPriceCapUSDCents(c), address: F.REGISTRY, functionName: "defaultPriceCapUSDCents", args: [] },
   { label: "registry._requireDeviceIdentifierNotReserved", run: (c) => registry._requireDeviceIdentifierNotReserved(c, "Device_11"), address: F.REGISTRY, functionName: "requireDeviceIdentifierNotReserved", args: ["Device_11"] },
   {
     label: "p256Verifier._verifySignature",
@@ -454,31 +468,31 @@ describe("deviceWallet._getOwner", () => {
 // --- Effective price ceiling ------------------------------------------------
 // The wallet's cap, the registry's, or no cap at all. The table above only
 // covers the first, since the shared mock never hands back a zero.
-describe("eSIMWallet._dataBundlePriceCap", () => {
+describe("eSIMWallet._priceCapUSDCents", () => {
   const capClient = (reads: Record<string, unknown>) =>
     ({
       getChainId: async () => 84532,
       transport: { url: "https://rpc.test.invalid" },
       account: { address: ACCOUNT },
       readContract: vi.fn(async ({ functionName }: { functionName: string }) => reads[functionName]),
-    }) as unknown as Parameters<typeof eSIMWallet._dataBundlePriceCap>[0];
+    }) as unknown as Parameters<typeof eSIMWallet._priceCapUSDCents>[0];
 
   it("returns the wallet's own cap when it has one", async () => {
-    const client = capClient({ dataBundlePriceCap: 7n, defaultDataBundlePriceCap: 99n });
+    const client = capClient({ priceCapUSDCents: 7n, defaultPriceCapUSDCents: 99n });
 
-    expect(await eSIMWallet._dataBundlePriceCap(client, ESIM)).toBe(7n);
+    expect(await eSIMWallet._priceCapUSDCents(client, ESIM)).toBe(7n);
     expect(client.readContract).toHaveBeenCalledTimes(1);
   });
 
   it("falls back to the registry default when the wallet has no cap", async () => {
-    const client = capClient({ dataBundlePriceCap: 0n, defaultDataBundlePriceCap: 99n });
+    const client = capClient({ priceCapUSDCents: 0n, defaultPriceCapUSDCents: 99n });
 
-    expect(await eSIMWallet._dataBundlePriceCap(client, ESIM)).toBe(99n);
+    expect(await eSIMWallet._priceCapUSDCents(client, ESIM)).toBe(99n);
   });
 
   it("reports no ceiling as maxUint256, not as zero", async () => {
-    const client = capClient({ dataBundlePriceCap: 0n, defaultDataBundlePriceCap: 0n });
+    const client = capClient({ priceCapUSDCents: 0n, defaultPriceCapUSDCents: 0n });
 
-    expect(await eSIMWallet._dataBundlePriceCap(client, ESIM)).toBe(maxUint256);
+    expect(await eSIMWallet._priceCapUSDCents(client, ESIM)).toBe(maxUint256);
   });
 });

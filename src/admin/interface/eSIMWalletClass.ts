@@ -1,6 +1,6 @@
-import { Address, WalletClient } from "viem";
+import { Address, Hex, WalletClient } from "viem";
 import { DataBundleDetails } from "../../types.js";
-import { _buyDataBundle } from "../../logic/admin/eSIMWallet.eoa.js";
+import { _buyDataBundleWithToken } from "../../logic/admin/eSIMWallet.eoa.js";
 import {
     _eSIMWalletFactory,
     _eSIMUniqueIdentifier,
@@ -26,8 +26,8 @@ export class AdminESIMWalletSubPackage {
         this.eSIMWalletAddress = eSIMWalletAddress;
     }
 
-    buyDataBundle(dataBundleDetails: DataBundleDetails, value: bigint = 0n) {
-        return _buyDataBundle(this.walletClient, this.eSIMWalletAddress, dataBundleDetails, value);
+    buyDataBundleWithToken(dataBundleDetails: DataBundleDetails, asset: Hex, maxAmountIn: bigint, paymentReference: Hex) {
+        return _buyDataBundleWithToken(this.walletClient, this.eSIMWalletAddress, dataBundleDetails, asset, maxAmountIn, paymentReference);
     }
 
     // Reads: public storage getters and views

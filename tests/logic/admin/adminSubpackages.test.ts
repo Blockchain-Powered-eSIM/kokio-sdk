@@ -5,7 +5,7 @@ import { makeMockWalletClient } from "../../utils/mockClient.js";
 import { baseSepoliaFactoryAddresses } from "../../../src/logic/constants.js";
 import { ContractRevertError } from "../../../src/logic/errors.js";
 import { Registry } from "../../../src/abis/index.js";
-import type { DataBundleDetails } from "../../../src/types.js";
+import { Settlement, type DataBundleDetails } from "../../../src/types.js";
 
 import * as deviceWalletFactory from "../../../src/logic/admin/deviceWalletFactory.eoa.js";
 import * as eSIMWalletFactory from "../../../src/logic/admin/eSIMWalletFactory.eoa.js";
@@ -27,7 +27,13 @@ const OWNER_KEY: [Hex, Hex] = [
   "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C291",
   "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F1",
 ];
-const BUNDLE: DataBundleDetails = { dataBundleID: "bundle-1", dataBundlePrice: 1000n };
+const BUNDLE: DataBundleDetails = {
+  id: "0x0000000000000000000000000000000000000000000000000000000000000001" as Hex,
+  priceUSDCents: 1000n,
+  settlement: Settlement.ExternalWallet,
+};
+const ASSET = "0x5553444300000000000000000000000000000000000000000000000000000000" as Hex;
+const PAYMENT_REFERENCE = "0x000000000000000000000000000000000000000000000000000000000000ee11" as Hex;
 
 const F = baseSepoliaFactoryAddresses;
 const CHAIN_ID = 84532;
@@ -178,11 +184,11 @@ const eoaCases: Array<{
     args: [],
   },
   {
-    label: "registry._setDefaultDataBundlePriceCap",
-    run: (c) => registry._setDefaultDataBundlePriceCap(c, 5n * 10n ** 18n),
+    label: "registry._setDefaultPriceCapUSDCents",
+    run: (c) => registry._setDefaultPriceCapUSDCents(c, 50_000n),
     address: F.REGISTRY,
-    functionName: "setDefaultDataBundlePriceCap",
-    args: [5n * 10n ** 18n],
+    functionName: "setDefaultPriceCapUSDCents",
+    args: [50_000n],
   },
   // lazyWalletRegistry.eoa (target = LAZY_WALLET_REGISTRY)
   {
@@ -249,20 +255,11 @@ const eoaCases: Array<{
   },
   // eSIMWallet.eoa (target = eSIM instance address)
   {
-    label: "eSIMWallet._buyDataBundle (explicit value)",
-    run: (c) => eSIMWallet._buyDataBundle(c, ESIM, BUNDLE, 500n),
+    label: "eSIMWallet._buyDataBundleWithToken",
+    run: (c) => eSIMWallet._buyDataBundleWithToken(c, ESIM, BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE),
     address: ESIM,
-    functionName: "buyDataBundle",
-    args: [BUNDLE],
-    value: 500n,
-  },
-  {
-    label: "eSIMWallet._buyDataBundle (default value 0)",
-    run: (c) => eSIMWallet._buyDataBundle(c, ESIM, BUNDLE),
-    address: ESIM,
-    functionName: "buyDataBundle",
-    args: [BUNDLE],
-    value: 0n,
+    functionName: "buyDataBundleWithToken",
+    args: [BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE],
   },
 ];
 

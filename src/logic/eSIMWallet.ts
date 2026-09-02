@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData, maxUint256 } from "viem"
+import { Address, Hex, encodeFunctionData, maxUint256 } from "viem"
 import { DataBundleDetails } from "../types.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { MissingSmartWalletError } from "./errors.js";
@@ -42,7 +42,23 @@ export const _setPriceCapUSDCents = async (client: KokioSmartAccountClient, addr
     });
 }
 
-export const _buyDataBundle = async (client: KokioSmartAccountClient, address: Address, dataBundleDetails: DataBundleDetails) => {
+/**
+ * Buy a data bundle in `asset`, an ERC-20 the payment adapter accepts.
+ *
+ * `_maxAmountIn` is the most of `asset` the buyer will spend, in its smallest
+ * unit - read it from `paymentAdapter.quote(asset, dataBundleDetails.priceUSDCents)`
+ * first. `_paymentReference` ties this purchase to its offchain order and is
+ * spendable once per eSIM wallet; the caller supplies it rather than the SDK
+ * inventing one.
+ */
+export const _buyDataBundleWithToken = async (
+    client: KokioSmartAccountClient,
+    address: Address,
+    dataBundleDetails: DataBundleDetails,
+    asset: Hex,
+    maxAmountIn: bigint,
+    paymentReference: Hex
+) => {
 
     if(!client.account) throw new MissingSmartWalletError()
 
@@ -53,8 +69,30 @@ export const _buyDataBundle = async (client: KokioSmartAccountClient, address: A
             to: address,
             data: encodeFunctionData({
                 abi: ESIMWallet,
-                functionName: "buyDataBundle",
-                args: [dataBundleDetails]
+                functionName: "buyDataBundleWithToken",
+                args: [dataBundleDetails, asset, maxAmountIn, paymentReference]
+            })
+        }]
+    });
+}
+
+/**
+ * Send an ERC-20 held by this eSIM wallet back to its owning device wallet.
+ * `onlyDeviceWallet`.
+ */
+export const _sendTokenToDeviceWallet = async (client: KokioSmartAccountClient, address: Address, token: Address, amount: bigint) => {
+
+    if(!client.account) throw new MissingSmartWalletError()
+
+    // UserOp - `onlyDeviceWallet`.
+    return client.sendUserOperation({
+        account: client.account,
+        calls: [{
+            to: address,
+            data: encodeFunctionData({
+                abi: ESIMWallet,
+                functionName: "sendTokenToDeviceWallet",
+                args: [token, amount]
             })
         }]
     });
