@@ -295,6 +295,25 @@ export const _usedPaymentReferences = async (client: KokioSmartAccountClient, sc
 }
 
 /**
+ * Throws if `eSIMWallet` still has lazy-deployment history waiting to be copied
+ * in. `buyDataBundleWithToken` checks this itself before writing a new entry, so
+ * calling it first only turns that revert into a typed error ahead of a userOp.
+ */
+export const _requireLazyHistoryCopied = async (client: KokioSmartAccountClient, eSIMWallet: Address): Promise<void> => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    await client.readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "requireLazyHistoryCopied",
+        args: [eSIMWallet]
+    });
+}
+
+/**
  * Throws if a fiat user's eSIMs are already waiting on this device identifier.
  * Worth calling before a deployment: taking a reserved identifier strands the
  * lazy user, since the history copy, the wallet deployment and the device switch

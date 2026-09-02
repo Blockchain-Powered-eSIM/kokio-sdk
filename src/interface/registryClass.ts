@@ -14,6 +14,7 @@ import {
     _defaultPriceCapUSDCents,
     _paymentAdapter,
     _usedPaymentReferences,
+    _requireLazyHistoryCopied,
     _requireDeviceIdentifierNotReserved
 } from "../logic/registry.js"
 import { KokioSmartAccountClient } from "../types.js";
@@ -82,6 +83,10 @@ export class RegistrySubPackage {
 
     usedPaymentReferences (scopedReference: Hex) {
         return _usedPaymentReferences(this.client, scopedReference);
+    }
+
+    requireLazyHistoryCopied (eSIMWallet: Address) {
+        return _requireLazyHistoryCopied(this.client, eSIMWallet);
     }
 
     requireDeviceIdentifierNotReserved (deviceUniqueIdentifier: string) {

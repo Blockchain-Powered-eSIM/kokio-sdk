@@ -161,6 +161,26 @@ export const _historyEntriesCopied = async (client: WalletClient, eSIMIdentifier
     }) as Promise<bigint>;
 }
 
+/**
+ * History entries still waiting to be copied in for this eSIM. A wallet's own
+ * purchase paths (`buyDataBundleWithToken`, `recordSettledPurchase`) refuse a
+ * new entry while this is non-zero, since it would land ahead of history that
+ * has not arrived yet.
+ */
+export const _outstandingHistoryEntries = async (client: WalletClient, eSIMIdentifier: string): Promise<bigint> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+        abi: LazyWalletRegistry,
+        functionName: "outstandingHistoryEntries",
+        args: [eSIMIdentifier]
+    }) as Promise<bigint>;
+}
+
 /** Whether a device identifier has purchases recorded against it here. */
 export const _isDeviceIdentifierReserved = async (client: WalletClient, deviceIdentifier: string): Promise<boolean> => {
 
