@@ -39,7 +39,8 @@ is ever held in the app.
 
 You will need:
 
-- a viem `WalletClient` connected to the target chain,
+- a viem `WalletClient` connected to the target chain, carrying an `account`
+  and an explicit RPC URL (see the note under the example),
 - the passkey `credentialId` and `rpId` registered for the device,
 - a Pimlico API key and a gas policy id (used by the bundler and paymaster).
 
@@ -48,7 +49,11 @@ import { Kokio } from "kokio-sdk";
 import { createWalletClient, http } from "viem";
 import { baseSepolia } from "viem/chains";
 
-const walletClient = createWalletClient({ chain: baseSepolia, transport: http() });
+const walletClient = createWalletClient({
+  account: knownAddress,
+  chain: baseSepolia,
+  transport: http(rpcUrl),
+});
 
 const kokio = new Kokio(
   walletClient,
@@ -81,8 +86,19 @@ const session = new Kokio(
 
 // 4. Send a user operation. The passkey signs it on the device.
 const hash = await session.deviceWallet!.toggleAccessToFunds(eSIMWalletAddress, true);
-await smartAccountClient.waitForUserOperationTransaction({ hash });
+const receipt = await smartAccountClient.waitForUserOperationReceipt({ hash });
+if (!receipt.success) throw new Error("operation reverted");
 ```
+
+Two things about the wallet client. It has to carry an `account`:
+`getSmartWallet` refuses a client without one, though it never asks it for a
+signature, since the passkey signs everything. And give `http()` a real RPC
+URL, because the SDK reads `client.transport.url` to build the public client
+it uses for contract reads.
+
+Check `receipt.success`. An operation whose calls revert is still mined and
+still returns a receipt, so the await resolving is not on its own proof the
+write landed. `receipt.receipt.transactionHash` is the onchain transaction.
 
 The contract surfaces (`deviceWallet`, `eSIMWallet`, `deviceWalletFactory`,
 `eSIMWalletFactory`, `registry`, `paymentAdapter`, `P256Verifier`) are only
