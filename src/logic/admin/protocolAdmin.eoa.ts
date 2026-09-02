@@ -607,6 +607,27 @@ export const _setDefaultPriceCapUSDCentsCall = async (client: WalletClient, cap:
     };
 }
 
+/**
+ * Point the registry at a new payment adapter. Pass the result to `schedule`.
+ *
+ * Owner only, deliberately not the admin: the adapter holds the spent payment
+ * references, so an admin that could swap it would get an empty set back and
+ * could record every purchase a second time.
+ *
+ * `target` defaults to the registry.
+ */
+export const _setPaymentAdapterCall = async (client: WalletClient, paymentAdapter: Address, target?: Address): Promise<OwnerCall> => {
+
+    const values = await _resolve(client);
+
+    return {
+        address: target ?? values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: 'setPaymentAdapter',
+        args: [paymentAdapter],
+    };
+}
+
 // ---------------------------------------------------------------------------
 // Admin suspension payloads - the owner's route, aimed at the target contract
 // ---------------------------------------------------------------------------

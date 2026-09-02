@@ -24,6 +24,7 @@ import {
     _enableAdminCall,
     _unpauseCall,
     _setDefaultPriceCapUSDCentsCall,
+    _setPaymentAdapterCall,
 } from "../../logic/admin/protocolAdmin.eoa.js";
 import {
     _getMinDelay,
@@ -214,6 +215,10 @@ export class AdminProtocolAdminSubPackage {
 
     setDefaultPriceCapUSDCentsCall(cap: bigint, target?: Address) {
         return _setDefaultPriceCapUSDCentsCall(this.walletClient, cap, target);
+    }
+
+    setPaymentAdapterCall(paymentAdapter: Address, target?: Address) {
+        return _setPaymentAdapterCall(this.walletClient, paymentAdapter, target);
     }
 
     // Operation ids
