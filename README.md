@@ -80,15 +80,15 @@ const session = new Kokio(
 );
 
 // 4. Send a user operation. The passkey signs it on the device.
-const hash = await session.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, true);
+const hash = await session.deviceWallet!.toggleAccessToFunds(eSIMWalletAddress, true);
 await smartAccountClient.waitForUserOperationTransaction({ hash });
 ```
 
 The contract surfaces (`deviceWallet`, `eSIMWallet`, `deviceWalletFactory`,
-`eSIMWalletFactory`, `registry`, `P256Verifier`) are only present once a
-`smartAccountClient` is supplied, which is why the example constructs `Kokio`
-twice. Instance surfaces (`deviceWallet`, `eSIMWallet`) also need their contract
-address. They stay `undefined` until you pass it.
+`eSIMWalletFactory`, `registry`, `paymentAdapter`, `P256Verifier`) are only
+present once a `smartAccountClient` is supplied, which is why the example
+constructs `Kokio` twice. Instance surfaces (`deviceWallet`, `eSIMWallet`) also
+need their contract address. They stay `undefined` until you pass it.
 
 A device wallet often holds more than one eSIM wallet, and the app needs to
 switch which one it is acting on without resolving the smart account again.
@@ -97,7 +97,15 @@ reference:
 
 ```ts
 session.setESIMWalletAddress(anotherESIMWalletAddress);
-const hash = await session.eSIMWallet!.buyDataBundle({ dataBundleID, dataBundlePrice });
+const asset = "0x5553444300000000000000000000000000000000000000000000000000000000"; // "USDC"
+const priceUSDCents = 500n; // $5.00
+const maxAmountIn = await session.paymentAdapter!.quote(asset, priceUSDCents);
+const hash = await session.eSIMWallet!.buyDataBundleWithToken(
+  { id: bundleId, priceUSDCents, settlement: Settlement.DeviceWallet },
+  asset,
+  maxAmountIn,
+  paymentReference, // from the backend
+);
 ```
 
 `setDeviceWalletAddress` and `setESIMWalletAddress` each mutate the instance
@@ -151,7 +159,13 @@ admin.setDeviceWalletAddress(deviceWalletAddress);
 await admin.deviceWallet!.deployESIMWallet(salt);
 
 admin.setESIMWalletAddress(eSIMWalletAddress);
-await admin.eSIMWallet!.buyDataBundle({ dataBundleID, dataBundlePrice });
+const maxAmountIn = await admin.paymentAdapter.quote(asset, priceUSDCents);
+await admin.eSIMWallet!.buyDataBundleWithToken(
+  { id: bundleId, priceUSDCents, settlement: 0 }, // 0 = DeviceWallet pays
+  asset,
+  maxAmountIn,
+  paymentReference,
+);
 ```
 
 `setDeviceWalletAddress`, `setESIMWalletAddress`, and `setWalletClient` each mutate

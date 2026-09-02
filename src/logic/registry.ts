@@ -103,8 +103,9 @@ export const _isDeviceIdentifierAlreadyUsed = async (client: KokioSmartAccountCl
 }
 
 /**
- * Whether the protocol is paused. While true, every ETH-moving path on the device
- * wallets and eSIM wallets reverts, so check this before offering a purchase.
+ * Whether the protocol is paused. While true, the purchase and token-pull paths
+ * on the device wallets and eSIM wallets revert, so check this before offering a
+ * purchase.
  */
 export const _paused = async (client: KokioSmartAccountClient): Promise<boolean> => {
 

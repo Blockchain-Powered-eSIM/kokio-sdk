@@ -3,10 +3,10 @@
 `admin.protocolAdmin`
 
 The timelock that owns `registry`, `lazyWalletRegistry`, `deviceWalletFactory`,
-and `eSIMWalletFactory`. Any change to those four contracts that needs
-`onlyOwner` goes through here: a proposer announces it, a delay passes, and
-anyone can then run it. This is what stands between a single compromised key
-and an instant change to any of the four contracts it owns.
+`eSIMWalletFactory`, and `paymentAdapter`. Any change to those five contracts
+that needs `onlyOwner` goes through here: a proposer announces it, a delay
+passes, and anyone can then run it. This is what stands between a single
+compromised key and an instant change to any of the five contracts it owns.
 
 Four role-scoped surfaces do the actual work:
 
@@ -284,16 +284,32 @@ const scheduled = await admin.protocolAdmin.proposer.schedule(call);
 
 Returns: `Promise<OwnerCall>`.
 
-## setDefaultDataBundlePriceCapCall
+## setDefaultPriceCapUSDCentsCall
 
-Builds the call payload to set the registry's fallback price cap. A zero
-cap only fails when this eventually executes, not when it is scheduled, so
-a mistake here costs the whole delay before it is caught.
+Builds the call payload to set the registry's fallback price cap, in USD
+cents. A zero cap only fails when this eventually executes, not when it is
+scheduled, so a mistake here costs the whole delay before it is caught.
 
 `target` defaults to the registry.
 
 ```ts
-const call = await admin.protocolAdmin.setDefaultDataBundlePriceCapCall(cap);
+const call = await admin.protocolAdmin.setDefaultPriceCapUSDCentsCall(cap);
+const scheduled = await admin.protocolAdmin.proposer.schedule(call);
+```
+
+Returns: `Promise<OwnerCall>`.
+
+## setPaymentAdapterCall
+
+Builds the call payload to point the registry at a new payment adapter.
+Owner only, deliberately not the admin: the adapter holds the spent payment
+references, so an admin that could swap it would get an empty set back and
+could record every purchase a second time.
+
+`target` defaults to the registry.
+
+```ts
+const call = await admin.protocolAdmin.setPaymentAdapterCall(paymentAdapterAddress);
 const scheduled = await admin.protocolAdmin.proposer.schedule(call);
 ```
 

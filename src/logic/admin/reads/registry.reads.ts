@@ -65,8 +65,8 @@ export const _adminDisabled = async (client: WalletClient): Promise<boolean> => 
 }
 
 /**
- * Whether the protocol is paused. While true, every ETH-moving path on the
- * device wallets and eSIM wallets reverts `ProtocolPaused`.
+ * Whether the protocol is paused. While true, the purchase and token-pull
+ * paths on the device wallets and eSIM wallets revert `ProtocolPaused`.
  */
 export const _paused = async (client: WalletClient): Promise<boolean> => {
 

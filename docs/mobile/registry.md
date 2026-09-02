@@ -50,9 +50,9 @@ Returns: `Promise<boolean>`.
 
 ## paused
 
-Checks whether the whole protocol is paused. While paused, every path that
-moves ETH on the device wallets and eSIM wallets reverts. Check this before
-offering a purchase.
+Checks whether the whole protocol is paused. While paused, the purchase and
+token-pull paths on the device wallets and eSIM wallets revert. Check this
+before offering a purchase.
 
 ```ts
 const paused = await kokio.registry!.paused();
@@ -139,16 +139,54 @@ const wallet = await kokio.registry!.eSIMWalletForIdentifier(eSIMUniqueIdentifie
 
 Returns: `Promise<Address>`, zero if nobody holds it.
 
-## defaultDataBundlePriceCap
+## defaultPriceCapUSDCents
 
-Reads the fallback price ceiling, in wei, for a wallet that has not set its
-own cap.
+Reads the fallback price ceiling, in USD cents, for a wallet that has not set
+its own cap.
 
 ```ts
-const cap = await kokio.registry!.defaultDataBundlePriceCap();
+const cap = await kokio.registry!.defaultPriceCapUSDCents();
 ```
 
 Returns: `Promise<bigint>`.
+
+## paymentAdapter
+
+Reads the payment adapter this registry currently points at. Read this
+before going to `kokio.paymentAdapter`, which targets whatever address you
+pass it rather than resolving the current one itself.
+
+```ts
+const adapter = await kokio.registry!.paymentAdapter();
+```
+
+Returns: `Promise<Address>`.
+
+## usedPaymentReferences
+
+Checks whether a payment reference has already been spent for an eSIM
+wallet. Scoped per wallet: pass
+`keccak256(abi.encode(eSIMWalletAddress, paymentReference))`, not the bare
+reference.
+
+```ts
+const used = await kokio.registry!.usedPaymentReferences(scopedReference);
+```
+
+Returns: `Promise<boolean>`.
+
+## requireLazyHistoryCopied
+
+Throws if an eSIM wallet still has lazy-deployment history waiting to be
+copied in. `buyDataBundleWithToken` checks this itself before writing a new
+entry, so calling it first only turns that revert into a typed error ahead of
+a user operation.
+
+```ts
+await kokio.registry!.requireLazyHistoryCopied(eSIMWalletAddress);
+```
+
+Returns: `Promise<void>`.
 
 ## requireDeviceIdentifierNotReserved
 

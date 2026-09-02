@@ -129,13 +129,13 @@ export const _enableAdmin = async (client: WalletClient) => {
 }
 
 /**
- * Stop the ETH-moving paths on every device wallet and eSIM wallet.
- * `onlyESIMWalletAdmin`, so this is the one emergency lever the backend key can
- * pull on its own.
+ * Stop the purchase and token-pull paths on every device wallet and eSIM
+ * wallet. `onlyESIMWalletAdmin`, so this is the one emergency lever the backend
+ * key can pull on its own.
  *
  * It cannot release it again: `_unpause` is `onlyOwner`. That split is what stops
- * a compromised backend key holding user funds. Owners can still spend their own
- * ETH through their device wallet's `execute`, which a pause never reaches.
+ * a compromised backend key holding user funds. Owners can still move their own
+ * funds through their device wallet's `execute`, which a pause never reaches.
  */
 export const _pause = async (client: WalletClient) => {
 

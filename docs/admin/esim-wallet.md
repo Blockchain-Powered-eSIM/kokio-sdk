@@ -7,23 +7,33 @@ The EOA-signed view of one eSIM wallet. Only present once bound with
 
 ```ts
 admin.setESIMWalletAddress(eSIMWalletAddress);
-const hash = await admin.eSIMWallet!.buyDataBundle({ dataBundleID, dataBundlePrice });
+const asset = "0x5553444300000000000000000000000000000000000000000000000000000000"; // "USDC" as bytes32
+const maxAmountIn = await admin.paymentAdapter.quote(asset, 500n);
+const hash = await admin.eSIMWallet!.buyDataBundleWithToken(
+  { id: bundleId, priceUSDCents: 500n, settlement: 0 },
+  asset,
+  maxAmountIn,
+  paymentReference,
+);
 ```
 
-## buyDataBundle
+## buyDataBundleWithToken
 
 Buys a data bundle for this eSIM as the admin, rather than as the eSIM's own
-device wallet. Use this when the backend is paying for or triggering a
-purchase on the user's behalf.
+device wallet. Use this when the backend is triggering a purchase on the
+user's behalf and the device wallet's own token balance pays for it.
 
-`value` is optional. Pass `0n` (the default) to have the contract pull the
-price from the device wallet's own balance, or forward the price directly to
-pay it from the admin EOA instead.
+Read `admin.paymentAdapter.quote(asset, priceUSDCents)` first to size
+`maxAmountIn`, the most of `asset` this purchase may spend, in its smallest
+unit. `paymentReference` is a backend-issued id, spendable once per eSIM
+wallet.
 
 ```ts
-const hash = await admin.eSIMWallet!.buyDataBundle(
-  { dataBundleID: "5gb-30d", dataBundlePrice: price },
-  0n, // pull the price from the device wallet's balance
+const hash = await admin.eSIMWallet!.buyDataBundleWithToken(
+  { id: bundleId, priceUSDCents: 500n, settlement: 0 }, // 0 = DeviceWallet pays
+  asset,
+  maxAmountIn,
+  paymentReference,
 );
 ```
 
@@ -69,15 +79,15 @@ const owner = await admin.eSIMWallet!.owner();
 
 Returns: `Promise<Address>`.
 
-## dataBundlePriceCap
+## priceCapUSDCents
 
-Reads the price ceiling stored on this wallet directly, in wei. Unlike the
-mobile surface's `dataBundlePriceCap`, this does not fall back to the
+Reads the price ceiling stored on this wallet directly, in USD cents. Unlike
+the mobile surface's `priceCapUSDCents`, this does not fall back to the
 registry's default when the wallet has none of its own, it returns whatever
 this wallet's own storage holds.
 
 ```ts
-const cap = await admin.eSIMWallet!.dataBundlePriceCap();
+const cap = await admin.eSIMWallet!.priceCapUSDCents();
 ```
 
 Returns: `Promise<bigint>`.
@@ -100,4 +110,7 @@ Reads one past purchase by its position in the list.
 const purchase = await admin.eSIMWallet!.transactionHistory(0n);
 ```
 
-Returns: `Promise<DataBundleDetails>`, `{ dataBundleID, dataBundlePrice }`.
+Returns: `Promise<DataBundleDetails>`, `{ id, priceUSDCents, settlement }`.
+`settlement` names which contract, if any, saw the money move: `0` for the
+device wallet's own balance, `1` for an external wallet, `2` for fiat. Only
+`0` is provable onchain.

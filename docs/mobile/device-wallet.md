@@ -9,7 +9,7 @@ Only present once `Kokio` has both a `smartAccountClient` and a
 operation signed by the passkey.
 
 ```ts
-const hash = await kokio.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, true);
+const hash = await kokio.deviceWallet!.toggleAccessToFunds(eSIMWalletAddress, true);
 await smartAccountClient.waitForUserOperationTransaction({ hash });
 ```
 
@@ -35,8 +35,8 @@ Adds an eSIM wallet this device already owns onto the device wallet's list.
 Use it after an eSIM wallet transfer lands, once the eSIM wallet's `owner()`
 already points at this device wallet.
 
-This never grants ETH access on its own. Call `toggleAccessToETH` afterwards
-if the eSIM wallet should be able to pull ETH.
+This never grants fund access on its own. Call `toggleAccessToFunds`
+afterwards if the eSIM wallet should be able to pull tokens.
 
 ```ts
 const hash = await kokio.deviceWallet!.addESIMWallet(eSIMWalletAddress);
@@ -59,14 +59,14 @@ const hash = await kokio.deviceWallet!.removeESIMWallet(eSIMWalletAddress, true)
 
 Returns: `Promise<Hash>`.
 
-## toggleAccessToETH
+## toggleAccessToFunds
 
-Turns on or off whether an eSIM wallet may pull ETH held in this device
+Turns on or off whether an eSIM wallet may pull tokens held in this device
 wallet. Use it when the user wants to fund a specific eSIM's purchases, or to
 take that permission back.
 
 ```ts
-const hash = await kokio.deviceWallet!.toggleAccessToETH(eSIMWalletAddress, true);
+const hash = await kokio.deviceWallet!.toggleAccessToFunds(eSIMWalletAddress, true);
 ```
 
 Returns: `Promise<Hash>`.
@@ -151,14 +151,14 @@ const holds = await kokio.deviceWallet!.isValidESIMWallet(eSIMWalletAddress);
 
 Returns: `Promise<boolean>`.
 
-## canPullETH
+## canPullFunds
 
-Checks whether an eSIM wallet is currently allowed to pull ETH from this
-device wallet. Starts `false` for every eSIM wallet until `toggleAccessToETH`
-turns it on.
+Checks whether an eSIM wallet is currently allowed to pull tokens from this
+device wallet. Starts `false` for every eSIM wallet until
+`toggleAccessToFunds` turns it on.
 
 ```ts
-const allowed = await kokio.deviceWallet!.canPullETH(eSIMWalletAddress);
+const allowed = await kokio.deviceWallet!.canPullFunds(eSIMWalletAddress);
 ```
 
 Returns: `Promise<boolean>`.

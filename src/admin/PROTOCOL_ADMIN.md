@@ -1,9 +1,9 @@
 # ProtocolAdmin
 
 `ProtocolAdmin` is the timelock that owns `Registry`, `LazyWalletRegistry`,
-`DeviceWalletFactory` and `ESIMWalletFactory`. Both wallet beacons sit under the
-two factories, so owning the factories reaches every device wallet and every eSIM
-wallet.
+`DeviceWalletFactory`, `ESIMWalletFactory` and `PaymentAdapter`. Both wallet
+beacons sit under the two factories, so owning the factories reaches every
+device wallet and every eSIM wallet.
 
 Every owner change goes one way. A proposer schedules it, the delay runs out, and
 anyone executes it. Guardians are the exception: three powers, no wait, and each
@@ -217,15 +217,16 @@ return an `OwnerCall` instead of sending a transaction.
 | `updateDelayCall(newDelay)` | Change the delay. Still clamped by `minDelayFloor`. |
 | `disableAndNominateCall(target, newAdmin)` | Suspend a contract's admin and nominate its replacement in one operation. |
 
-Four more builders exist for the registry's own owner functions. These are aimed
-at the registry, not at the timelock:
+Five more builders exist for the registry's own owner functions. These are
+aimed at the registry, not at the timelock:
 
 | Builder | Effect |
 |---|---|
 | `disableAdminCall(target?)` | Suspend the admin key. Defaults to the registry. |
 | `enableAdminCall(target?)` | Lift a suspension. Defaults to the registry. |
 | `unpauseCall(target?)` | Release the protocol pause. Defaults to the registry. |
-| `setDefaultDataBundlePriceCapCall(cap, target?)` | Set the fallback price ceiling in wei. Zero reverts. |
+| `setDefaultPriceCapUSDCentsCall(cap, target?)` | Set the fallback price ceiling in USD cents. Zero reverts. |
+| `setPaymentAdapterCall(paymentAdapter, target?)` | Point the registry at a new payment adapter. Defaults to the registry. |
 
 There is no `pauseCall`. Tripping the pause is `onlyESIMWalletAdmin`, so the
 timelock cannot do it at all: that is the backend key's own lever, and the split
@@ -233,10 +234,15 @@ is what stops one hot key both freezing funds and releasing them. `unpauseCall`
 is the scheduled release, and a guardian holding `unpauseInstantly` is the one
 that does not wait.
 
-`setDefaultDataBundlePriceCapCall` rejecting zero is checked on execution, not on
+`setDefaultPriceCapUSDCentsCall` rejecting zero is checked on execution, not on
 scheduling, so a zero costs the whole delay before it fails.
 
-All eight go the same route:
+The payment adapter's own owner functions (`registerAsset`, `updateAsset`,
+`transferOwnership`, `upgradeToAndCall`) have their own builders on
+`admin.paymentAdapter`, mirroring the pattern the other four owned singletons
+already follow, rather than living here.
+
+All nine go the same route:
 
 ```ts
 const op = await timelock.proposer.schedule(await timelock.disableAdminCall());

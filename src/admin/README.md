@@ -20,8 +20,8 @@ transaction.
   group. Most match a wrapper in the mobile [../interface/](../interface/), but
   two are admin-only: `lazyWalletRegistryClass.ts` handles fiat/lazy
   provisioning, and `protocolAdminClass.ts` wraps the timelock that owns
-  `registry`, `lazyWalletRegistry`, `deviceWalletFactory`, and
-  `eSIMWalletFactory`.
+  `registry`, `lazyWalletRegistry`, `deviceWalletFactory`,
+  `eSIMWalletFactory`, and `paymentAdapter`.
 - The wrappers forward to the EOA logic functions in [../logic/admin/](../logic/admin/):
   the `*.eoa.ts` files for writes, and [../logic/admin/reads/](../logic/admin/reads/)
   for reads.

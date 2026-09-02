@@ -27,6 +27,10 @@ Call this first, before deploying anything: the deploy step refuses a
 device that already has a wallet, and expects its history to already be
 recorded.
 
+Nothing here saw any of these purchases move money, so every entry's
+`settlement` must be `1` (`ExternalWallet`) or `2` (`Fiat`); the contract
+reverts `SettlementNotAsserted` on `0` (`DeviceWallet`).
+
 ```ts
 const hash = await admin.lazyWalletRegistry.batchPopulateHistory(
   deviceUniqueIdentifiers,     // string[]
@@ -219,6 +223,19 @@ const copied = await admin.lazyWalletRegistry.historyEntriesCopied(eSIMIdentifie
 
 Returns: `Promise<bigint>`.
 
+## outstandingHistoryEntries
+
+Reads how many of an eSIM's stored purchase entries are still waiting to be
+copied in. `buyDataBundleWithToken` and `recordSettledPurchase` both refuse a
+new entry while this is non-zero, since it would land ahead of history that
+has not arrived yet.
+
+```ts
+const outstanding = await admin.lazyWalletRegistry.outstandingHistoryEntries(eSIMIdentifier);
+```
+
+Returns: `Promise<bigint>`.
+
 ## isDeviceIdentifierReserved
 
 Checks whether a device identifier has purchase history recorded against it
@@ -252,7 +269,7 @@ reverts.
 const purchase = await admin.lazyWalletRegistry.deviceIdentifierToESIMDetails(deviceIdentifier, eSIMIdentifier, 0n);
 ```
 
-Returns: `Promise<DataBundleDetails>`, `{ dataBundleID, dataBundlePrice }`.
+Returns: `Promise<DataBundleDetails>`, `{ id, priceUSDCents, settlement }`.
 
 ## eSIMIdentifiersAssociatedWithDeviceIdentifier
 
