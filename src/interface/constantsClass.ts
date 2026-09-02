@@ -2,28 +2,16 @@ import { WalletClient } from "viem";
 import {
     _extractChainID,
     _getChainSpecificConstants,
-    mainnetFactoryAddresses,
-    sepoliaFactoryAddresses,
-    optimismMainnetFactoryAddresses,
-    optimismSepoliaFactoryAddresses,
     baseMainnetFactoryAddresses,
     baseSepoliaFactoryAddresses,
-    arbitrumOneFactoryAddresses,
-    arbitrumSepoliaFactoryAddresses,
     customErrors,
     chainSpecifcConstants
 } from "../logic/constants.js"
 
 export interface KokioConstants {
     factoryAddresses:
-            typeof sepoliaFactoryAddresses |
-            typeof mainnetFactoryAddresses |
-            typeof optimismMainnetFactoryAddresses |
-            typeof optimismSepoliaFactoryAddresses |
             typeof baseMainnetFactoryAddresses |
-            typeof baseSepoliaFactoryAddresses |
-            typeof arbitrumOneFactoryAddresses |
-            typeof arbitrumSepoliaFactoryAddresses;
+            typeof baseSepoliaFactoryAddresses;
     chain: chainSpecifcConstants["chain"];
     rpcURL: string;
     pimlicoRpcURL: string;

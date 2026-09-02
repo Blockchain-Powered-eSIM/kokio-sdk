@@ -58,13 +58,13 @@ const holds = await admin.deviceWallet!.isValidESIMWallet(eSIMWalletAddress);
 
 Returns: `Promise<boolean>`.
 
-## canPullETH
+## canPullFunds
 
-Checks whether an eSIM wallet is currently allowed to pull ETH from this
+Checks whether an eSIM wallet is currently allowed to pull tokens from this
 device wallet.
 
 ```ts
-const allowed = await admin.deviceWallet!.canPullETH(eSIMWalletAddress);
+const allowed = await admin.deviceWallet!.canPullFunds(eSIMWalletAddress);
 ```
 
 Returns: `Promise<boolean>`.

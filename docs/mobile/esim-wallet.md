@@ -11,34 +11,66 @@ Writes here need the device wallet that owns this eSIM wallet to be the
 signer, which is exactly what a passkey user operation already is.
 
 ```ts
-const hash = await kokio.eSIMWallet!.buyDataBundle({ dataBundleID, dataBundlePrice });
+const asset = "0x5553444300000000000000000000000000000000000000000000000000000000"; // "USDC" as bytes32
+const dataBundleDetails = { id: bundleId, priceUSDCents: 500n, settlement: Settlement.DeviceWallet };
+const maxAmountIn = await kokio.paymentAdapter!.quote(asset, dataBundleDetails.priceUSDCents);
+const hash = await kokio.eSIMWallet!.buyDataBundleWithToken(dataBundleDetails, asset, maxAmountIn, paymentReference);
 ```
 
-## buyDataBundle
+## buyDataBundleWithToken
 
-Buys a data bundle for this eSIM. Use this for the everyday purchase flow.
+Buys a data bundle for this eSIM, paid for in an ERC-20 the payment adapter
+accepts (USDC on Base Sepolia today). Use this for the everyday purchase
+flow.
 
-Check `dataBundlePriceCap()` first: a price above the cap reverts.
+Check `priceCapUSDCents()` first: a price above the cap reverts. Read
+`kokio.paymentAdapter!.quote(asset, priceUSDCents)` to size `maxAmountIn` -
+the most of `asset` this purchase may spend, in its smallest unit. Nothing
+moves the price between the quote and the purchase today, so quoting and
+passing that value straight through is enough; a swap path may show up later,
+which is why the contract takes a max rather than an exact amount.
+
+`paymentReference` ties the purchase to its offchain order and is spendable
+once per eSIM wallet. The backend hands this to the app; the SDK never
+invents one.
 
 ```ts
-const hash = await kokio.eSIMWallet!.buyDataBundle({
-  dataBundleID: "5gb-30d",
-  dataBundlePrice: price, // must not exceed dataBundlePriceCap()
-});
+const hash = await kokio.eSIMWallet!.buyDataBundleWithToken(
+  {
+    id: bundleId, // bytes32
+    priceUSDCents: 500n, // $5.00, must not exceed priceCapUSDCents()
+    settlement: Settlement.DeviceWallet, // this wallet's own balance pays
+  },
+  asset, // bytes32 symbol, e.g. "USDC"
+  maxAmountIn, // from paymentAdapter.quote(asset, priceUSDCents)
+  paymentReference, // bytes32, from the backend
+);
 ```
 
 Returns: `Promise<Hash>`, a user operation hash.
 
-## setDataBundlePriceCap
+## sendTokenToDeviceWallet
 
-Sets the most this eSIM wallet may be charged for one bundle. Use it to give
-the user control over their own spending limit, separate from whatever the
-admin sets as the default.
+Sends an ERC-20 held by this eSIM wallet back to its owning device wallet.
+Nothing else moves a stray token balance off this wallet, so use this when one
+is stuck here after a handover or a refund.
+
+```ts
+const hash = await kokio.eSIMWallet!.sendTokenToDeviceWallet(tokenAddress, amount);
+```
+
+Returns: `Promise<Hash>`.
+
+## setPriceCapUSDCents
+
+Sets the most this eSIM wallet may be charged for one bundle, in USD cents.
+Use it to give the user control over their own spending limit, separate from
+whatever the admin sets as the default.
 
 Pass `0n` to hand control back to the registry's default cap.
 
 ```ts
-const hash = await kokio.eSIMWallet!.setDataBundlePriceCap(cap);
+const hash = await kokio.eSIMWallet!.setPriceCapUSDCents(50_000n); // $500.00
 ```
 
 Returns: `Promise<Hash>`.
@@ -68,7 +100,10 @@ Returns: `Promise<Hash>`.
 
 ## sendETHToDeviceWallet
 
-Sends ETH held by this eSIM wallet back to its owning device wallet.
+Sends ETH held by this eSIM wallet back to its owning device wallet. Data
+bundles no longer cost ETH, but the wallet still accepts plain ETH transfers
+(that is how a device wallet tops it up), so this stays around for moving
+that balance back.
 
 ```ts
 const hash = await kokio.eSIMWallet!.sendETHToDeviceWallet(amount);
@@ -76,17 +111,18 @@ const hash = await kokio.eSIMWallet!.sendETHToDeviceWallet(amount);
 
 Returns: `Promise<Hash>`.
 
-## dataBundlePriceCap
+## priceCapUSDCents
 
 Reads the price ceiling that actually applies to this wallet's next
-purchase, in wei. Check this before naming a price on `buyDataBundle`.
+purchase, in USD cents. Check this before naming a price on
+`buyDataBundleWithToken`.
 
 If the wallet has no cap of its own it falls back to the registry's default,
-and if neither is set it returns the maximum `uint256` rather than zero, so a
+and if neither is set it returns the maximum `uint64` rather than zero, so a
 missing cap never reads as "no purchases allowed."
 
 ```ts
-const cap = await kokio.eSIMWallet!.dataBundlePriceCap();
+const cap = await kokio.eSIMWallet!.priceCapUSDCents();
 ```
 
 Returns: `Promise<bigint>`.
@@ -122,4 +158,7 @@ from the wallet's purchase events.
 const purchase = await kokio.eSIMWallet!.transactionHistory(0n);
 ```
 
-Returns: `Promise<DataBundleDetails>`, `{ dataBundleID, dataBundlePrice }`.
+Returns: `Promise<DataBundleDetails>`, `{ id, priceUSDCents, settlement }`.
+`settlement` names which contract, if any, saw the money move: `0` for this
+wallet's own balance, `1` for an external wallet, `2` for fiat. Only `0` is
+provable onchain; the admin's word is the only check on the other two.

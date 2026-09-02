@@ -65,8 +65,8 @@ export const _adminDisabled = async (client: WalletClient): Promise<boolean> => 
 }
 
 /**
- * Whether the protocol is paused. While true, every ETH-moving path on the
- * device wallets and eSIM wallets reverts `ProtocolPaused`.
+ * Whether the protocol is paused. While true, the purchase and token-pull
+ * paths on the device wallets and eSIM wallets revert `ProtocolPaused`.
  */
 export const _paused = async (client: WalletClient): Promise<boolean> => {
 
@@ -83,10 +83,10 @@ export const _paused = async (client: WalletClient): Promise<boolean> => {
 }
 
 /**
- * The fallback price ceiling in wei, applied to any eSIM wallet holding no cap of
- * its own. Never zero.
+ * The fallback price ceiling in USD cents, applied to any eSIM wallet holding no
+ * cap of its own. Never zero.
  */
-export const _defaultDataBundlePriceCap = async (client: WalletClient): Promise<bigint> => {
+export const _defaultPriceCapUSDCents = async (client: WalletClient): Promise<bigint> => {
 
     const chainID = await client.getChainId();
     const rpcURL = client.transport.url;
@@ -95,7 +95,7 @@ export const _defaultDataBundlePriceCap = async (client: WalletClient): Promise<
     return client.extend(publicActions).readContract({
         address: values.factoryAddresses.REGISTRY,
         abi: Registry,
-        functionName: "defaultDataBundlePriceCap",
+        functionName: "defaultPriceCapUSDCents",
         args: []
     }) as Promise<bigint>;
 }
@@ -498,4 +498,38 @@ export const _upgradeInterfaceVersion = async (client: WalletClient): Promise<st
         functionName: "UPGRADE_INTERFACE_VERSION",
         args: []
     }) as Promise<string>;
+}
+
+/** The payment adapter this registry currently points at. */
+export const _paymentAdapter = async (client: WalletClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "paymentAdapter",
+        args: []
+    }) as Promise<Address>;
+}
+
+/**
+ * Whether a payment reference has already been spent for an eSIM wallet.
+ * Scoped per wallet: pass the same `keccak256(abi.encode(eSIMWallet, paymentReference))`
+ * the contract keys `usedPaymentReferences` by, not the bare reference.
+ */
+export const _usedPaymentReferences = async (client: WalletClient, scopedReference: Hex): Promise<boolean> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "usedPaymentReferences",
+        args: [scopedReference]
+    }) as Promise<boolean>;
 }

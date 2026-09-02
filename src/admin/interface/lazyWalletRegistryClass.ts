@@ -19,6 +19,7 @@ import {
     _eSIMIdentifiersAssociatedWithDeviceIdentifier,
     _eSIMWalletsDeployed,
     _historyEntriesCopied,
+    _outstandingHistoryEntries,
     _isDeviceIdentifierReserved,
     _isESIMIdentifierReserved,
     _lazyDeployedESIMWallet,
@@ -140,6 +141,10 @@ export class AdminLazyWalletRegistrySubPackage {
     }
 
     /** History cursor, per eSIM. */
+    outstandingHistoryEntries(eSIMIdentifier: string) {
+        return _outstandingHistoryEntries(this.walletClient, eSIMIdentifier);
+    }
+
     historyEntriesCopied(eSIMIdentifier: string) {
         return _historyEntriesCopied(this.walletClient, eSIMIdentifier);
     }

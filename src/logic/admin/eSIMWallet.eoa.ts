@@ -1,24 +1,29 @@
-import { Address, WalletClient } from "viem";
+import { Address, Hex, WalletClient } from "viem";
 import { _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { ESIMWallet } from "../../abis/index.js";
 import { DataBundleDetails } from "../../types.js";
 
 // Admin-EOA logic targeting a specific `ESIMWallet` instance (address passed in).
-// `buyDataBundle` is `onlyDeviceWalletOrESIMWalletAdmin`, so the admin EOA can
-// call it directly.
+// `buyDataBundleWithToken` is `onlyDeviceWalletOrESIMWalletAdmin`, so the admin
+// EOA can call it directly.
 
 /**
- * Buy a data bundle for an eSIM wallet. `onlyDeviceWalletOrESIMWalletAdmin`,
- * `payable`. `value` is optional: the contract pulls any shortfall from the
- * device wallet's balance, so an admin can pass `0n` when the wallet is funded,
- * or forward `dataBundlePrice` to pay directly.
+ * Buy a data bundle in `asset`, an ERC-20 the payment adapter accepts.
+ * `onlyDeviceWalletOrESIMWalletAdmin`.
+ *
+ * `maxAmountIn` is the most of `asset` the buyer will spend, in its smallest
+ * unit - read it from `paymentAdapter.quote(asset, dataBundleDetails.priceUSDCents)`
+ * first. `paymentReference` ties this purchase to its offchain order and is
+ * spendable once per eSIM wallet.
  */
-export const _buyDataBundle = async (
+export const _buyDataBundleWithToken = async (
     client: WalletClient,
     eSIMWalletAddress: Address,
     dataBundleDetails: DataBundleDetails,
-    value: bigint = 0n
+    asset: Hex,
+    maxAmountIn: bigint,
+    paymentReference: Hex
 ) => {
 
     const chainID = await client.getChainId();
@@ -32,8 +37,7 @@ export const _buyDataBundle = async (
         chain: values.chain,
         account: client.account.address,
         abi: ESIMWallet,
-        functionName: 'buyDataBundle',
-        args: [dataBundleDetails],
-        value
+        functionName: 'buyDataBundleWithToken',
+        args: [dataBundleDetails, asset, maxAmountIn, paymentReference]
     });
 }

@@ -97,13 +97,38 @@ const hash = await admin.registry.assignESIMIdentifier(eSIMWalletAddress, eSIMUn
 
 Returns: `Promise<Hash>`.
 
+## recordSettledPurchase
+
+Records a data bundle paid for outside the protocol, by card or an external
+wallet. Use this once the backend has confirmed a payment through whatever
+rail took it.
+
+No money moves through this call, so `settlement` on the bundle details must
+be `1` (`ExternalWallet`) or `2` (`Fiat`), never `0` (`DeviceWallet`): the
+contract reverts `SettlementNotAsserted` on that, since nothing here proves
+the device wallet actually paid. `tokenAmount` is recorded for offchain
+matching and never checked against `priceUSDCents`. `paymentReference` is
+spendable once per eSIM wallet.
+
+```ts
+const hash = await admin.registry.recordSettledPurchase(
+  eSIMWalletAddress,
+  { id: bundleId, priceUSDCents: 500n, settlement: 2 }, // 2 = Fiat
+  asset,
+  tokenAmount,
+  paymentReference,
+);
+```
+
+Returns: `Promise<Hash>`.
+
 ## pause
 
-Stops every ETH-moving path on every device wallet and eSIM wallet,
-protocol-wide. This is the one emergency lever the admin key can pull on its
-own: it can pause, but only the owner (the `protocolAdmin` timelock on the
-live deployment) can unpause. Use it if something looks wrong and needs an
-immediate stop.
+Stops the purchase and token-pull paths on every device wallet and eSIM
+wallet, protocol-wide. This is the one emergency lever the admin key can pull
+on its own: it can pause, but only the owner (the `protocolAdmin` timelock on
+the live deployment) can unpause. Use it if something looks wrong and needs
+an immediate stop.
 
 ```ts
 const hash = await admin.registry.pause();
@@ -126,16 +151,16 @@ const hash = await admin.registry.unpause();
 
 Returns: `Promise<Hash>`.
 
-## setDefaultDataBundlePriceCap
+## setDefaultPriceCapUSDCents
 
-Sets the fallback price ceiling every eSIM wallet uses when it has no cap of
-its own.
+Sets the fallback price ceiling, in USD cents, every eSIM wallet uses when it
+has no cap of its own.
 
 Zero reverts: a zero cap would read as "no limit" for every wallet without
 one of its own, so the contract refuses it outright.
 
 ```ts
-const hash = await admin.registry.setDefaultDataBundlePriceCap(cap);
+const hash = await admin.registry.setDefaultPriceCapUSDCents(cap);
 ```
 
 Returns: `Promise<Hash>`.
@@ -343,16 +368,39 @@ const paused = await admin.registry.paused();
 
 Returns: `Promise<boolean>`.
 
-## defaultDataBundlePriceCap
+## defaultPriceCapUSDCents
 
-Reads the fallback price ceiling, in wei, for a wallet with no cap of its
-own.
+Reads the fallback price ceiling, in USD cents, for a wallet with no cap of
+its own.
 
 ```ts
-const cap = await admin.registry.defaultDataBundlePriceCap();
+const cap = await admin.registry.defaultPriceCapUSDCents();
 ```
 
 Returns: `Promise<bigint>`.
+
+## paymentAdapter
+
+Reads the payment adapter this registry currently points at.
+
+```ts
+const adapter = await admin.registry.paymentAdapter();
+```
+
+Returns: `Promise<Address>`.
+
+## usedPaymentReferences
+
+Checks whether a payment reference has already been spent for an eSIM
+wallet. Scoped per wallet: pass
+`keccak256(abi.encode(eSIMWalletAddress, paymentReference))`, not the bare
+reference.
+
+```ts
+const used = await admin.registry.usedPaymentReferences(scopedReference);
+```
+
+Returns: `Promise<boolean>`.
 
 ## isDeviceIdentifierAlreadyUsed
 

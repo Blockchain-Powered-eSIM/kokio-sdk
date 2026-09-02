@@ -5,7 +5,7 @@ import { makeMockWalletClient } from "../../utils/mockClient.js";
 import { baseSepoliaFactoryAddresses } from "../../../src/logic/constants.js";
 import { ContractRevertError } from "../../../src/logic/errors.js";
 import { Registry } from "../../../src/abis/index.js";
-import type { DataBundleDetails } from "../../../src/types.js";
+import { Settlement, type Asset, type DataBundleDetails } from "../../../src/types.js";
 
 import * as deviceWalletFactory from "../../../src/logic/admin/deviceWalletFactory.eoa.js";
 import * as eSIMWalletFactory from "../../../src/logic/admin/eSIMWalletFactory.eoa.js";
@@ -13,6 +13,7 @@ import * as registry from "../../../src/logic/admin/registry.eoa.js";
 import * as lazyWalletRegistry from "../../../src/logic/admin/lazyWalletRegistry.eoa.js";
 import * as deviceWallet from "../../../src/logic/admin/deviceWallet.eoa.js";
 import * as eSIMWallet from "../../../src/logic/admin/eSIMWallet.eoa.js";
+import * as paymentAdapter from "../../../src/logic/admin/paymentAdapter.eoa.js";
 
 // --- Fixtures ---------------------------------------------------------------
 const EOA = "0x00000000000000000000000000000000000e0a01" as Address;
@@ -27,7 +28,15 @@ const OWNER_KEY: [Hex, Hex] = [
   "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C291",
   "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F1",
 ];
-const BUNDLE: DataBundleDetails = { dataBundleID: "bundle-1", dataBundlePrice: 1000n };
+const BUNDLE: DataBundleDetails = {
+  id: "0x0000000000000000000000000000000000000000000000000000000000000001" as Hex,
+  priceUSDCents: 1000n,
+  settlement: Settlement.ExternalWallet,
+};
+const ASSET = "0x5553444300000000000000000000000000000000000000000000000000000000" as Hex;
+const PAYMENT_REFERENCE = "0x000000000000000000000000000000000000000000000000000000000000ee11" as Hex;
+const TOKEN = "0x0000000000000000000000000000000000706b31" as Address;
+const ASSET_ENTRY: Asset = { allowed: true, isDollarUnit: false, decimals: 6, token: TOKEN };
 
 const F = baseSepoliaFactoryAddresses;
 const CHAIN_ID = 84532;
@@ -178,11 +187,18 @@ const eoaCases: Array<{
     args: [],
   },
   {
-    label: "registry._setDefaultDataBundlePriceCap",
-    run: (c) => registry._setDefaultDataBundlePriceCap(c, 5n * 10n ** 18n),
+    label: "registry._setDefaultPriceCapUSDCents",
+    run: (c) => registry._setDefaultPriceCapUSDCents(c, 50_000n),
     address: F.REGISTRY,
-    functionName: "setDefaultDataBundlePriceCap",
-    args: [5n * 10n ** 18n],
+    functionName: "setDefaultPriceCapUSDCents",
+    args: [50_000n],
+  },
+  {
+    label: "registry._recordSettledPurchase",
+    run: (c) => registry._recordSettledPurchase(c, ESIM, BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE),
+    address: F.REGISTRY,
+    functionName: "recordSettledPurchase",
+    args: [ESIM, BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE],
   },
   // lazyWalletRegistry.eoa (target = LAZY_WALLET_REGISTRY)
   {
@@ -249,20 +265,34 @@ const eoaCases: Array<{
   },
   // eSIMWallet.eoa (target = eSIM instance address)
   {
-    label: "eSIMWallet._buyDataBundle (explicit value)",
-    run: (c) => eSIMWallet._buyDataBundle(c, ESIM, BUNDLE, 500n),
+    label: "eSIMWallet._buyDataBundleWithToken",
+    run: (c) => eSIMWallet._buyDataBundleWithToken(c, ESIM, BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE),
     address: ESIM,
-    functionName: "buyDataBundle",
-    args: [BUNDLE],
-    value: 500n,
+    functionName: "buyDataBundleWithToken",
+    args: [BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE],
+  },
+  // paymentAdapter.eoa (target = PAYMENT_ADAPTER)
+  {
+    label: "paymentAdapter._registerAsset",
+    run: (c) => paymentAdapter._registerAsset(c, ASSET, ASSET_ENTRY),
+    address: F.PAYMENT_ADAPTER,
+    functionName: "registerAsset",
+    args: [ASSET, ASSET_ENTRY],
   },
   {
-    label: "eSIMWallet._buyDataBundle (default value 0)",
-    run: (c) => eSIMWallet._buyDataBundle(c, ESIM, BUNDLE),
-    address: ESIM,
-    functionName: "buyDataBundle",
-    args: [BUNDLE],
-    value: 0n,
+    label: "paymentAdapter._updateAsset",
+    run: (c) => paymentAdapter._updateAsset(c, ASSET, ASSET_ENTRY),
+    address: F.PAYMENT_ADAPTER,
+    functionName: "updateAsset",
+    args: [ASSET, ASSET_ENTRY],
+  },
+  {
+    // Sent by the incoming owner, not the outgoing one.
+    label: "paymentAdapter._acceptOwnership",
+    run: (c) => paymentAdapter._acceptOwnership(c),
+    address: F.PAYMENT_ADAPTER,
+    functionName: "acceptOwnership",
+    args: [],
   },
 ];
 

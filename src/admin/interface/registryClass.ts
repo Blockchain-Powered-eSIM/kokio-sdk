@@ -1,4 +1,5 @@
 import { Address, Hex, WalletClient } from "viem";
+import { DataBundleDetails } from "../../types.js";
 import {
     _addOrUpdateLazyWalletRegistryAddress,
     _updateVaultAddress,
@@ -7,9 +8,10 @@ import {
     _enableAdmin,
     _acceptAdminUpdate,
     _assignESIMIdentifier,
+    _recordSettledPurchase,
     _pause,
     _unpause,
-    _setDefaultDataBundlePriceCap,
+    _setDefaultPriceCapUSDCents,
     _acceptOwnership,
     _transferOwnershipCall,
     _upgradeCall,
@@ -30,7 +32,9 @@ import {
     _isESIMWalletValid,
     _isESIMWalletOnStandby,
     _paused,
-    _defaultDataBundlePriceCap,
+    _defaultPriceCapUSDCents,
+    _paymentAdapter,
+    _usedPaymentReferences,
     _isDeviceIdentifierAlreadyUsed,
     _isESIMIdentifierClaimed,
     _eSIMWalletForIdentifier,
@@ -78,6 +82,16 @@ export class AdminRegistrySubPackage {
         return _acceptAdminUpdate(this.walletClient);
     }
 
+    recordSettledPurchase(
+        eSIMWalletAddress: Address,
+        dataBundleDetail: DataBundleDetails,
+        asset: Hex,
+        tokenAmount: bigint,
+        paymentReference: Hex
+    ) {
+        return _recordSettledPurchase(this.walletClient, eSIMWalletAddress, dataBundleDetail, asset, tokenAmount, paymentReference);
+    }
+
     assignESIMIdentifier(eSIMWalletAddress: Address, eSIMUniqueIdentifier: string) {
         return _assignESIMIdentifier(this.walletClient, eSIMWalletAddress, eSIMUniqueIdentifier);
     }
@@ -90,8 +104,8 @@ export class AdminRegistrySubPackage {
         return _unpause(this.walletClient);
     }
 
-    setDefaultDataBundlePriceCap(cap: bigint) {
-        return _setDefaultDataBundlePriceCap(this.walletClient, cap);
+    setDefaultPriceCapUSDCents(cap: bigint) {
+        return _setDefaultPriceCapUSDCents(this.walletClient, cap);
     }
 
     acceptOwnership() {
@@ -170,8 +184,16 @@ export class AdminRegistrySubPackage {
         return _paused(this.walletClient);
     }
 
-    defaultDataBundlePriceCap() {
-        return _defaultDataBundlePriceCap(this.walletClient);
+    defaultPriceCapUSDCents() {
+        return _defaultPriceCapUSDCents(this.walletClient);
+    }
+
+    paymentAdapter() {
+        return _paymentAdapter(this.walletClient);
+    }
+
+    usedPaymentReferences(scopedReference: Hex) {
+        return _usedPaymentReferences(this.walletClient, scopedReference);
     }
 
     isDeviceIdentifierAlreadyUsed(deviceUniqueIdentifier: string) {

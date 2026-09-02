@@ -2,7 +2,7 @@ import { Address, Hex, WalletClient } from "viem";
 import {
     _addDeposit,
     _addESIMWallet,
-    _canPullETH,
+    _canPullFunds,
     _deviceUniqueIdentifier,
     _entryPoint,
     _eSIMWalletFactory,
@@ -14,7 +14,7 @@ import {
     _registry,
     _removeESIMWallet,
     _sendUserOperation,
-    _toggleAccessToETH,
+    _toggleAccessToFunds,
     _transferOwnership,
     _verifier,
     _withdrawDepositTo
@@ -53,8 +53,8 @@ export class DeviceWalletSubPackage {
         return _removeESIMWallet(this.smartAccountClient, this.address, eSIMWalletAddress, callBackETH);
     }
 
-    toggleAccessToETH (eSIMWalletAddress: Address, hasAccessToETH: boolean) {
-        return _toggleAccessToETH(this.smartAccountClient, this.address, eSIMWalletAddress, hasAccessToETH);
+    toggleAccessToFunds (eSIMWalletAddress: Address, hasAccessToFunds: boolean) {
+        return _toggleAccessToFunds(this.smartAccountClient, this.address, eSIMWalletAddress, hasAccessToFunds);
     }
 
     transferOwnership (newOwner: P256Key) {
@@ -67,8 +67,8 @@ export class DeviceWalletSubPackage {
 
     // Reads
 
-    canPullETH (eSIMWalletAddress: Address) {
-        return _canPullETH(this.smartAccountClient, this.address, eSIMWalletAddress);
+    canPullFunds (eSIMWalletAddress: Address) {
+        return _canPullFunds(this.smartAccountClient, this.address, eSIMWalletAddress);
     }
 
     deviceUniqueIdentifier () {

@@ -23,6 +23,8 @@ user operation through the smart account client.
   `kokio.eSIMWalletFactory`. Deploy a new eSIM wallet.
 - [Registry](mobile/registry.md), `kokio.registry`. Bind eSIM wallets and read
   protocol-wide state.
+- [Payment adapter](mobile/payment-adapter.md), `kokio.paymentAdapter`. Read
+  the currencies data bundle purchases can be paid in.
 - [P256 verifier](mobile/p256-verifier.md), `kokio.P256Verifier`. Check a
   WebAuthn signature directly.
 
@@ -40,10 +42,13 @@ ordinary transaction, no bundler or passkey involved.
 - [eSIM wallet factory](admin/esim-wallet-factory.md),
   `admin.eSIMWalletFactory`. Manage the eSIM wallet implementation.
 - [Registry](admin/registry.md), `admin.registry`. Protocol admin actions:
-  pause, price caps, admin handover, and every read.
+  pause, price caps, admin handover, recording purchases paid for outside the
+  protocol, and every read.
 - [Lazy wallet registry](admin/lazy-wallet-registry.md),
   `admin.lazyWalletRegistry`. Deploy wallets for users who bought eSIMs before
   they had one, and copy their purchase history in.
+- [Payment adapter](admin/payment-adapter.md), `admin.paymentAdapter`. Manage
+  the currencies data bundle purchases can be paid in.
 - [Protocol admin](admin/protocol-admin.md), `admin.protocolAdmin`. The
   timelock that owns the contracts above. Schedule, execute, and cancel
   delayed admin calls.

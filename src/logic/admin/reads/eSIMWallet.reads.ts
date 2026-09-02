@@ -33,14 +33,14 @@ export const _eSIMUniqueIdentifier = async (client: WalletClient, eSIMWalletAddr
  * This wallet's own price ceiling in wei. Zero means it follows the registry's
  * `defaultDataBundlePriceCap` instead, which is the state a fresh wallet and a
  * newly handed-over wallet both start in. Worth reading before naming a price on
- * `buyDataBundle`, since a price over the ceiling reverts.
+ * `buyDataBundleWithToken`, since a price over the ceiling reverts.
  */
-export const _dataBundlePriceCap = async (client: WalletClient, eSIMWalletAddress: Address): Promise<bigint> => {
+export const _priceCapUSDCents = async (client: WalletClient, eSIMWalletAddress: Address): Promise<bigint> => {
 
     return client.extend(publicActions).readContract({
         address: eSIMWalletAddress,
         abi: ESIMWallet,
-        functionName: "dataBundlePriceCap",
+        functionName: "priceCapUSDCents",
         args: []
     }) as Promise<bigint>;
 }
@@ -89,17 +89,18 @@ export const _deviceWallet = async (client: WalletClient, eSIMWalletAddress: Add
  *
  * The contract publishes no length getter, so there is no way to ask how many
  * entries exist. Read upwards from zero until a call reverts, or track the count
- * from the `DataBundleBought` and `TransactionHistoryPopulated` events, whose
- * `_totalEntries` is the length after the batch landed.
+ * from the `DataBundleBoughtWithToken`, `DataBundleSettlementRecorded` and
+ * `TransactionHistoryPopulated` events, whose `_totalEntries` is the length
+ * after the batch landed.
  */
 export const _transactionHistory = async (client: WalletClient, eSIMWalletAddress: Address, index: bigint): Promise<DataBundleDetails> => {
 
-    const [dataBundleID, dataBundlePrice] = await client.extend(publicActions).readContract({
+    const [id, priceUSDCents, settlement] = await client.extend(publicActions).readContract({
         address: eSIMWalletAddress,
         abi: ESIMWallet,
         functionName: "transactionHistory",
         args: [index]
-    }) as [string, bigint];
+    });
 
-    return { dataBundleID, dataBundlePrice };
+    return { id, priceUSDCents, settlement };
 }

@@ -298,7 +298,7 @@ const ESIMWalletFactory = [
     },
     {
         "type": "event",
-        "name": "ESIMWalletFactorydeployed",
+        "name": "ESIMWalletFactoryDeployed",
         "inputs": [
             {
                 "name": "_upgradeManager",
@@ -313,7 +313,7 @@ const ESIMWalletFactory = [
                 "internalType": "address"
             },
             {
-                "name": "beacon",
+                "name": "_beacon",
                 "type": "address",
                 "indexed": true,
                 "internalType": "address"

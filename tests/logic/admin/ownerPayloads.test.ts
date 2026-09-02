@@ -3,17 +3,22 @@ import { type Address, type Hex } from "viem";
 
 import { makeMockWalletClient } from "../../utils/mockClient.js";
 import { baseSepoliaFactoryAddresses } from "../../../src/logic/constants.js";
+import type { Asset } from "../../../src/types.js";
 
 import * as registry from "../../../src/logic/admin/registry.eoa.js";
 import * as lazyWalletRegistry from "../../../src/logic/admin/lazyWalletRegistry.eoa.js";
 import * as deviceWalletFactory from "../../../src/logic/admin/deviceWalletFactory.eoa.js";
 import * as eSIMWalletFactory from "../../../src/logic/admin/eSIMWalletFactory.eoa.js";
+import * as paymentAdapter from "../../../src/logic/admin/paymentAdapter.eoa.js";
 
 // --- Fixtures ---------------------------------------------------------------
 const EOA = "0x00000000000000000000000000000000000e0a01" as Address;
 const NEW_OWNER = "0x000000000000000000000000000000000000b055" as Address;
 const IMPL = "0x0000000000000000000000000000000000009e11" as Address;
 const INIT_DATA = "0xdeadbeef" as Hex;
+const ASSET = "0x5553444300000000000000000000000000000000000000000000000000000000" as Hex;
+const TOKEN = "0x0000000000000000000000000000000000706b31" as Address;
+const ASSET_ENTRY: Asset = { allowed: true, isDollarUnit: false, decimals: 6, token: TOKEN };
 
 const F = baseSepoliaFactoryAddresses;
 const CHAIN_ID = 84532;
@@ -41,6 +46,11 @@ const payloadCases: Array<{
   // eSIMWalletFactory.eoa (target = ESIM_WALLET_FACTORY, the factory's own proxy, not the beacon)
   { label: "eSIMWalletFactory._transferOwnershipCall", run: (c) => eSIMWalletFactory._transferOwnershipCall(c, NEW_OWNER), address: F.ESIM_WALLET_FACTORY, functionName: "transferOwnership", args: [NEW_OWNER] },
   { label: "eSIMWalletFactory._upgradeCall", run: (c) => eSIMWalletFactory._upgradeCall(c, IMPL, INIT_DATA), address: F.ESIM_WALLET_FACTORY, functionName: "upgradeToAndCall", args: [IMPL, INIT_DATA] },
+  // paymentAdapter.eoa (target = PAYMENT_ADAPTER)
+  { label: "paymentAdapter._transferOwnershipCall", run: (c) => paymentAdapter._transferOwnershipCall(c, NEW_OWNER), address: F.PAYMENT_ADAPTER, functionName: "transferOwnership", args: [NEW_OWNER] },
+  { label: "paymentAdapter._upgradeCall", run: (c) => paymentAdapter._upgradeCall(c, IMPL, INIT_DATA), address: F.PAYMENT_ADAPTER, functionName: "upgradeToAndCall", args: [IMPL, INIT_DATA] },
+  { label: "paymentAdapter._registerAssetCall", run: (c) => paymentAdapter._registerAssetCall(c, ASSET, ASSET_ENTRY), address: F.PAYMENT_ADAPTER, functionName: "registerAsset", args: [ASSET, ASSET_ENTRY] },
+  { label: "paymentAdapter._updateAssetCall", run: (c) => paymentAdapter._updateAssetCall(c, ASSET, ASSET_ENTRY), address: F.PAYMENT_ADAPTER, functionName: "updateAsset", args: [ASSET, ASSET_ENTRY] },
 ];
 
 describe("owner payloads", () => {

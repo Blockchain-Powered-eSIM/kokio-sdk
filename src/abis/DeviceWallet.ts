@@ -20,7 +20,7 @@ const DeviceWallet = [
                 "internalType": "address"
             },
             {
-                "name": "_hasAccessToETH",
+                "name": "_hasAccessToFunds",
                 "type": "bool",
                 "internalType": "bool"
             }
@@ -30,7 +30,7 @@ const DeviceWallet = [
     },
     {
         "type": "function",
-        "name": "canPullETH",
+        "name": "canPullFunds",
         "inputs": [
             {
                 "name": "eSIMWalletAddress",
@@ -40,7 +40,7 @@ const DeviceWallet = [
         ],
         "outputs": [
             {
-                "name": "isAllowedToPullETH",
+                "name": "isAllowedToPullFunds",
                 "type": "bool",
                 "internalType": "bool"
             }
@@ -52,7 +52,7 @@ const DeviceWallet = [
         "name": "deployESIMWallet",
         "inputs": [
             {
-                "name": "_hasAccessToETH",
+                "name": "_hasAccessToFunds",
                 "type": "bool",
                 "internalType": "bool"
             },
@@ -400,8 +400,13 @@ const DeviceWallet = [
     },
     {
         "type": "function",
-        "name": "pullETH",
+        "name": "pullToken",
         "inputs": [
+            {
+                "name": "_token",
+                "type": "address",
+                "internalType": "address"
+            },
             {
                 "name": "_amount",
                 "type": "uint256",
@@ -469,7 +474,7 @@ const DeviceWallet = [
     },
     {
         "type": "function",
-        "name": "toggleAccessToETH",
+        "name": "toggleAccessToFunds",
         "inputs": [
             {
                 "name": "_eSIMWalletAddress",
@@ -477,7 +482,7 @@ const DeviceWallet = [
                 "internalType": "address"
             },
             {
-                "name": "_hasAccessToETH",
+                "name": "_hasAccessToFunds",
                 "type": "bool",
                 "internalType": "bool"
             }
@@ -654,7 +659,7 @@ const DeviceWallet = [
                 "internalType": "address"
             },
             {
-                "name": "_hasAccessToETH",
+                "name": "_hasAccessToFunds",
                 "type": "bool",
                 "indexed": false,
                 "internalType": "bool"
@@ -695,25 +700,6 @@ const DeviceWallet = [
     },
     {
         "type": "event",
-        "name": "ETHAccessUpdated",
-        "inputs": [
-            {
-                "name": "_eSIMWalletAddress",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "_hasAccessToETH",
-                "type": "bool",
-                "indexed": false,
-                "internalType": "bool"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
         "name": "ETHCalledBack",
         "inputs": [
             {
@@ -727,7 +713,7 @@ const DeviceWallet = [
     },
     {
         "type": "event",
-        "name": "ETHSent",
+        "name": "FundsAccessUpdated",
         "inputs": [
             {
                 "name": "_eSIMWalletAddress",
@@ -736,10 +722,10 @@ const DeviceWallet = [
                 "internalType": "address"
             },
             {
-                "name": "_amount",
-                "type": "uint256",
+                "name": "_hasAccessToFunds",
+                "type": "bool",
                 "indexed": false,
-                "internalType": "uint256"
+                "internalType": "bool"
             }
         ],
         "anonymous": false
@@ -761,6 +747,31 @@ const DeviceWallet = [
         "type": "event",
         "name": "NoETHToCallback",
         "inputs": [],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "TokenSent",
+        "inputs": [
+            {
+                "name": "_token",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_eSIMWalletAddress",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_amount",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            }
+        ],
         "anonymous": false
     },
     {
@@ -792,49 +803,28 @@ const DeviceWallet = [
     },
     {
         "type": "error",
-        "name": "ETHAccessNotGrantableAtBind",
-        "inputs": [
-            {
-                "name": "eSIMWallet",
-                "type": "address",
-                "internalType": "address"
-            }
-        ]
-    },
-    {
-        "type": "error",
-        "name": "ETHAccessRevoked",
-        "inputs": [
-            {
-                "name": "eSIMWallet",
-                "type": "address",
-                "internalType": "address"
-            }
-        ]
-    },
-    {
-        "type": "error",
         "name": "EmptyDeviceIdentifier",
         "inputs": []
     },
     {
         "type": "error",
-        "name": "FailedToTransfer",
-        "inputs": []
+        "name": "FundsAccessNotGrantableAtBind",
+        "inputs": [
+            {
+                "name": "eSIMWallet",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
     },
     {
         "type": "error",
-        "name": "InsufficientBalance",
+        "name": "FundsAccessRevoked",
         "inputs": [
             {
-                "name": "balance",
-                "type": "uint256",
-                "internalType": "uint256"
-            },
-            {
-                "name": "amount",
-                "type": "uint256",
-                "internalType": "uint256"
+                "name": "eSIMWallet",
+                "type": "address",
+                "internalType": "address"
             }
         ]
     },
@@ -892,6 +882,17 @@ const DeviceWallet = [
         "type": "error",
         "name": "ReentrancyGuardReentrantCall",
         "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "SafeERC20FailedOperation",
+        "inputs": [
+            {
+                "name": "token",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
     },
     {
         "type": "error",

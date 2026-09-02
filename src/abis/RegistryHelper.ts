@@ -293,14 +293,19 @@ const RegistryHelper = [
                 "internalType": "struct DataBundleDetails[]",
                 "components": [
                     {
-                        "name": "dataBundleID",
-                        "type": "string",
-                        "internalType": "string"
+                        "name": "id",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
                     },
                     {
-                        "name": "dataBundlePrice",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "name": "priceUSDCents",
+                        "type": "uint64",
+                        "internalType": "uint64"
+                    },
+                    {
+                        "name": "settlement",
+                        "type": "uint8",
+                        "internalType": "enum Settlement"
                     }
                 ]
             }
@@ -437,13 +442,68 @@ const RegistryHelper = [
     },
     {
         "type": "event",
-        "name": "DefaultDataBundlePriceCapUpdated",
+        "name": "DataBundleSettled",
         "inputs": [
             {
-                "name": "_cap",
+                "name": "_eSIMWallet",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_dataBundleID",
+                "type": "bytes32",
+                "indexed": false,
+                "internalType": "bytes32"
+            },
+            {
+                "name": "_priceUSDCents",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
+            },
+            {
+                "name": "_settlement",
+                "type": "uint8",
+                "indexed": false,
+                "internalType": "enum Settlement"
+            },
+            {
+                "name": "_asset",
+                "type": "bytes32",
+                "indexed": true,
+                "internalType": "bytes32"
+            },
+            {
+                "name": "_token",
+                "type": "address",
+                "indexed": false,
+                "internalType": "address"
+            },
+            {
+                "name": "_tokenAmount",
                 "type": "uint256",
                 "indexed": false,
                 "internalType": "uint256"
+            },
+            {
+                "name": "_paymentReference",
+                "type": "bytes32",
+                "indexed": true,
+                "internalType": "bytes32"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "DefaultPriceCapUSDCentsUpdated",
+        "inputs": [
+            {
+                "name": "_cap",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
             }
         ],
         "anonymous": false
@@ -594,6 +654,38 @@ const RegistryHelper = [
     },
     {
         "type": "event",
+        "name": "PaymentAdapterUpdated",
+        "inputs": [
+            {
+                "name": "_paymentAdapter",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "PaymentReferenceConsumed",
+        "inputs": [
+            {
+                "name": "_eSIMWallet",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_paymentReference",
+                "type": "bytes32",
+                "indexed": true,
+                "internalType": "bytes32"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
         "name": "RegistryInitialized",
         "inputs": [
             {
@@ -644,7 +736,7 @@ const RegistryHelper = [
     },
     {
         "type": "event",
-        "name": "UpdatedDeviceWalletassociatedWithESIMWallet",
+        "name": "UpdatedDeviceWalletAssociatedWithESIMWallet",
         "inputs": [
             {
                 "name": "_eSIMWalletAddress",

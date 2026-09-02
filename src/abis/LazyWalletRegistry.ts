@@ -65,14 +65,19 @@ const LazyWalletRegistry = [
                 "internalType": "struct DataBundleDetails[][]",
                 "components": [
                     {
-                        "name": "dataBundleID",
-                        "type": "string",
-                        "internalType": "string"
+                        "name": "id",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
                     },
                     {
-                        "name": "dataBundlePrice",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "name": "priceUSDCents",
+                        "type": "uint64",
+                        "internalType": "uint64"
+                    },
+                    {
+                        "name": "settlement",
+                        "type": "uint8",
+                        "internalType": "enum Settlement"
                     }
                 ]
             }
@@ -180,14 +185,19 @@ const LazyWalletRegistry = [
         ],
         "outputs": [
             {
-                "name": "dataBundleID",
-                "type": "string",
-                "internalType": "string"
+                "name": "id",
+                "type": "bytes32",
+                "internalType": "bytes32"
             },
             {
-                "name": "dataBundlePrice",
-                "type": "uint256",
-                "internalType": "uint256"
+                "name": "priceUSDCents",
+                "type": "uint64",
+                "internalType": "uint64"
+            },
+            {
+                "name": "settlement",
+                "type": "uint8",
+                "internalType": "enum Settlement"
             }
         ],
         "stateMutability": "view"
@@ -361,6 +371,25 @@ const LazyWalletRegistry = [
         "outputs": [
             {
                 "name": "baseSalt",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "outstandingHistoryEntries",
+        "inputs": [
+            {
+                "name": "_eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
                 "type": "uint256",
                 "internalType": "uint256"
             }
@@ -564,14 +593,19 @@ const LazyWalletRegistry = [
                 "internalType": "struct DataBundleDetails[]",
                 "components": [
                     {
-                        "name": "dataBundleID",
-                        "type": "string",
-                        "internalType": "string"
+                        "name": "id",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
                     },
                     {
-                        "name": "dataBundlePrice",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "name": "priceUSDCents",
+                        "type": "uint64",
+                        "internalType": "uint64"
+                    },
+                    {
+                        "name": "settlement",
+                        "type": "uint8",
+                        "internalType": "enum Settlement"
                     }
                 ]
             }
@@ -601,14 +635,19 @@ const LazyWalletRegistry = [
                 "internalType": "struct DataBundleDetails[]",
                 "components": [
                     {
-                        "name": "dataBundleID",
-                        "type": "string",
-                        "internalType": "string"
+                        "name": "id",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
                     },
                     {
-                        "name": "dataBundlePrice",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "name": "priceUSDCents",
+                        "type": "uint64",
+                        "internalType": "uint64"
+                    },
+                    {
+                        "name": "settlement",
+                        "type": "uint8",
+                        "internalType": "enum Settlement"
                     }
                 ]
             }
@@ -1175,6 +1214,11 @@ const LazyWalletRegistry = [
                 "internalType": "uint256"
             }
         ]
+    },
+    {
+        "type": "error",
+        "name": "SettlementNotAsserted",
+        "inputs": []
     },
     {
         "type": "error",

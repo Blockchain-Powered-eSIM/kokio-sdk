@@ -7,6 +7,7 @@ import { RegistrySubPackage } from "./interface/registryClass.js";
 import { DeviceWalletSubPackage } from "./interface/deviceWalletClass.js";
 import { ESIMWalletSubPackage } from "./interface/eSIMWalletClass.js";
 import { ESIMWalletFactorySubPackage } from "./interface/eSIMWalletFactoryClass.js";
+import { PaymentAdapterSubPackage } from "./interface/paymentAdapterClass.js";
 import { KokioSmartAccountClient } from "./types.js";
 
 // Re-export the typed error surface so consumers can `instanceof KokioError`
@@ -45,6 +46,7 @@ export class Kokio {
     deviceWallet?: DeviceWalletSubPackage;
     eSIMWallet?: ESIMWalletSubPackage;
     P256Verifier?: P256VerifierSubPackage;
+    paymentAdapter?: PaymentAdapterSubPackage;
 
     constructor(
         viemWalletClient: WalletClient,
@@ -72,6 +74,7 @@ export class Kokio {
         this.eSIMWalletFactory = smartAccountClient? new ESIMWalletFactorySubPackage(viemWalletClient, smartAccountClient): undefined;
         this.registry = smartAccountClient? new RegistrySubPackage(smartAccountClient): undefined;
         this.P256Verifier = smartAccountClient? new P256VerifierSubPackage(smartAccountClient): undefined;
+        this.paymentAdapter = smartAccountClient? new PaymentAdapterSubPackage(smartAccountClient): undefined;
         this.deviceWallet = deviceWalletAddress && smartAccountClient? new DeviceWalletSubPackage(viemWalletClient, smartAccountClient, deviceWalletAddress): undefined;
         this.eSIMWallet = eSIMWalletAddress && smartAccountClient? new ESIMWalletSubPackage(smartAccountClient, eSIMWalletAddress): undefined;
     }

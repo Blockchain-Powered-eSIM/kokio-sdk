@@ -26,34 +26,10 @@ describe("_getChainSpecificConstants - configured testnets", () => {
 });
 
 describe("_getChainSpecificConstants - unconfigured chains (P1 guard)", () => {
-  // The guard now throws for chains whose factory addresses are still '0x'
+  // The guard throws for a chain whose factory addresses are still '0x'
   // placeholders, instead of silently leaking '0x' into viem calls.
-  it("throws for sepolia (cleared after the EntryPoint v0.8 move)", () => {
-    expect(() => _getChainSpecificConstants(CHAIN_ID.SEPOLIA, RPC)).toThrow(
-      /not yet configured/,
-    );
-  });
-
-  it("throws for optimism-sepolia (cleared after the EntryPoint v0.8 move)", () => {
-    expect(() => _getChainSpecificConstants(CHAIN_ID.OPTIMISM_SEPOLIA, RPC)).toThrow(
-      /not yet configured/,
-    );
-  });
-
-  it("throws for mainnet (placeholder addresses)", () => {
-    expect(() => _getChainSpecificConstants(CHAIN_ID.MAINNET, RPC)).toThrow(
-      /not yet configured/,
-    );
-  });
-
-  it("throws for arbitrum-one (placeholder addresses)", () => {
-    expect(() => _getChainSpecificConstants(CHAIN_ID.ARBITRUM_ONE, RPC)).toThrow(
-      /not yet configured/,
-    );
-  });
-
-  it("throws for arbitrum-sepolia (placeholder addresses)", () => {
-    expect(() => _getChainSpecificConstants(CHAIN_ID.ARBITRUM_SEPOLIA, RPC)).toThrow(
+  it("throws for base mainnet (not deployed yet)", () => {
+    expect(() => _getChainSpecificConstants(CHAIN_ID.BASE_MAINNET, RPC)).toThrow(
       /not yet configured/,
     );
   });

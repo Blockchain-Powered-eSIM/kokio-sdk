@@ -3,7 +3,7 @@ import { _addDeposit, _deployESIMWallet } from "../../logic/admin/deviceWallet.e
 import {
     _deviceUniqueIdentifier,
     _isValidESIMWallet,
-    _canPullETH,
+    _canPullFunds,
     _getVaultAddress,
     _getOwner,
     _getDeposit,
@@ -47,8 +47,8 @@ export class AdminDeviceWalletSubPackage {
         return _isValidESIMWallet(this.walletClient, this.deviceWalletAddress, eSIMWallet);
     }
 
-    canPullETH(eSIMWallet: Address) {
-        return _canPullETH(this.walletClient, this.deviceWalletAddress, eSIMWallet);
+    canPullFunds(eSIMWallet: Address) {
+        return _canPullFunds(this.walletClient, this.deviceWalletAddress, eSIMWallet);
     }
 
     getVaultAddress() {

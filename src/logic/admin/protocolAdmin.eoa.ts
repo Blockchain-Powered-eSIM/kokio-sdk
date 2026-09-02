@@ -588,22 +588,43 @@ export const _unpauseCall = async (client: WalletClient, target?: Address): Prom
 }
 
 /**
- * Set the fallback data bundle price ceiling. Pass the result to `schedule`.
+ * Set the fallback price ceiling, in USD cents. Pass the result to `schedule`.
  *
  * Zero reverts on execution, not on scheduling, so a zero here costs the whole
  * delay before it fails.
  *
  * `target` defaults to the registry.
  */
-export const _setDefaultDataBundlePriceCapCall = async (client: WalletClient, cap: bigint, target?: Address): Promise<OwnerCall> => {
+export const _setDefaultPriceCapUSDCentsCall = async (client: WalletClient, cap: bigint, target?: Address): Promise<OwnerCall> => {
 
     const values = await _resolve(client);
 
     return {
         address: target ?? values.factoryAddresses.REGISTRY,
         abi: Registry,
-        functionName: 'setDefaultDataBundlePriceCap',
+        functionName: 'setDefaultPriceCapUSDCents',
         args: [cap],
+    };
+}
+
+/**
+ * Point the registry at a new payment adapter. Pass the result to `schedule`.
+ *
+ * Owner only, deliberately not the admin: the adapter holds the spent payment
+ * references, so an admin that could swap it would get an empty set back and
+ * could record every purchase a second time.
+ *
+ * `target` defaults to the registry.
+ */
+export const _setPaymentAdapterCall = async (client: WalletClient, paymentAdapter: Address, target?: Address): Promise<OwnerCall> => {
+
+    const values = await _resolve(client);
+
+    return {
+        address: target ?? values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: 'setPaymentAdapter',
+        args: [paymentAdapter],
     };
 }
 

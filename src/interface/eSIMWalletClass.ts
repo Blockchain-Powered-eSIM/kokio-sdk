@@ -1,13 +1,14 @@
-import { Address } from "viem";
+import { Address, Hex } from "viem";
 import {
     _acceptOwnershipTransfer,
-    _buyDataBundle,
-    _dataBundlePriceCap,
+    _buyDataBundleWithToken,
+    _priceCapUSDCents,
     _deviceWallet,
     _owner,
     _requestTransferOwnership,
     _sendETHToDeviceWallet,
-    _setDataBundlePriceCap,
+    _sendTokenToDeviceWallet,
+    _setPriceCapUSDCents,
     _transactionHistory
 } from "../logic/eSIMWallet.js"
 import { DataBundleDetails } from "../types";
@@ -27,12 +28,12 @@ export class ESIMWalletSubPackage {
         return _acceptOwnershipTransfer(this.client, this.address);
     }
 
-    buyDataBundle (dataBundleDetails: DataBundleDetails) {
-        return _buyDataBundle(this.client, this.address, dataBundleDetails);
+    buyDataBundleWithToken (dataBundleDetails: DataBundleDetails, asset: Hex, maxAmountIn: bigint, paymentReference: Hex) {
+        return _buyDataBundleWithToken(this.client, this.address, dataBundleDetails, asset, maxAmountIn, paymentReference);
     }
 
-    dataBundlePriceCap () {
-        return _dataBundlePriceCap(this.client, this.address);
+    priceCapUSDCents () {
+        return _priceCapUSDCents(this.client, this.address);
     }
 
     deviceWallet () {
@@ -51,8 +52,12 @@ export class ESIMWalletSubPackage {
         return _sendETHToDeviceWallet(this.client, this.address, amount);
     }
 
-    setDataBundlePriceCap (cap: bigint) {
-        return _setDataBundlePriceCap(this.client, this.address, cap);
+    sendTokenToDeviceWallet (token: Address, amount: bigint) {
+        return _sendTokenToDeviceWallet(this.client, this.address, token, amount);
+    }
+
+    setPriceCapUSDCents (cap: bigint) {
+        return _setPriceCapUSDCents(this.client, this.address, cap);
     }
 
     transactionHistory (index: bigint) {

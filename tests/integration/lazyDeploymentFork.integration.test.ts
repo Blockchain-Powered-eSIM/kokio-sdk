@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
-import { getContract, toHex, type Address } from "viem";
+import { getContract, keccak256, toHex, type Address } from "viem";
 import { p256 } from "@noble/curves/nist.js";
 
 // `createSmartAccount.ts` (pulled in transitively) statically imports
@@ -14,7 +14,7 @@ import {
   MAX_ESIM_WALLETS_PER_CALL,
   MAX_HISTORY_ENTRIES_PER_CALL,
 } from "../../src/logic/admin/lazyWalletRegistry.eoa.js";
-import type { DataBundleDetails, P256Key } from "../../src/types.js";
+import { Settlement, type DataBundleDetails, type P256Key } from "../../src/types.js";
 import { forkAvailable, impersonateAdmin, startFork, type Fork } from "../utils/forkChain.js";
 
 const F = baseSepoliaFactoryAddresses;
@@ -26,8 +26,14 @@ const freshOwnerKey = (): P256Key => {
   return [toHex(pub.slice(1, 33)), toHex(pub.slice(33, 65))];
 };
 
+// `batchPopulateHistory` refuses `Settlement.DeviceWallet`: that value asserts the
+// purchase already moved funds through a device wallet, which lazy history predates.
 const bundles = (count: number): DataBundleDetails[] =>
-  Array.from({ length: count }, (_, i) => ({ dataBundleID: `bundle-${i}`, dataBundlePrice: BigInt(i + 1) }));
+  Array.from({ length: count }, (_, i) => ({
+    id: keccak256(toHex(`bundle-${i}`)),
+    priceUSDCents: BigInt(i + 1),
+    settlement: Settlement.ExternalWallet,
+  }));
 
 const readLazy = (fork: Fork) => getContract({
   abi: LazyWalletRegistry,

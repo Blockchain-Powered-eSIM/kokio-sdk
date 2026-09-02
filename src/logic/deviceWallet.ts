@@ -38,19 +38,19 @@ export const _sendUserOperation = async (client: KokioSmartAccountClient, calls:
     });
 }
 
-export const _toggleAccessToETH = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToETH: boolean) => {
+export const _toggleAccessToFunds = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address, hasAccessToFunds: boolean) => {
 
     if(!client.account) throw new MissingSmartWalletError();
 
-    // UserOp - `onlySelf`; the device wallet toggles ETH access for an eSIM wallet it owns.
+    // UserOp - `onlySelf`; the device wallet toggles fund access for an eSIM wallet it owns.
     return client.sendUserOperation({
         account: client.account,
         calls: [{
             to: address,
             data: encodeFunctionData({
                 abi: DeviceWallet,
-                functionName: "toggleAccessToETH",
-                args: [eSIMWalletAddress, hasAccessToETH]
+                functionName: "toggleAccessToFunds",
+                args: [eSIMWalletAddress, hasAccessToFunds]
             })
         }]
     });
@@ -59,10 +59,10 @@ export const _toggleAccessToETH = async (client: KokioSmartAccountClient, addres
 /**
  * Bind an eSIM wallet this device wallet already owns.
  *
- * A bind never carries ETH access: the contract reverts on a `true` rather than
+ * A bind never carries fund access: the contract reverts on a `true` rather than
  * downgrading it quietly, so the SDK passes `false` and there is nothing to
- * choose. `toggleAccessToETH` is the only way to grant it, which is what stops a
- * bind from undoing the owner's revocation.
+ * choose. `toggleAccessToFunds` is the only way to grant it, which is what stops
+ * a bind from undoing the owner's revocation.
  */
 export const _addESIMWallet = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address) => {
 
@@ -218,14 +218,14 @@ export const _isValidESIMWallet = async (client: KokioSmartAccountClient, addres
 }
 
 /**
- * Whether an eSIM wallet may pull ETH from this one. Binding a wallet never
- * grants it, so this stays false until `toggleAccessToETH` says otherwise.
+ * Whether an eSIM wallet may pull funds from this one. Binding a wallet never
+ * grants it, so this stays false until `toggleAccessToFunds` says otherwise.
  */
-export const _canPullETH = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address): Promise<boolean> => {
+export const _canPullFunds = async (client: KokioSmartAccountClient, address: Address, eSIMWalletAddress: Address): Promise<boolean> => {
     return client.readContract({
         address,
         abi: DeviceWallet,
-        functionName: "canPullETH",
+        functionName: "canPullFunds",
         args: [eSIMWalletAddress]
     }) as Promise<boolean>;
 }

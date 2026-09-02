@@ -54,14 +54,14 @@ export const _deviceIdentifierToESIMDetails = async (
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    const [dataBundleID, dataBundlePrice] = await client.extend(publicActions).readContract({
+    const [id, priceUSDCents, settlement] = await client.extend(publicActions).readContract({
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         abi: LazyWalletRegistry,
         functionName: "deviceIdentifierToESIMDetails",
         args: [deviceIdentifier, eSIMIdentifier, index]
-    }) as [string, bigint];
+    });
 
-    return { dataBundleID, dataBundlePrice };
+    return { id, priceUSDCents, settlement };
 }
 
 /** Most eSIM wallets one `deployLazyWalletAndSetESIMIdentifier` call will deploy. */
@@ -157,6 +157,26 @@ export const _historyEntriesCopied = async (client: WalletClient, eSIMIdentifier
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         abi: LazyWalletRegistry,
         functionName: "historyEntriesCopied",
+        args: [eSIMIdentifier]
+    }) as Promise<bigint>;
+}
+
+/**
+ * History entries still waiting to be copied in for this eSIM. A wallet's own
+ * purchase paths (`buyDataBundleWithToken`, `recordSettledPurchase`) refuse a
+ * new entry while this is non-zero, since it would land ahead of history that
+ * has not arrived yet.
+ */
+export const _outstandingHistoryEntries = async (client: WalletClient, eSIMIdentifier: string): Promise<bigint> => {
+
+    const chainID = await client.getChainId();
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
+        abi: LazyWalletRegistry,
+        functionName: "outstandingHistoryEntries",
         args: [eSIMIdentifier]
     }) as Promise<bigint>;
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { type Address } from "viem";
+import { type Address, type Hex } from "viem";
 
 import { makeMockWalletClient } from "../utils/mockClient.js";
 import { KokioAdmin, MissingEOAWalletError } from "../../src/admin/config-admin.js";
@@ -68,7 +68,10 @@ describe("KokioAdmin setters", () => {
     const admin = new KokioAdmin(client);
 
     admin.setESIMWalletAddress(ESIM_A);
-    await admin.eSIMWallet!.buyDataBundle({ dataBundleID: "b", dataBundlePrice: 1n });
+    const id = "0x0000000000000000000000000000000000000000000000000000000000000001" as Hex;
+    const asset = "0x5553444300000000000000000000000000000000000000000000000000000000" as Hex;
+    const paymentReference = "0x000000000000000000000000000000000000000000000000000000000000ee11" as Hex;
+    await admin.eSIMWallet!.buyDataBundleWithToken({ id, priceUSDCents: 1n, settlement: 1 }, asset, 1n, paymentReference);
     expect(lastWrite(client).address).toBe(ESIM_A);
   });
 

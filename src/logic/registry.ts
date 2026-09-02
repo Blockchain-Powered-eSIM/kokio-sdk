@@ -1,4 +1,4 @@
-import { Address, encodeFunctionData } from "viem";
+import { Address, Hex, encodeFunctionData } from "viem";
 import { _getChainSpecificConstants } from "./constants.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { Registry } from "../abis/index.js";
@@ -103,8 +103,9 @@ export const _isDeviceIdentifierAlreadyUsed = async (client: KokioSmartAccountCl
 }
 
 /**
- * Whether the protocol is paused. While true, every ETH-moving path on the device
- * wallets and eSIM wallets reverts, so check this before offering a purchase.
+ * Whether the protocol is paused. While true, the purchase and token-pull paths
+ * on the device wallets and eSIM wallets revert, so check this before offering a
+ * purchase.
  */
 export const _paused = async (client: KokioSmartAccountClient): Promise<boolean> => {
 
@@ -245,8 +246,8 @@ export const _eSIMWalletForIdentifier = async (client: KokioSmartAccountClient, 
     }) as Promise<Address>;
 }
 
-/** The fallback price ceiling in wei for a wallet holding no cap of its own. */
-export const _defaultDataBundlePriceCap = async (client: KokioSmartAccountClient): Promise<bigint> => {
+/** The fallback price ceiling in USD cents for a wallet holding no cap of its own. */
+export const _defaultPriceCapUSDCents = async (client: KokioSmartAccountClient): Promise<bigint> => {
 
     const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -255,9 +256,62 @@ export const _defaultDataBundlePriceCap = async (client: KokioSmartAccountClient
     return client.readContract({
         address: values.factoryAddresses.REGISTRY,
         abi: Registry,
-        functionName: "defaultDataBundlePriceCap",
+        functionName: "defaultPriceCapUSDCents",
         args: []
     }) as Promise<bigint>;
+}
+
+/** The payment adapter this registry currently points at. */
+export const _paymentAdapter = async (client: KokioSmartAccountClient): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "paymentAdapter",
+        args: []
+    }) as Promise<Address>;
+}
+
+/**
+ * Whether a payment reference has already been spent for an eSIM wallet.
+ * Scoped per wallet: pass the same `keccak256(abi.encode(eSIMWallet, paymentReference))`
+ * the contract keys `usedPaymentReferences` by, not the bare reference.
+ */
+export const _usedPaymentReferences = async (client: KokioSmartAccountClient, scopedReference: Hex): Promise<boolean> => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "usedPaymentReferences",
+        args: [scopedReference]
+    }) as Promise<boolean>;
+}
+
+/**
+ * Throws if `eSIMWallet` still has lazy-deployment history waiting to be copied
+ * in. `buyDataBundleWithToken` checks this itself before writing a new entry, so
+ * calling it first only turns that revert into a typed error ahead of a userOp.
+ */
+export const _requireLazyHistoryCopied = async (client: KokioSmartAccountClient, eSIMWallet: Address): Promise<void> => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    await client.readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "requireLazyHistoryCopied",
+        args: [eSIMWallet]
+    });
 }
 
 /**

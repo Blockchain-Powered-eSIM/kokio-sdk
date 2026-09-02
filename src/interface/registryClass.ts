@@ -1,4 +1,4 @@
-import { Address } from "viem";
+import { Address, Hex } from "viem";
 import {
     _bindESIMWallet,
     _toggleESIMWalletStandbyStatus,
@@ -11,7 +11,10 @@ import {
     _uniqueIdentifierToDeviceWallet,
     _isESIMIdentifierClaimed,
     _eSIMWalletForIdentifier,
-    _defaultDataBundlePriceCap,
+    _defaultPriceCapUSDCents,
+    _paymentAdapter,
+    _usedPaymentReferences,
+    _requireLazyHistoryCopied,
     _requireDeviceIdentifierNotReserved
 } from "../logic/registry.js"
 import { KokioSmartAccountClient } from "../types.js";
@@ -70,8 +73,20 @@ export class RegistrySubPackage {
         return _eSIMWalletForIdentifier(this.client, eSIMUniqueIdentifier);
     }
 
-    defaultDataBundlePriceCap () {
-        return _defaultDataBundlePriceCap(this.client);
+    defaultPriceCapUSDCents () {
+        return _defaultPriceCapUSDCents(this.client);
+    }
+
+    paymentAdapter () {
+        return _paymentAdapter(this.client);
+    }
+
+    usedPaymentReferences (scopedReference: Hex) {
+        return _usedPaymentReferences(this.client, scopedReference);
+    }
+
+    requireLazyHistoryCopied (eSIMWallet: Address) {
+        return _requireLazyHistoryCopied(this.client, eSIMWallet);
     }
 
     requireDeviceIdentifierNotReserved (deviceUniqueIdentifier: string) {

@@ -4,6 +4,7 @@ export type {
     WebAuthnSignature,
     P256Credential,
     DataBundleDetails,
+    Asset,
     SignedRequest,
     KokioSmartAccount,
     KokioSmartAccountClient,
@@ -12,3 +13,5 @@ export type {
     ScheduledOperation,
     ScheduledBatchOperation
 } from './types';
+
+export { Settlement } from './types';

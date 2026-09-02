@@ -91,12 +91,12 @@ describe("CREATE2 counterfactual address (invariant vs compute-initCode.js)", ()
     const hash = await getInitCodeHash(client, UID, OWNER_KEY);
     // Golden value captured from current SDK behavior; must match the
     // contract-side BeaconProxy.creationCode ++ abi.encode(beacon, init(...)).
-    expect(hash).toMatchInlineSnapshot(`"0x5889afcff15d87c5b2477f47d6b48c79c05441d43a850039003d42dea62a5e81"`);
+    expect(hash).toMatchInlineSnapshot(`"0xf2baa5cd0786b4cb0a6ae7fc910e18add9b68836d251764467bc7c746bea098c"`);
   });
 
   it("locks the counterfactual address for the fixed fixture", async () => {
     const address = await getCounterFactualAddress(client, UID, OWNER_KEY, SALT);
-    expect(address).toMatchInlineSnapshot(`"0x15b5045C823D503974F9a1cEC120525F4302cFC0"`);
+    expect(address).toMatchInlineSnapshot(`"0xbBe28f11576809f8Bb4fF5573211C8562216ba09"`);
   });
 
   it("composes CREATE2 from (factory, salt(size:32), initCodeHash)", async () => {
@@ -347,7 +347,8 @@ describe("_signMessage / _signUserOperationHash envelope shape", () => {
     const onBaseSepolia = challengeOf();
 
     passkeyGet.mockClear();
-    await _signMessage("hello", "cred-id", "kokio.test", CHAIN_ID.OPTIMISM_SEPOLIA, SIGNER_ACCOUNT);
+    // Any chain id distinct from SIGNER_CHAIN_ID proves the challenge binds it.
+    await _signMessage("hello", "cred-id", "kokio.test", 11155420, SIGNER_ACCOUNT);
 
     expect(challengeOf()).not.toBe(onBaseSepolia);
   });
@@ -449,7 +450,8 @@ describe("_signTypedData (P0: stub replaced with real passkey stamping)", () => 
     const onBaseSepolia = challengeOf();
 
     passkeyGet.mockClear();
-    await _signTypedData(typedData, "cred-id", "kokio.test", CHAIN_ID.OPTIMISM_SEPOLIA, SIGNER_ACCOUNT);
+    // Any chain id distinct from SIGNER_CHAIN_ID proves the challenge binds it.
+    await _signTypedData(typedData, "cred-id", "kokio.test", 11155420, SIGNER_ACCOUNT);
 
     expect(challengeOf()).not.toBe(onBaseSepolia);
   });
