@@ -7,6 +7,7 @@ import { AdminLazyWalletRegistrySubPackage } from "./interface/lazyWalletRegistr
 import { AdminProtocolAdminSubPackage } from "./interface/protocolAdminClass.js";
 import { AdminDeviceWalletSubPackage } from "./interface/deviceWalletClass.js";
 import { AdminESIMWalletSubPackage } from "./interface/eSIMWalletClass.js";
+import { AdminPaymentAdapterSubPackage } from "./interface/paymentAdapterClass.js";
 
 // Re-export the typed error surface so backend consumers can `instanceof
 // KokioError` (or a subclass) and decode reverts without reaching into internal
@@ -59,6 +60,7 @@ export class KokioAdmin {
     registry: AdminRegistrySubPackage;
     lazyWalletRegistry: AdminLazyWalletRegistrySubPackage;
     protocolAdmin: AdminProtocolAdminSubPackage;
+    paymentAdapter: AdminPaymentAdapterSubPackage;
 
     // Instance-scoped surfaces - undefined until their address is known.
     deviceWallet?: AdminDeviceWalletSubPackage;
@@ -76,6 +78,7 @@ export class KokioAdmin {
         this.registry = new AdminRegistrySubPackage(walletClient);
         this.lazyWalletRegistry = new AdminLazyWalletRegistrySubPackage(walletClient);
         this.protocolAdmin = new AdminProtocolAdminSubPackage(walletClient);
+        this.paymentAdapter = new AdminPaymentAdapterSubPackage(walletClient);
 
         this.deviceWallet = deviceWalletAddress ? new AdminDeviceWalletSubPackage(walletClient, deviceWalletAddress) : undefined;
         this.eSIMWallet = eSIMWalletAddress ? new AdminESIMWalletSubPackage(walletClient, eSIMWalletAddress) : undefined;
@@ -132,6 +135,7 @@ export class KokioAdmin {
         this.registry = new AdminRegistrySubPackage(walletClient);
         this.lazyWalletRegistry = new AdminLazyWalletRegistrySubPackage(walletClient);
         this.protocolAdmin = new AdminProtocolAdminSubPackage(walletClient);
+        this.paymentAdapter = new AdminPaymentAdapterSubPackage(walletClient);
 
         this.deviceWallet = this.deviceWalletAddress ? new AdminDeviceWalletSubPackage(walletClient, this.deviceWalletAddress) : undefined;
         this.eSIMWallet = this.eSIMWalletAddress ? new AdminESIMWalletSubPackage(walletClient, this.eSIMWalletAddress) : undefined;
