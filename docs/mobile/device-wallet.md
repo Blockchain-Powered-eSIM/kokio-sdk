@@ -10,8 +10,12 @@ operation signed by the passkey.
 
 ```ts
 const hash = await kokio.deviceWallet!.toggleAccessToFunds(eSIMWalletAddress, true);
-await smartAccountClient.waitForUserOperationTransaction({ hash });
+const receipt = await smartAccountClient.waitForUserOperationReceipt({ hash });
+if (!receipt.success) throw new Error("operation reverted");
 ```
+
+An operation whose calls revert is still mined and still returns a receipt,
+so check `success` rather than treating a resolved await as confirmation.
 
 ## sendUserOperation
 
