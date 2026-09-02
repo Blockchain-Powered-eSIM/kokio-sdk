@@ -103,11 +103,33 @@ export type P256Credential = {
     signature: {r: Hex, s: Hex};
 };
 
+/**
+ * Which contract, if any, saw the money for a data bundle move. Mirrors the
+ * on-chain `Settlement` enum (CustomStructs.sol) - viem decodes a Solidity enum
+ * as its `uint8` position, so the member order here must match exactly.
+ */
+export enum Settlement {
+    DeviceWallet,
+    ExternalWallet,
+    Fiat,
+}
+
 export type DataBundleDetails = {
-    // Field name must match the on-chain `DataBundleDetails` struct
-    // (ESIMWallet.sol) - viem's `as const` ABIs encode by exact key.
-    dataBundleID: string;
-    dataBundlePrice: bigint;
+    // Field names must match the on-chain `DataBundleDetails` struct
+    // (CustomStructs.sol) - viem's `as const` ABIs encode by exact key.
+    id: Hex;
+    priceUSDCents: bigint;
+    settlement: Settlement;
+}
+
+/** One currency the payment adapter accepts. Mirrors the on-chain `Asset` struct (PaymentAdapter.sol). */
+export type Asset = {
+    allowed: boolean;
+    // USDC, USDT, DAI and USD are true. ETH, TON and ZEC are not.
+    isDollarUnit: boolean;
+    decimals: number;
+    // ERC-20 address, or the zero address for fiat and non-EVM assets.
+    token: Address;
 }
 
 /** One `deployMoreESIMWalletsForLazyDevice` (or first) transaction, read back from its receipt. */
