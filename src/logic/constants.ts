@@ -5,12 +5,6 @@ import {
     UnsupportedChainError,
 } from './errors.js';
 import {
-    mainnet,
-    sepolia,
-    optimism,
-    optimismSepolia,
-    arbitrum,
-    arbitrumSepolia,
     base,
     baseSepolia
 } from "viem/chains";
@@ -38,88 +32,27 @@ export const STUB_VERIFICATION_GAS_PAD = BigInt(60_000);
 // the measured shortfall.
 export const STUB_PRE_VERIFICATION_GAS_PAD = BigInt(15_000);
 
+// Only the two chains the protocol actually targets. A chain gets an entry here
+// once a deployment exists for it, not before.
 export enum CHAIN_ID  {
-    MAINNET = 1,
-    SEPOLIA = 11155111,
-    OPTIMISM_MAINNET = 10,
-    OPTIMISM_SEPOLIA = 11155420,
     BASE_MAINNET = 8453,
     BASE_SEPOLIA = 84532,
-    ARBITRUM_ONE = 42161,
-    ARBITRUM_SEPOLIA = 421614,
 }
 
 export interface chainSpecifcConstants {
-    factoryAddresses: 
-        typeof sepoliaFactoryAddresses |
-        typeof mainnetFactoryAddresses |
-        typeof optimismMainnetFactoryAddresses |
-        typeof optimismSepoliaFactoryAddresses |
+    factoryAddresses:
         typeof baseMainnetFactoryAddresses |
-        typeof baseSepoliaFactoryAddresses |
-        typeof arbitrumOneFactoryAddresses |
-        typeof arbitrumSepoliaFactoryAddresses;
-    chain: 
-        typeof mainnet |
-        typeof sepolia |
-        typeof optimism |
-        typeof optimismSepolia |
+        typeof baseSepoliaFactoryAddresses;
+    chain:
         typeof base |
-        typeof baseSepolia |
-        typeof arbitrum |
-        typeof arbitrumSepolia
+        typeof baseSepolia
     rpcURL: string;
     pimlicoRpcURL: string;
     customErrors: typeof customErrors;
 }
 
-// Cleared: the deployment here targets EntryPoint v0.7, which this SDK no longer
-// speaks. Refill only after a redeploy on v0.8.
-export const sepoliaFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0x',
-    ESIM_WALLET_FACTORY: '0x',
-    LAZY_WALLET_REGISTRY: '0x',
-    REGISTRY: '0x',
-    ENTRY_POINT: '0x',
-    SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x',
-    PROTOCOL_ADMIN: '0x'
-}
-
-export const mainnetFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0x',
-    ESIM_WALLET_FACTORY: '0x',
-    LAZY_WALLET_REGISTRY: '0x',
-    REGISTRY: '0x',
-    ENTRY_POINT: '0x',
-    SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x',
-    PROTOCOL_ADMIN: '0x'
-}
-
-export const optimismMainnetFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0x',
-    ESIM_WALLET_FACTORY: '0x',
-    LAZY_WALLET_REGISTRY: '0x',
-    REGISTRY: '0x',
-    ENTRY_POINT: '0x',
-    SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x',
-    PROTOCOL_ADMIN: '0x'
-}
-
-// Cleared for the same reason as Sepolia: a v0.7 deployment this SDK cannot use.
-export const optimismSepoliaFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0x',
-    ESIM_WALLET_FACTORY: '0x',
-    LAZY_WALLET_REGISTRY: '0x',
-    REGISTRY: '0x',
-    ENTRY_POINT: '0x',
-    SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x',
-    PROTOCOL_ADMIN: '0x'
-}
-
+// Not yet deployed. Kept as a placeholder so mainnet has a documented shape to
+// fill in once the protocol ships there, following Base Sepolia's soak.
 export const baseMainnetFactoryAddresses: Record<string, Address> = {
     DEVICE_WALLET_FACTORY: '0x',
     ESIM_WALLET_FACTORY: '0x',
@@ -128,40 +61,20 @@ export const baseMainnetFactoryAddresses: Record<string, Address> = {
     ENTRY_POINT: '0x',
     SENDER_CREATOR: '0x',
     P256VERIFIER: '0x',
-    PROTOCOL_ADMIN: '0x'
+    PROTOCOL_ADMIN: '0x',
+    PAYMENT_ADAPTER: '0x'
 }
 
 export const baseSepoliaFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0xB006c7066C89a5d7Bfc229e9fb0bADf96c8F979f',
-    ESIM_WALLET_FACTORY: '0x13998C0bb7433c51cE5101922B12EE69F459699A',
-    LAZY_WALLET_REGISTRY: '0x394177c5cc4762b897c37de1820259B75993e033',
-    REGISTRY: '0x89e386E3251692F21a2E9048A46518AdC2A5Cb4A',
+    DEVICE_WALLET_FACTORY: '0x0BB3BA8D9233514a4aA6D72c243a2473f9cFf0bb',
+    ESIM_WALLET_FACTORY: '0x57da54e07705de17c713ec311ac193e83470D5a5',
+    LAZY_WALLET_REGISTRY: '0x5bE46Cf216186Bc2E3C220729331D6bE7d186e84',
+    REGISTRY: '0x916b6b554119c789EF3026EDeB0E1Ba741b42A49',
     ENTRY_POINT: '0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108',
     SENDER_CREATOR: '0x449ED7C3e6Fee6a97311d4b55475DF59C44AdD33',
-    P256VERIFIER: '0x625561429bD99d647956ccBCA4eBf762aaA142c5',
-    PROTOCOL_ADMIN: '0x77A1D6f27462c34BF038832d9Cff6b3E94a9Fe6F'
-}
-
-export const arbitrumOneFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0x',
-    ESIM_WALLET_FACTORY: '0x',
-    LAZY_WALLET_REGISTRY: '0x',
-    REGISTRY: '0x',
-    ENTRY_POINT: '0x',
-    SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x',
-    PROTOCOL_ADMIN: '0x'
-}
-
-export const arbitrumSepoliaFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0x',
-    ESIM_WALLET_FACTORY: '0x',
-    LAZY_WALLET_REGISTRY: '0x',
-    REGISTRY: '0x',
-    ENTRY_POINT: '0x',
-    SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x',
-    PROTOCOL_ADMIN: '0x'
+    P256VERIFIER: '0x6FA3E7E145476Dc4682734Fd845019A3872b4821',
+    PROTOCOL_ADMIN: '0xdDeCC2C1345BC966337B5f4Fe57EC2D5bfad751A',
+    PAYMENT_ADAPTER: '0xBFaA666a8074924588E96507c307b680ecCeB2c1'
 }
 
 export const customErrors: Record<string, string> = {
@@ -178,19 +91,12 @@ export const _extractChainID = async (client: WalletClient) => {
     return client.getChainId();
 }
 
-// Maps each supported chain id to its factory-address book + viem chain. Chains
-// whose addresses are still '0x' placeholders are intentionally listed so the
-// guard below can reject them with a clear message rather than leaking '0x'
-// into viem calls.
+// Maps each supported chain id to its factory-address book + viem chain. Base
+// Mainnet is listed with '0x' placeholders so the guard below rejects it with a
+// clear message rather than leaking '0x' into viem calls.
 const CHAIN_CONFIG: Record<number, { factoryAddresses: Record<string, Address>; chain: chainSpecifcConstants["chain"] }> = {
-    [CHAIN_ID.SEPOLIA]: { factoryAddresses: sepoliaFactoryAddresses, chain: sepolia },
-    [CHAIN_ID.MAINNET]: { factoryAddresses: mainnetFactoryAddresses, chain: mainnet },
-    [CHAIN_ID.OPTIMISM_MAINNET]: { factoryAddresses: optimismMainnetFactoryAddresses, chain: optimism },
-    [CHAIN_ID.OPTIMISM_SEPOLIA]: { factoryAddresses: optimismSepoliaFactoryAddresses, chain: optimismSepolia },
     [CHAIN_ID.BASE_MAINNET]: { factoryAddresses: baseMainnetFactoryAddresses, chain: base },
     [CHAIN_ID.BASE_SEPOLIA]: { factoryAddresses: baseSepoliaFactoryAddresses, chain: baseSepolia },
-    [CHAIN_ID.ARBITRUM_ONE]: { factoryAddresses: arbitrumOneFactoryAddresses, chain: arbitrum },
-    [CHAIN_ID.ARBITRUM_SEPOLIA]: { factoryAddresses: arbitrumSepoliaFactoryAddresses, chain: arbitrumSepolia },
 };
 
 // A factory address book is only usable if every entry is a real 20-byte
@@ -200,14 +106,8 @@ const _hasUnconfiguredAddresses = (addresses: Record<string, Address>): boolean 
 
 export const _getChainSpecificConstants = (
     chainID:
-        CHAIN_ID.SEPOLIA |
-        CHAIN_ID.MAINNET |
-        CHAIN_ID.OPTIMISM_MAINNET |
-        CHAIN_ID.OPTIMISM_SEPOLIA |
         CHAIN_ID.BASE_MAINNET |
-        CHAIN_ID.BASE_SEPOLIA |
-        CHAIN_ID.ARBITRUM_ONE |
-        CHAIN_ID.ARBITRUM_SEPOLIA,
+        CHAIN_ID.BASE_SEPOLIA,
     rpcURL: string,
     pimlicoAPIKey?: string
     ): chainSpecifcConstants => {

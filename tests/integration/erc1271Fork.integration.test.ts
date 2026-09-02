@@ -118,7 +118,8 @@ describe.skipIf(!forkAvailable())("ERC-1271 message signing on a Base Sepolia fo
 
   it("a signature bound to another chain is refused", async () => {
     const message = "gm from kokio";
-    const signature = await _signMessage(message, "cred-id", "kokio.test", CHAIN_ID.OPTIMISM_SEPOLIA, wallet);
+    // Any chain id distinct from the wallet's own proves the challenge binds it.
+    const signature = await _signMessage(message, "cred-id", "kokio.test", 11155420, wallet);
 
     expect(await check(hashMessage(message), signature)).toBe(REFUSED);
   }, 60_000);

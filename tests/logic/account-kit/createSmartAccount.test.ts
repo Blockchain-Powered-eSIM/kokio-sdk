@@ -347,7 +347,8 @@ describe("_signMessage / _signUserOperationHash envelope shape", () => {
     const onBaseSepolia = challengeOf();
 
     passkeyGet.mockClear();
-    await _signMessage("hello", "cred-id", "kokio.test", CHAIN_ID.OPTIMISM_SEPOLIA, SIGNER_ACCOUNT);
+    // Any chain id distinct from SIGNER_CHAIN_ID proves the challenge binds it.
+    await _signMessage("hello", "cred-id", "kokio.test", 11155420, SIGNER_ACCOUNT);
 
     expect(challengeOf()).not.toBe(onBaseSepolia);
   });
@@ -449,7 +450,8 @@ describe("_signTypedData (P0: stub replaced with real passkey stamping)", () => 
     const onBaseSepolia = challengeOf();
 
     passkeyGet.mockClear();
-    await _signTypedData(typedData, "cred-id", "kokio.test", CHAIN_ID.OPTIMISM_SEPOLIA, SIGNER_ACCOUNT);
+    // Any chain id distinct from SIGNER_CHAIN_ID proves the challenge binds it.
+    await _signTypedData(typedData, "cred-id", "kokio.test", 11155420, SIGNER_ACCOUNT);
 
     expect(challengeOf()).not.toBe(onBaseSepolia);
   });
