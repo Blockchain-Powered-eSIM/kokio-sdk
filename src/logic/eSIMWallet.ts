@@ -3,7 +3,7 @@ import { DataBundleDetails } from "../types.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { MissingSmartWalletError } from "./errors.js";
 import { ESIMWallet } from "../abis/index.js";
-import { _defaultDataBundlePriceCap } from "./registry.js";
+import { _defaultPriceCapUSDCents } from "./registry.js";
 
 // Not exposed on this surface:
 //   - populateHistory and setESIMUniqueIdentifier are `onlyRegistry` - callable
@@ -16,15 +16,15 @@ import { _defaultDataBundlePriceCap } from "./registry.js";
 // wallet) or otherwise satisfiable by the device-wallet userOp sender, so they succeed.
 
 /**
- * Cap what this eSIM wallet may be charged for one data bundle. Zero hands it
- * back to the registry's ceiling.
+ * Cap what this eSIM wallet may be charged for one data bundle, in USD cents.
+ * Zero hands it back to the registry's ceiling.
  *
  * `onlyDeviceWallet`, so it needs the user's own signature. That is the point:
- * the admin names the price on `buyDataBundle`, so it must not be able to raise
- * the ceiling on that price too. A handover clears the cap, and the new owner has
- * to set it again.
+ * the admin names the price on `buyDataBundleWithToken`, so it must not be able
+ * to raise the ceiling on that price too. A handover clears the cap, and the new
+ * owner has to set it again.
  */
-export const _setDataBundlePriceCap = async (client: KokioSmartAccountClient, address: Address, cap: bigint) => {
+export const _setPriceCapUSDCents = async (client: KokioSmartAccountClient, address: Address, cap: bigint) => {
 
     if(!client.account) throw new MissingSmartWalletError()
 
@@ -35,7 +35,7 @@ export const _setDataBundlePriceCap = async (client: KokioSmartAccountClient, ad
             to: address,
             data: encodeFunctionData({
                 abi: ESIMWallet,
-                functionName: "setDataBundlePriceCap",
+                functionName: "setPriceCapUSDCents",
                 args: [cap]
             })
         }]
@@ -71,9 +71,9 @@ export const _owner = async (client: KokioSmartAccountClient, address: Address):
 }
 
 /**
- * The ceiling that actually applies to this wallet's next purchase, in wei.
- * Read it before naming a price on `buyDataBundle`, since a price above the
- * ceiling reverts.
+ * The ceiling that actually applies to this wallet's next purchase, in USD
+ * cents. Read it before naming a price on `buyDataBundleWithToken`, since a
+ * price above the ceiling reverts.
  *
  * Resolved the way the contract resolves it. The wallet's own cap wins when it
  * has one. Zero there means "follow the registry", which is where a fresh wallet
@@ -82,22 +82,22 @@ export const _owner = async (client: KokioSmartAccountClient, address: Address):
  * not spend anything".
  *
  * That last case cannot happen on a live deployment: the registry refuses a zero
- * cap in both `initialize` and `setDefaultDataBundlePriceCap`. It is handled
+ * cap in both `initialize` and `setDefaultPriceCapUSDCents`. It is handled
  * because the contract's own check treats zero as unlimited, not because the
  * state is reachable.
  */
-export const _dataBundlePriceCap = async (client: KokioSmartAccountClient, address: Address): Promise<bigint> => {
+export const _priceCapUSDCents = async (client: KokioSmartAccountClient, address: Address): Promise<bigint> => {
 
     const walletCap = await client.readContract({
         address,
         abi: ESIMWallet,
-        functionName: "dataBundlePriceCap",
+        functionName: "priceCapUSDCents",
         args: []
     }) as bigint;
 
     if (walletCap !== 0n) return walletCap;
 
-    const registryCap = await _defaultDataBundlePriceCap(client);
+    const registryCap = await _defaultPriceCapUSDCents(client);
 
     return registryCap === 0n ? maxUint256 : registryCap;
 }
@@ -121,19 +121,19 @@ export const _deviceWallet = async (client: KokioSmartAccountClient, address: Ad
  * pre-deployment purchases the lazy registry copies in.
  *
  * There is no length getter on the contract. Read upwards from zero until a call
- * reverts, or track the count from the `DataBundleBought` and
- * `TransactionHistoryPopulated` events.
+ * reverts, or track the count from the `DataBundleBoughtWithToken`,
+ * `DataBundleSettlementRecorded` and `TransactionHistoryPopulated` events.
  */
 export const _transactionHistory = async (client: KokioSmartAccountClient, address: Address, index: bigint): Promise<DataBundleDetails> => {
 
-    const [dataBundleID, dataBundlePrice] = await client.readContract({
+    const [id, priceUSDCents, settlement] = await client.readContract({
         address,
         abi: ESIMWallet,
         functionName: "transactionHistory",
         args: [index]
-    }) as [string, bigint];
+    });
 
-    return { dataBundleID, dataBundlePrice };
+    return { id, priceUSDCents, settlement };
 }
 
 export const _requestTransferOwnership = async (client: KokioSmartAccountClient, address: Address, newOwner: Address) => {

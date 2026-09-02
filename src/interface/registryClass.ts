@@ -11,7 +11,7 @@ import {
     _uniqueIdentifierToDeviceWallet,
     _isESIMIdentifierClaimed,
     _eSIMWalletForIdentifier,
-    _defaultDataBundlePriceCap,
+    _defaultPriceCapUSDCents,
     _requireDeviceIdentifierNotReserved
 } from "../logic/registry.js"
 import { KokioSmartAccountClient } from "../types.js";
@@ -70,8 +70,8 @@ export class RegistrySubPackage {
         return _eSIMWalletForIdentifier(this.client, eSIMUniqueIdentifier);
     }
 
-    defaultDataBundlePriceCap () {
-        return _defaultDataBundlePriceCap(this.client);
+    defaultPriceCapUSDCents () {
+        return _defaultPriceCapUSDCents(this.client);
     }
 
     requireDeviceIdentifierNotReserved (deviceUniqueIdentifier: string) {

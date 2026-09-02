@@ -245,8 +245,8 @@ export const _eSIMWalletForIdentifier = async (client: KokioSmartAccountClient, 
     }) as Promise<Address>;
 }
 
-/** The fallback price ceiling in wei for a wallet holding no cap of its own. */
-export const _defaultDataBundlePriceCap = async (client: KokioSmartAccountClient): Promise<bigint> => {
+/** The fallback price ceiling in USD cents for a wallet holding no cap of its own. */
+export const _defaultPriceCapUSDCents = async (client: KokioSmartAccountClient): Promise<bigint> => {
 
     const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -255,7 +255,7 @@ export const _defaultDataBundlePriceCap = async (client: KokioSmartAccountClient
     return client.readContract({
         address: values.factoryAddresses.REGISTRY,
         abi: Registry,
-        functionName: "defaultDataBundlePriceCap",
+        functionName: "defaultPriceCapUSDCents",
         args: []
     }) as Promise<bigint>;
 }

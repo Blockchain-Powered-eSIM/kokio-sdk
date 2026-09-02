@@ -2,12 +2,12 @@ import { Address } from "viem";
 import {
     _acceptOwnershipTransfer,
     _buyDataBundle,
-    _dataBundlePriceCap,
+    _priceCapUSDCents,
     _deviceWallet,
     _owner,
     _requestTransferOwnership,
     _sendETHToDeviceWallet,
-    _setDataBundlePriceCap,
+    _setPriceCapUSDCents,
     _transactionHistory
 } from "../logic/eSIMWallet.js"
 import { DataBundleDetails } from "../types";
@@ -31,8 +31,8 @@ export class ESIMWalletSubPackage {
         return _buyDataBundle(this.client, this.address, dataBundleDetails);
     }
 
-    dataBundlePriceCap () {
-        return _dataBundlePriceCap(this.client, this.address);
+    priceCapUSDCents () {
+        return _priceCapUSDCents(this.client, this.address);
     }
 
     deviceWallet () {
@@ -51,8 +51,8 @@ export class ESIMWalletSubPackage {
         return _sendETHToDeviceWallet(this.client, this.address, amount);
     }
 
-    setDataBundlePriceCap (cap: bigint) {
-        return _setDataBundlePriceCap(this.client, this.address, cap);
+    setPriceCapUSDCents (cap: bigint) {
+        return _setPriceCapUSDCents(this.client, this.address, cap);
     }
 
     transactionHistory (index: bigint) {
