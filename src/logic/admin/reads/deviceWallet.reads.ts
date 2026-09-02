@@ -31,12 +31,12 @@ export const _isValidESIMWallet = async (client: WalletClient, deviceWalletAddre
 }
 
 /** Whether an eSIM wallet is allowed to pull ETH from this device wallet. */
-export const _canPullETH = async (client: WalletClient, deviceWalletAddress: Address, eSIMWallet: Address): Promise<boolean> => {
+export const _canPullFunds = async (client: WalletClient, deviceWalletAddress: Address, eSIMWallet: Address): Promise<boolean> => {
 
     return client.extend(publicActions).readContract({
         address: deviceWalletAddress,
         abi: DeviceWallet,
-        functionName: "canPullETH",
+        functionName: "canPullFunds",
         args: [eSIMWallet]
     }) as Promise<boolean>;
 }

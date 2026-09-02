@@ -106,7 +106,7 @@ const readCases: Array<{
   // deviceWallet.reads (target = device wallet instance address)
   { label: "deviceWallet._deviceUniqueIdentifier", run: (c) => deviceWallet._deviceUniqueIdentifier(c, WALLET), address: WALLET, functionName: "deviceUniqueIdentifier", args: [] },
   { label: "deviceWallet._isValidESIMWallet", run: (c) => deviceWallet._isValidESIMWallet(c, WALLET, ESIM), address: WALLET, functionName: "isValidESIMWallet", args: [ESIM] },
-  { label: "deviceWallet._canPullETH", run: (c) => deviceWallet._canPullETH(c, WALLET, ESIM), address: WALLET, functionName: "canPullETH", args: [ESIM] },
+  { label: "deviceWallet._canPullFunds", run: (c) => deviceWallet._canPullFunds(c, WALLET, ESIM), address: WALLET, functionName: "canPullFunds", args: [ESIM] },
   { label: "deviceWallet._getVaultAddress", run: (c) => deviceWallet._getVaultAddress(c, WALLET), address: WALLET, functionName: "getVaultAddress", args: [] },
   { label: "deviceWallet._getDeposit", run: (c) => deviceWallet._getDeposit(c, WALLET), address: WALLET, functionName: "getDeposit", args: [] },
   { label: "deviceWallet._isValidSignature", run: (c) => deviceWallet._isValidSignature(c, WALLET, HASH, "0x01000000000000dead"), address: WALLET, functionName: "isValidSignature", args: [HASH, "0x01000000000000dead"] },
