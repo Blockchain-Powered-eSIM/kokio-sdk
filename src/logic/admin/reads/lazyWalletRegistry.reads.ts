@@ -54,14 +54,14 @@ export const _deviceIdentifierToESIMDetails = async (
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
-    const [dataBundleID, dataBundlePrice] = await client.extend(publicActions).readContract({
+    const [id, priceUSDCents, settlement] = await client.extend(publicActions).readContract({
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         abi: LazyWalletRegistry,
         functionName: "deviceIdentifierToESIMDetails",
         args: [deviceIdentifier, eSIMIdentifier, index]
-    }) as [string, bigint];
+    });
 
-    return { dataBundleID, dataBundlePrice };
+    return { id, priceUSDCents, settlement };
 }
 
 /** Most eSIM wallets one `deployLazyWalletAndSetESIMIdentifier` call will deploy. */

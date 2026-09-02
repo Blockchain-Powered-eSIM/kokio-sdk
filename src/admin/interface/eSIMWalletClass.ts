@@ -6,7 +6,7 @@ import {
     _eSIMUniqueIdentifier,
     _newRequestedOwner,
     _owner,
-    _dataBundlePriceCap,
+    _priceCapUSDCents,
     _deviceWallet,
     _transactionHistory,
 } from "../../logic/admin/reads/eSIMWallet.reads.js";
@@ -48,8 +48,8 @@ export class AdminESIMWalletSubPackage {
         return _owner(this.walletClient, this.eSIMWalletAddress);
     }
 
-    dataBundlePriceCap() {
-        return _dataBundlePriceCap(this.walletClient, this.eSIMWalletAddress);
+    priceCapUSDCents() {
+        return _priceCapUSDCents(this.walletClient, this.eSIMWalletAddress);
     }
 
     deviceWallet() {

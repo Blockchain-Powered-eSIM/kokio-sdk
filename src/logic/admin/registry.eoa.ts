@@ -183,12 +183,12 @@ export const _unpause = async (client: WalletClient) => {
 /**
  * Set the price ceiling every eSIM wallet falls back to when it holds none of its
  * own. `onlyOwner`, deliberately not the admin: the admin names the price on
- * `buyDataBundle`, so it must not also be able to raise its own limit.
+ * `buyDataBundleWithToken`, so it must not also be able to raise its own limit.
  *
  * Zero reverts `ZeroDataBundlePriceCap`, since a zero would read as "no ceiling"
  * for every wallet without one of its own.
  */
-export const _setDefaultDataBundlePriceCap = async (client: WalletClient, cap: bigint) => {
+export const _setDefaultPriceCapUSDCents = async (client: WalletClient, cap: bigint) => {
 
     const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
@@ -201,7 +201,7 @@ export const _setDefaultDataBundlePriceCap = async (client: WalletClient, cap: b
         chain: values.chain,
         account: client.account.address,
         abi: Registry,
-        functionName: 'setDefaultDataBundlePriceCap',
+        functionName: 'setDefaultPriceCapUSDCents',
         args: [cap]
     });
 }

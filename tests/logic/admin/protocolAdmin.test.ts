@@ -412,16 +412,16 @@ describe("protocolAdmin registry payloads", () => {
         expect(arg.args[5]).toBe(MIN_DELAY);
     });
 
-    it("setDefaultDataBundlePriceCapCall carries the cap and defaults to the registry", async () => {
-        const call = await protocolAdmin._setDefaultDataBundlePriceCapCall(client(), 5n * 10n ** 18n);
+    it("setDefaultPriceCapUSDCentsCall carries the cap and defaults to the registry", async () => {
+        const call = await protocolAdmin._setDefaultPriceCapUSDCentsCall(client(), 50_000n);
 
         expect(call.address).toBe(F.REGISTRY);
-        expect(call.functionName).toBe("setDefaultDataBundlePriceCap");
-        expect(call.args).toEqual([5n * 10n ** 18n]);
+        expect(call.functionName).toBe("setDefaultPriceCapUSDCents");
+        expect(call.args).toEqual([50_000n]);
     });
 
-    it("setDefaultDataBundlePriceCapCall aims at an explicit target when given one", async () => {
-        const call = await protocolAdmin._setDefaultDataBundlePriceCapCall(client(), 1n, OTHER);
+    it("setDefaultPriceCapUSDCentsCall aims at an explicit target when given one", async () => {
+        const call = await protocolAdmin._setDefaultPriceCapUSDCentsCall(client(), 1n, OTHER);
         expect(call.address).toBe(OTHER);
     });
 });

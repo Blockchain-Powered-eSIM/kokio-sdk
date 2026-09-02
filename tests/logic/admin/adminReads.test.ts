@@ -74,7 +74,7 @@ const readCases: Array<{
   { label: "registry._isESIMWalletValid", run: (c) => registry._isESIMWalletValid(c, ESIM), address: F.REGISTRY, functionName: "isESIMWalletValid", args: [ESIM] },
   { label: "registry._isESIMWalletOnStandby", run: (c) => registry._isESIMWalletOnStandby(c, ESIM), address: F.REGISTRY, functionName: "isESIMWalletOnStandby", args: [ESIM] },
   { label: "registry._paused", run: (c) => registry._paused(c), address: F.REGISTRY, functionName: "paused", args: [] },
-  { label: "registry._defaultDataBundlePriceCap", run: (c) => registry._defaultDataBundlePriceCap(c), address: F.REGISTRY, functionName: "defaultDataBundlePriceCap", args: [] },
+  { label: "registry._defaultPriceCapUSDCents", run: (c) => registry._defaultPriceCapUSDCents(c), address: F.REGISTRY, functionName: "defaultPriceCapUSDCents", args: [] },
   { label: "registry._isDeviceIdentifierAlreadyUsed", run: (c) => registry._isDeviceIdentifierAlreadyUsed(c, "Device_11"), address: F.REGISTRY, functionName: "isDeviceIdentifierAlreadyUsed", args: ["Device_11"] },
   { label: "registry._isESIMIdentifierClaimed", run: (c) => registry._isESIMIdentifierClaimed(c, "eSIM_11"), address: F.REGISTRY, functionName: "isESIMIdentifierClaimed", args: ["eSIM_11"] },
   { label: "registry._eSIMWalletForIdentifier", run: (c) => registry._eSIMWalletForIdentifier(c, "eSIM_11"), address: F.REGISTRY, functionName: "eSIMWalletForIdentifier", args: ["eSIM_11"] },
@@ -120,7 +120,7 @@ const readCases: Array<{
   { label: "eSIMWallet._eSIMUniqueIdentifier", run: (c) => eSIMWallet._eSIMUniqueIdentifier(c, ESIM), address: ESIM, functionName: "eSIMUniqueIdentifier", args: [] },
   { label: "eSIMWallet._newRequestedOwner", run: (c) => eSIMWallet._newRequestedOwner(c, ESIM), address: ESIM, functionName: "newRequestedOwner", args: [] },
   { label: "eSIMWallet._owner", run: (c) => eSIMWallet._owner(c, ESIM), address: ESIM, functionName: "owner", args: [] },
-  { label: "eSIMWallet._dataBundlePriceCap", run: (c) => eSIMWallet._dataBundlePriceCap(c, ESIM), address: ESIM, functionName: "dataBundlePriceCap", args: [] },
+  { label: "eSIMWallet._priceCapUSDCents", run: (c) => eSIMWallet._priceCapUSDCents(c, ESIM), address: ESIM, functionName: "priceCapUSDCents", args: [] },
   { label: "eSIMWallet._deviceWallet", run: (c) => eSIMWallet._deviceWallet(c, ESIM), address: ESIM, functionName: "deviceWallet", args: [] },
   { label: "eSIMWallet._transactionHistory", run: (c) => eSIMWallet._transactionHistory(c, ESIM, 2n), address: ESIM, functionName: "transactionHistory", args: [2n] },
 ];
@@ -155,13 +155,13 @@ describe("admin readContract calls", () => {
     expect(owner).toEqual([HASH, HASH]);
   });
 
-  it("deviceIdentifierToESIMDetails maps the (id, price) tuple into a DataBundleDetails", async () => {
-    const client = makeMockWalletClient({ chainId: CHAIN_ID, readResult: ["bundle-1", 1000n] });
+  it("deviceIdentifierToESIMDetails maps the (id, price, settlement) tuple into a DataBundleDetails", async () => {
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, readResult: [HASH, 1000n, 0] });
     const details = await lazyWalletRegistry._deviceIdentifierToESIMDetails(client, "Device_11", "eid-1", 0n);
 
     const read = client.readContract as ReturnType<typeof vi.fn>;
     expect(read.mock.calls[0][0].functionName).toBe("deviceIdentifierToESIMDetails");
     expect(read.mock.calls[0][0].args).toEqual(["Device_11", "eid-1", 0n]);
-    expect(details).toEqual({ dataBundleID: "bundle-1", dataBundlePrice: 1000n });
+    expect(details).toEqual({ id: HASH, priceUSDCents: 1000n, settlement: 0 });
   });
 });

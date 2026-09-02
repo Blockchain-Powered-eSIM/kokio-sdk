@@ -588,21 +588,21 @@ export const _unpauseCall = async (client: WalletClient, target?: Address): Prom
 }
 
 /**
- * Set the fallback data bundle price ceiling. Pass the result to `schedule`.
+ * Set the fallback price ceiling, in USD cents. Pass the result to `schedule`.
  *
  * Zero reverts on execution, not on scheduling, so a zero here costs the whole
  * delay before it fails.
  *
  * `target` defaults to the registry.
  */
-export const _setDefaultDataBundlePriceCapCall = async (client: WalletClient, cap: bigint, target?: Address): Promise<OwnerCall> => {
+export const _setDefaultPriceCapUSDCentsCall = async (client: WalletClient, cap: bigint, target?: Address): Promise<OwnerCall> => {
 
     const values = await _resolve(client);
 
     return {
         address: target ?? values.factoryAddresses.REGISTRY,
         abi: Registry,
-        functionName: 'setDefaultDataBundlePriceCap',
+        functionName: 'setDefaultPriceCapUSDCents',
         args: [cap],
     };
 }

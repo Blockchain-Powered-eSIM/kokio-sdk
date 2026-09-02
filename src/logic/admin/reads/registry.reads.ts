@@ -83,10 +83,10 @@ export const _paused = async (client: WalletClient): Promise<boolean> => {
 }
 
 /**
- * The fallback price ceiling in wei, applied to any eSIM wallet holding no cap of
- * its own. Never zero.
+ * The fallback price ceiling in USD cents, applied to any eSIM wallet holding no
+ * cap of its own. Never zero.
  */
-export const _defaultDataBundlePriceCap = async (client: WalletClient): Promise<bigint> => {
+export const _defaultPriceCapUSDCents = async (client: WalletClient): Promise<bigint> => {
 
     const chainID = await client.getChainId();
     const rpcURL = client.transport.url;
@@ -95,7 +95,7 @@ export const _defaultDataBundlePriceCap = async (client: WalletClient): Promise<
     return client.extend(publicActions).readContract({
         address: values.factoryAddresses.REGISTRY,
         abi: Registry,
-        functionName: "defaultDataBundlePriceCap",
+        functionName: "defaultPriceCapUSDCents",
         args: []
     }) as Promise<bigint>;
 }

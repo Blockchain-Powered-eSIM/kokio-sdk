@@ -9,7 +9,7 @@ import {
     _assignESIMIdentifier,
     _pause,
     _unpause,
-    _setDefaultDataBundlePriceCap,
+    _setDefaultPriceCapUSDCents,
     _acceptOwnership,
     _transferOwnershipCall,
     _upgradeCall,
@@ -30,7 +30,7 @@ import {
     _isESIMWalletValid,
     _isESIMWalletOnStandby,
     _paused,
-    _defaultDataBundlePriceCap,
+    _defaultPriceCapUSDCents,
     _isDeviceIdentifierAlreadyUsed,
     _isESIMIdentifierClaimed,
     _eSIMWalletForIdentifier,
@@ -90,8 +90,8 @@ export class AdminRegistrySubPackage {
         return _unpause(this.walletClient);
     }
 
-    setDefaultDataBundlePriceCap(cap: bigint) {
-        return _setDefaultDataBundlePriceCap(this.walletClient, cap);
+    setDefaultPriceCapUSDCents(cap: bigint) {
+        return _setDefaultPriceCapUSDCents(this.walletClient, cap);
     }
 
     acceptOwnership() {
@@ -170,8 +170,8 @@ export class AdminRegistrySubPackage {
         return _paused(this.walletClient);
     }
 
-    defaultDataBundlePriceCap() {
-        return _defaultDataBundlePriceCap(this.walletClient);
+    defaultPriceCapUSDCents() {
+        return _defaultPriceCapUSDCents(this.walletClient);
     }
 
     isDeviceIdentifierAlreadyUsed(deviceUniqueIdentifier: string) {
