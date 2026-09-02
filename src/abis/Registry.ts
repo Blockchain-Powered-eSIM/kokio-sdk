@@ -140,13 +140,26 @@ const Registry = [
     },
     {
         "type": "function",
-        "name": "defaultDataBundlePriceCap",
+        "name": "consumePaymentReference",
+        "inputs": [
+            {
+                "name": "_paymentReference",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "defaultPriceCapUSDCents",
         "inputs": [],
         "outputs": [
             {
                 "name": "",
-                "type": "uint256",
-                "internalType": "uint256"
+                "type": "uint64",
+                "internalType": "uint64"
             }
         ],
         "stateMutability": "view"
@@ -378,9 +391,9 @@ const Registry = [
                 "internalType": "contract IEntryPoint"
             },
             {
-                "name": "_defaultDataBundlePriceCap",
-                "type": "uint256",
-                "internalType": "uint256"
+                "name": "_defaultPriceCapUSDCents",
+                "type": "uint64",
+                "internalType": "uint64"
             }
         ],
         "outputs": [],
@@ -542,6 +555,19 @@ const Registry = [
     },
     {
         "type": "function",
+        "name": "paymentAdapter",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "pendingOwner",
         "inputs": [],
         "outputs": [
@@ -568,14 +594,19 @@ const Registry = [
                 "internalType": "struct DataBundleDetails[]",
                 "components": [
                     {
-                        "name": "dataBundleID",
-                        "type": "string",
-                        "internalType": "string"
+                        "name": "id",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
                     },
                     {
-                        "name": "dataBundlePrice",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "name": "priceUSDCents",
+                        "type": "uint64",
+                        "internalType": "uint64"
+                    },
+                    {
+                        "name": "settlement",
+                        "type": "uint8",
+                        "internalType": "enum Settlement"
                     }
                 ]
             }
@@ -595,6 +626,56 @@ const Registry = [
             }
         ],
         "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "recordSettledPurchase",
+        "inputs": [
+            {
+                "name": "_eSIMWallet",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "_dataBundleDetail",
+                "type": "tuple",
+                "internalType": "struct DataBundleDetails",
+                "components": [
+                    {
+                        "name": "id",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
+                    },
+                    {
+                        "name": "priceUSDCents",
+                        "type": "uint64",
+                        "internalType": "uint64"
+                    },
+                    {
+                        "name": "settlement",
+                        "type": "uint8",
+                        "internalType": "enum Settlement"
+                    }
+                ]
+            },
+            {
+                "name": "_asset",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            },
+            {
+                "name": "_tokenAmount",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "_paymentReference",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
     },
     {
         "type": "function",
@@ -650,6 +731,19 @@ const Registry = [
     },
     {
         "type": "function",
+        "name": "requireLazyHistoryCopied",
+        "inputs": [
+            {
+                "name": "_eSIMWallet",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "requireNotPaused",
         "inputs": [],
         "outputs": [],
@@ -657,12 +751,25 @@ const Registry = [
     },
     {
         "type": "function",
-        "name": "setDefaultDataBundlePriceCap",
+        "name": "setDefaultPriceCapUSDCents",
         "inputs": [
             {
                 "name": "_cap",
-                "type": "uint256",
-                "internalType": "uint256"
+                "type": "uint64",
+                "internalType": "uint64"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "setPaymentAdapter",
+        "inputs": [
+            {
+                "name": "_paymentAdapter",
+                "type": "address",
+                "internalType": "address"
             }
         ],
         "outputs": [],
@@ -813,6 +920,25 @@ const Registry = [
     },
     {
         "type": "function",
+        "name": "usedPaymentReferences",
+        "inputs": [
+            {
+                "name": "scopedReference",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "used",
+                "type": "bool",
+                "internalType": "bool"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "vault",
         "inputs": [],
         "outputs": [
@@ -915,13 +1041,68 @@ const Registry = [
     },
     {
         "type": "event",
-        "name": "DefaultDataBundlePriceCapUpdated",
+        "name": "DataBundleSettled",
         "inputs": [
             {
-                "name": "_cap",
+                "name": "_eSIMWallet",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_dataBundleID",
+                "type": "bytes32",
+                "indexed": false,
+                "internalType": "bytes32"
+            },
+            {
+                "name": "_priceUSDCents",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
+            },
+            {
+                "name": "_settlement",
+                "type": "uint8",
+                "indexed": false,
+                "internalType": "enum Settlement"
+            },
+            {
+                "name": "_asset",
+                "type": "bytes32",
+                "indexed": true,
+                "internalType": "bytes32"
+            },
+            {
+                "name": "_token",
+                "type": "address",
+                "indexed": false,
+                "internalType": "address"
+            },
+            {
+                "name": "_tokenAmount",
                 "type": "uint256",
                 "indexed": false,
                 "internalType": "uint256"
+            },
+            {
+                "name": "_paymentReference",
+                "type": "bytes32",
+                "indexed": true,
+                "internalType": "bytes32"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "DefaultPriceCapUSDCentsUpdated",
+        "inputs": [
+            {
+                "name": "_cap",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
             }
         ],
         "anonymous": false
@@ -1123,6 +1304,38 @@ const Registry = [
     },
     {
         "type": "event",
+        "name": "PaymentAdapterUpdated",
+        "inputs": [
+            {
+                "name": "_paymentAdapter",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "PaymentReferenceConsumed",
+        "inputs": [
+            {
+                "name": "_eSIMWallet",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_paymentReference",
+                "type": "bytes32",
+                "indexed": true,
+                "internalType": "bytes32"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
         "name": "RegistryInitialized",
         "inputs": [
             {
@@ -1173,7 +1386,7 @@ const Registry = [
     },
     {
         "type": "event",
-        "name": "UpdatedDeviceWalletassociatedWithESIMWallet",
+        "name": "UpdatedDeviceWalletAssociatedWithESIMWallet",
         "inputs": [
             {
                 "name": "_eSIMWalletAddress",
@@ -1349,13 +1562,39 @@ const Registry = [
     },
     {
         "type": "error",
+        "name": "EmptyDataBundleID",
+        "inputs": []
+    },
+    {
+        "type": "error",
         "name": "EmptyESIMIdentifier",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "EmptyPaymentReference",
         "inputs": []
     },
     {
         "type": "error",
         "name": "FailedCall",
         "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "HistoryNotFullyCopied",
+        "inputs": [
+            {
+                "name": "eSIMIdentifier",
+                "type": "string",
+                "internalType": "string"
+            },
+            {
+                "name": "outstanding",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
     },
     {
         "type": "error",
@@ -1487,7 +1726,39 @@ const Registry = [
     },
     {
         "type": "error",
+        "name": "PaymentAdapterNotSet",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "PaymentAdapterUnchanged",
+        "inputs": [
+            {
+                "name": "paymentAdapter",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "PaymentReferenceAlreadyUsed",
+        "inputs": [
+            {
+                "name": "paymentReference",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ]
+    },
+    {
+        "type": "error",
         "name": "ProtocolPaused",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "SettlementNotAsserted",
         "inputs": []
     },
     {
@@ -1538,6 +1809,11 @@ const Registry = [
                 "internalType": "string"
             }
         ]
+    },
+    {
+        "type": "error",
+        "name": "ZeroDataBundlePrice",
+        "inputs": []
     },
     {
         "type": "error",

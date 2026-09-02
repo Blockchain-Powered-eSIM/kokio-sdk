@@ -8,6 +8,7 @@ import Registry from './Registry.js';
 import RegistryHelper from './RegistryHelper.js';
 import BeaconProxy from './BeaconProxy.js';
 import ProtocolAdmin from './ProtocolAdmin.js';
+import PaymentAdapter from './PaymentAdapter.js';
 
 export {
     DeviceWallet,
@@ -19,5 +20,6 @@ export {
     Registry,
     RegistryHelper,
     BeaconProxy,
-    ProtocolAdmin
+    ProtocolAdmin,
+    PaymentAdapter
 }

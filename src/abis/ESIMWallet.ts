@@ -12,7 +12,7 @@ const ESIMWallet = [
     },
     {
         "type": "function",
-        "name": "buyDataBundle",
+        "name": "buyDataBundleWithToken",
         "inputs": [
             {
                 "name": "_dataBundleDetail",
@@ -20,16 +20,36 @@ const ESIMWallet = [
                 "internalType": "struct DataBundleDetails",
                 "components": [
                     {
-                        "name": "dataBundleID",
-                        "type": "string",
-                        "internalType": "string"
+                        "name": "id",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
                     },
                     {
-                        "name": "dataBundlePrice",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "name": "priceUSDCents",
+                        "type": "uint64",
+                        "internalType": "uint64"
+                    },
+                    {
+                        "name": "settlement",
+                        "type": "uint8",
+                        "internalType": "enum Settlement"
                     }
                 ]
+            },
+            {
+                "name": "_asset",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            },
+            {
+                "name": "_maxAmountIn",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "_paymentReference",
+                "type": "bytes32",
+                "internalType": "bytes32"
             }
         ],
         "outputs": [
@@ -39,20 +59,7 @@ const ESIMWallet = [
                 "internalType": "bool"
             }
         ],
-        "stateMutability": "payable"
-    },
-    {
-        "type": "function",
-        "name": "dataBundlePriceCap",
-        "inputs": [],
-        "outputs": [
-            {
-                "name": "",
-                "type": "uint256",
-                "internalType": "uint256"
-            }
-        ],
-        "stateMutability": "view"
+        "stateMutability": "nonpayable"
     },
     {
         "type": "function",
@@ -147,14 +154,19 @@ const ESIMWallet = [
                 "internalType": "struct DataBundleDetails[]",
                 "components": [
                     {
-                        "name": "dataBundleID",
-                        "type": "string",
-                        "internalType": "string"
+                        "name": "id",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
                     },
                     {
-                        "name": "dataBundlePrice",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "name": "priceUSDCents",
+                        "type": "uint64",
+                        "internalType": "uint64"
+                    },
+                    {
+                        "name": "settlement",
+                        "type": "uint8",
+                        "internalType": "enum Settlement"
                     }
                 ]
             }
@@ -166,6 +178,49 @@ const ESIMWallet = [
                 "internalType": "bool"
             }
         ],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "priceCapUSDCents",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint64",
+                "internalType": "uint64"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "recordSettledPurchase",
+        "inputs": [
+            {
+                "name": "_dataBundleDetail",
+                "type": "tuple",
+                "internalType": "struct DataBundleDetails",
+                "components": [
+                    {
+                        "name": "id",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
+                    },
+                    {
+                        "name": "priceUSDCents",
+                        "type": "uint64",
+                        "internalType": "uint64"
+                    },
+                    {
+                        "name": "settlement",
+                        "type": "uint8",
+                        "internalType": "enum Settlement"
+                    }
+                ]
+            }
+        ],
+        "outputs": [],
         "stateMutability": "nonpayable"
     },
     {
@@ -209,15 +264,26 @@ const ESIMWallet = [
     },
     {
         "type": "function",
-        "name": "setDataBundlePriceCap",
+        "name": "sendTokenToDeviceWallet",
         "inputs": [
             {
-                "name": "_cap",
+                "name": "_token",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "_amount",
                 "type": "uint256",
                 "internalType": "uint256"
             }
         ],
-        "outputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
         "stateMutability": "nonpayable"
     },
     {
@@ -235,6 +301,19 @@ const ESIMWallet = [
     },
     {
         "type": "function",
+        "name": "setPriceCapUSDCents",
+        "inputs": [
+            {
+                "name": "_cap",
+                "type": "uint64",
+                "internalType": "uint64"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
         "name": "transactionHistory",
         "inputs": [
             {
@@ -245,14 +324,19 @@ const ESIMWallet = [
         ],
         "outputs": [
             {
-                "name": "dataBundleID",
-                "type": "string",
-                "internalType": "string"
+                "name": "id",
+                "type": "bytes32",
+                "internalType": "bytes32"
             },
             {
-                "name": "dataBundlePrice",
-                "type": "uint256",
-                "internalType": "uint256"
+                "name": "priceUSDCents",
+                "type": "uint64",
+                "internalType": "uint64"
+            },
+            {
+                "name": "settlement",
+                "type": "uint8",
+                "internalType": "enum Settlement"
             }
         ],
         "stateMutability": "view"
@@ -272,38 +356,68 @@ const ESIMWallet = [
     },
     {
         "type": "event",
-        "name": "DataBundleBought",
+        "name": "DataBundleBoughtWithToken",
         "inputs": [
             {
                 "name": "_dataBundleID",
-                "type": "string",
+                "type": "bytes32",
                 "indexed": false,
-                "internalType": "string"
+                "internalType": "bytes32"
             },
             {
-                "name": "_dataBundlePrice",
+                "name": "_priceUSDCents",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
+            },
+            {
+                "name": "_asset",
+                "type": "bytes32",
+                "indexed": true,
+                "internalType": "bytes32"
+            },
+            {
+                "name": "_token",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_amountSpent",
                 "type": "uint256",
                 "indexed": false,
                 "internalType": "uint256"
             },
             {
-                "name": "_ethFromUser",
-                "type": "uint256",
-                "indexed": false,
-                "internalType": "uint256"
+                "name": "_paymentReference",
+                "type": "bytes32",
+                "indexed": true,
+                "internalType": "bytes32"
             }
         ],
         "anonymous": false
     },
     {
         "type": "event",
-        "name": "DataBundlePriceCapUpdated",
+        "name": "DataBundleSettlementRecorded",
         "inputs": [
             {
-                "name": "_cap",
-                "type": "uint256",
+                "name": "_dataBundleID",
+                "type": "bytes32",
                 "indexed": false,
-                "internalType": "uint256"
+                "internalType": "bytes32"
+            },
+            {
+                "name": "_priceUSDCents",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
+            },
+            {
+                "name": "_settlement",
+                "type": "uint8",
+                "indexed": false,
+                "internalType": "enum Settlement"
             }
         ],
         "anonymous": false
@@ -437,6 +551,44 @@ const ESIMWallet = [
     },
     {
         "type": "event",
+        "name": "PriceCapUSDCentsUpdated",
+        "inputs": [
+            {
+                "name": "_cap",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "TokenSentToDeviceWallet",
+        "inputs": [
+            {
+                "name": "_token",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_deviceWallet",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_amount",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
         "name": "TransactionHistoryPopulated",
         "inputs": [
             {
@@ -446,14 +598,19 @@ const ESIMWallet = [
                 "internalType": "struct DataBundleDetails[]",
                 "components": [
                     {
-                        "name": "dataBundleID",
-                        "type": "string",
-                        "internalType": "string"
+                        "name": "id",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
                     },
                     {
-                        "name": "dataBundlePrice",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "name": "priceUSDCents",
+                        "type": "uint64",
+                        "internalType": "uint64"
+                    },
+                    {
+                        "name": "settlement",
+                        "type": "uint8",
+                        "internalType": "enum Settlement"
                     }
                 ]
             },
@@ -468,17 +625,28 @@ const ESIMWallet = [
     },
     {
         "type": "error",
+        "name": "AssetNotTransferable",
+        "inputs": [
+            {
+                "name": "asset",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ]
+    },
+    {
+        "type": "error",
         "name": "DataBundlePriceAboveCap",
         "inputs": [
             {
-                "name": "price",
-                "type": "uint256",
-                "internalType": "uint256"
+                "name": "priceUSDCents",
+                "type": "uint64",
+                "internalType": "uint64"
             },
             {
                 "name": "cap",
-                "type": "uint256",
-                "internalType": "uint256"
+                "type": "uint64",
+                "internalType": "uint64"
             }
         ]
     },
@@ -600,8 +768,40 @@ const ESIMWallet = [
     },
     {
         "type": "error",
+        "name": "PaymentAdapterNotSet",
+        "inputs": []
+    },
+    {
+        "type": "error",
         "name": "ReentrancyGuardReentrantCall",
         "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "SafeERC20FailedOperation",
+        "inputs": [
+            {
+                "name": "token",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "SettlementAboveMax",
+        "inputs": [
+            {
+                "name": "required",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "maxAmountIn",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
     },
     {
         "type": "error",
@@ -618,6 +818,11 @@ const ESIMWallet = [
                 "internalType": "string"
             }
         ]
+    },
+    {
+        "type": "error",
+        "name": "ZeroAmount",
+        "inputs": []
     },
     {
         "type": "error",
