@@ -5,7 +5,7 @@ import { makeMockWalletClient } from "../../utils/mockClient.js";
 import { baseSepoliaFactoryAddresses } from "../../../src/logic/constants.js";
 import { ContractRevertError } from "../../../src/logic/errors.js";
 import { Registry } from "../../../src/abis/index.js";
-import { Settlement, type DataBundleDetails } from "../../../src/types.js";
+import { Settlement, type Asset, type DataBundleDetails } from "../../../src/types.js";
 
 import * as deviceWalletFactory from "../../../src/logic/admin/deviceWalletFactory.eoa.js";
 import * as eSIMWalletFactory from "../../../src/logic/admin/eSIMWalletFactory.eoa.js";
@@ -13,6 +13,7 @@ import * as registry from "../../../src/logic/admin/registry.eoa.js";
 import * as lazyWalletRegistry from "../../../src/logic/admin/lazyWalletRegistry.eoa.js";
 import * as deviceWallet from "../../../src/logic/admin/deviceWallet.eoa.js";
 import * as eSIMWallet from "../../../src/logic/admin/eSIMWallet.eoa.js";
+import * as paymentAdapter from "../../../src/logic/admin/paymentAdapter.eoa.js";
 
 // --- Fixtures ---------------------------------------------------------------
 const EOA = "0x00000000000000000000000000000000000e0a01" as Address;
@@ -34,6 +35,8 @@ const BUNDLE: DataBundleDetails = {
 };
 const ASSET = "0x5553444300000000000000000000000000000000000000000000000000000000" as Hex;
 const PAYMENT_REFERENCE = "0x000000000000000000000000000000000000000000000000000000000000ee11" as Hex;
+const TOKEN = "0x0000000000000000000000000000000000706b31" as Address;
+const ASSET_ENTRY: Asset = { allowed: true, isDollarUnit: false, decimals: 6, token: TOKEN };
 
 const F = baseSepoliaFactoryAddresses;
 const CHAIN_ID = 84532;
@@ -190,6 +193,13 @@ const eoaCases: Array<{
     functionName: "setDefaultPriceCapUSDCents",
     args: [50_000n],
   },
+  {
+    label: "registry._recordSettledPurchase",
+    run: (c) => registry._recordSettledPurchase(c, ESIM, BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE),
+    address: F.REGISTRY,
+    functionName: "recordSettledPurchase",
+    args: [ESIM, BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE],
+  },
   // lazyWalletRegistry.eoa (target = LAZY_WALLET_REGISTRY)
   {
     // Sent by the incoming owner, not the outgoing one.
@@ -260,6 +270,29 @@ const eoaCases: Array<{
     address: ESIM,
     functionName: "buyDataBundleWithToken",
     args: [BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE],
+  },
+  // paymentAdapter.eoa (target = PAYMENT_ADAPTER)
+  {
+    label: "paymentAdapter._registerAsset",
+    run: (c) => paymentAdapter._registerAsset(c, ASSET, ASSET_ENTRY),
+    address: F.PAYMENT_ADAPTER,
+    functionName: "registerAsset",
+    args: [ASSET, ASSET_ENTRY],
+  },
+  {
+    label: "paymentAdapter._updateAsset",
+    run: (c) => paymentAdapter._updateAsset(c, ASSET, ASSET_ENTRY),
+    address: F.PAYMENT_ADAPTER,
+    functionName: "updateAsset",
+    args: [ASSET, ASSET_ENTRY],
+  },
+  {
+    // Sent by the incoming owner, not the outgoing one.
+    label: "paymentAdapter._acceptOwnership",
+    run: (c) => paymentAdapter._acceptOwnership(c),
+    address: F.PAYMENT_ADAPTER,
+    functionName: "acceptOwnership",
+    args: [],
   },
 ];
 

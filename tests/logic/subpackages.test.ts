@@ -18,6 +18,7 @@ import * as deviceWalletFactory from "../../src/logic/deviceWalletFactory.js";
 import * as eSIMWallet from "../../src/logic/eSIMWallet.js";
 import * as eSIMWalletFactory from "../../src/logic/eSIMWalletFactory.js";
 import * as registry from "../../src/logic/registry.js";
+import * as paymentAdapter from "../../src/logic/paymentAdapter.js";
 import * as p256Verifier from "../../src/logic/P256Verifier.js";
 
 // --- Fixtures ---------------------------------------------------------------
@@ -383,6 +384,16 @@ const readCases: Array<{
   { label: "registry._eSIMWalletForIdentifier", run: (c) => registry._eSIMWalletForIdentifier(c, "eid-1"), address: F.REGISTRY, functionName: "eSIMWalletForIdentifier", args: ["eid-1"] },
   { label: "registry._defaultPriceCapUSDCents", run: (c) => registry._defaultPriceCapUSDCents(c), address: F.REGISTRY, functionName: "defaultPriceCapUSDCents", args: [] },
   { label: "registry._requireDeviceIdentifierNotReserved", run: (c) => registry._requireDeviceIdentifierNotReserved(c, "Device_11"), address: F.REGISTRY, functionName: "requireDeviceIdentifierNotReserved", args: ["Device_11"] },
+  { label: "registry._paymentAdapter", run: (c) => registry._paymentAdapter(c), address: F.REGISTRY, functionName: "paymentAdapter", args: [] },
+  { label: "registry._usedPaymentReferences", run: (c) => registry._usedPaymentReferences(c, PAYMENT_REFERENCE), address: F.REGISTRY, functionName: "usedPaymentReferences", args: [PAYMENT_REFERENCE] },
+  { label: "registry._requireLazyHistoryCopied", run: (c) => registry._requireLazyHistoryCopied(c, ESIM), address: F.REGISTRY, functionName: "requireLazyHistoryCopied", args: [ESIM] },
+  // paymentAdapter.ts (target = PAYMENT_ADAPTER)
+  { label: "paymentAdapter._registry", run: (c) => paymentAdapter._registry(c), address: F.PAYMENT_ADAPTER, functionName: "registry", args: [] },
+  { label: "paymentAdapter._settlementToken", run: (c) => paymentAdapter._settlementToken(c), address: F.PAYMENT_ADAPTER, functionName: "settlementToken", args: [] },
+  { label: "paymentAdapter._resolveAsset", run: (c) => paymentAdapter._resolveAsset(c, ASSET), address: F.PAYMENT_ADAPTER, functionName: "resolveAsset", args: [ASSET] },
+  { label: "paymentAdapter._quote", run: (c) => paymentAdapter._quote(c, ASSET, 1000n), address: F.PAYMENT_ADAPTER, functionName: "quote", args: [ASSET, 1000n] },
+  { label: "paymentAdapter._usedReferences", run: (c) => paymentAdapter._usedReferences(c, PAYMENT_REFERENCE), address: F.PAYMENT_ADAPTER, functionName: "usedReferences", args: [PAYMENT_REFERENCE] },
+  { label: "paymentAdapter._upgradeManager", run: (c) => paymentAdapter._upgradeManager(c), address: F.PAYMENT_ADAPTER, functionName: "upgradeManager", args: [] },
   {
     label: "p256Verifier._verifySignature",
     run: (c) => p256Verifier._verifySignature(c, "0x1234", true, WEBAUTHN_SIG, 10n, 20n),
@@ -494,5 +505,20 @@ describe("eSIMWallet._priceCapUSDCents", () => {
     const client = capClient({ priceCapUSDCents: 0n, defaultPriceCapUSDCents: 0n });
 
     expect(await eSIMWallet._priceCapUSDCents(client, ESIM)).toBe(maxUint256);
+  });
+});
+
+// --- Currency table entry ----------------------------------------------------
+describe("paymentAdapter._assets", () => {
+  it("maps the (allowed, isDollarUnit, decimals, token) tuple into an Asset", async () => {
+    const client = {
+      getChainId: async () => 84532,
+      transport: { url: "https://rpc.test.invalid" },
+      account: { address: ACCOUNT },
+      readContract: vi.fn(async () => [true, false, 6, TOKEN]),
+    } as unknown as Parameters<typeof paymentAdapter._assets>[0];
+
+    const asset = await paymentAdapter._assets(client, ASSET);
+    expect(asset).toEqual({ allowed: true, isDollarUnit: false, decimals: 6, token: TOKEN });
   });
 });

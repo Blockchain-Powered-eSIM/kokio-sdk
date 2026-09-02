@@ -10,11 +10,15 @@ import * as registry from "../../../src/logic/admin/reads/registry.reads.js";
 import * as lazyWalletRegistry from "../../../src/logic/admin/reads/lazyWalletRegistry.reads.js";
 import * as deviceWallet from "../../../src/logic/admin/reads/deviceWallet.reads.js";
 import * as eSIMWallet from "../../../src/logic/admin/reads/eSIMWallet.reads.js";
+import * as paymentAdapter from "../../../src/logic/admin/reads/paymentAdapter.reads.js";
 
 // --- Fixtures ---------------------------------------------------------------
 const WALLET = "0x00000000000000000000000000000000000dead1" as Address;
 const ESIM = "0x00000000000000000000000000000000000e51a1" as Address;
 const HASH = "0x00000000000000000000000000000000000000000000000000000000000000a1" as Hex;
+const ASSET = "0x5553444300000000000000000000000000000000000000000000000000000000" as Hex;
+const PAYMENT_REFERENCE = "0x000000000000000000000000000000000000000000000000000000000000ee11" as Hex;
+const TOKEN = "0x0000000000000000000000000000000000706b31" as Address;
 const OWNER_KEY: [Hex, Hex] = [
   "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C291",
   "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F1",
@@ -85,6 +89,8 @@ const readCases: Array<{
   { label: "registry._deviceWalletFactory", run: (c) => registry._deviceWalletFactory(c), address: F.REGISTRY, functionName: "deviceWalletFactory", args: [] },
   { label: "registry._eSIMWalletFactory", run: (c) => registry._eSIMWalletFactory(c), address: F.REGISTRY, functionName: "eSIMWalletFactory", args: [] },
   { label: "registry._entryPoint", run: (c) => registry._entryPoint(c), address: F.REGISTRY, functionName: "entryPoint", args: [] },
+  { label: "registry._paymentAdapter", run: (c) => registry._paymentAdapter(c), address: F.REGISTRY, functionName: "paymentAdapter", args: [] },
+  { label: "registry._usedPaymentReferences", run: (c) => registry._usedPaymentReferences(c, PAYMENT_REFERENCE), address: F.REGISTRY, functionName: "usedPaymentReferences", args: [PAYMENT_REFERENCE] },
 
   // lazyWalletRegistry.reads (target = LAZY_WALLET_REGISTRY)
   { label: "lazyWalletRegistry._owner", run: (c) => lazyWalletRegistry._owner(c), address: F.LAZY_WALLET_REGISTRY, functionName: "owner", args: [] },
@@ -102,6 +108,7 @@ const readCases: Array<{
   { label: "lazyWalletRegistry._historyEntriesCopied", run: (c) => lazyWalletRegistry._historyEntriesCopied(c, "eid-1"), address: F.LAZY_WALLET_REGISTRY, functionName: "historyEntriesCopied", args: ["eid-1"] },
   { label: "lazyWalletRegistry._isDeviceIdentifierReserved", run: (c) => lazyWalletRegistry._isDeviceIdentifierReserved(c, "Device_11"), address: F.LAZY_WALLET_REGISTRY, functionName: "isDeviceIdentifierReserved", args: ["Device_11"] },
   { label: "lazyWalletRegistry._isESIMIdentifierReserved", run: (c) => lazyWalletRegistry._isESIMIdentifierReserved(c, "eid-1"), address: F.LAZY_WALLET_REGISTRY, functionName: "isESIMIdentifierReserved", args: ["eid-1"] },
+  { label: "lazyWalletRegistry._outstandingHistoryEntries", run: (c) => lazyWalletRegistry._outstandingHistoryEntries(c, "eid-1"), address: F.LAZY_WALLET_REGISTRY, functionName: "outstandingHistoryEntries", args: ["eid-1"] },
 
   // deviceWallet.reads (target = device wallet instance address)
   { label: "deviceWallet._deviceUniqueIdentifier", run: (c) => deviceWallet._deviceUniqueIdentifier(c, WALLET), address: WALLET, functionName: "deviceUniqueIdentifier", args: [] },
@@ -123,6 +130,14 @@ const readCases: Array<{
   { label: "eSIMWallet._priceCapUSDCents", run: (c) => eSIMWallet._priceCapUSDCents(c, ESIM), address: ESIM, functionName: "priceCapUSDCents", args: [] },
   { label: "eSIMWallet._deviceWallet", run: (c) => eSIMWallet._deviceWallet(c, ESIM), address: ESIM, functionName: "deviceWallet", args: [] },
   { label: "eSIMWallet._transactionHistory", run: (c) => eSIMWallet._transactionHistory(c, ESIM, 2n), address: ESIM, functionName: "transactionHistory", args: [2n] },
+
+  // paymentAdapter.reads (target = PAYMENT_ADAPTER)
+  { label: "paymentAdapter._registry", run: (c) => paymentAdapter._registry(c), address: F.PAYMENT_ADAPTER, functionName: "registry", args: [] },
+  { label: "paymentAdapter._settlementToken", run: (c) => paymentAdapter._settlementToken(c), address: F.PAYMENT_ADAPTER, functionName: "settlementToken", args: [] },
+  { label: "paymentAdapter._resolveAsset", run: (c) => paymentAdapter._resolveAsset(c, ASSET), address: F.PAYMENT_ADAPTER, functionName: "resolveAsset", args: [ASSET] },
+  { label: "paymentAdapter._quote", run: (c) => paymentAdapter._quote(c, ASSET, 1000n), address: F.PAYMENT_ADAPTER, functionName: "quote", args: [ASSET, 1000n] },
+  { label: "paymentAdapter._usedReferences", run: (c) => paymentAdapter._usedReferences(c, PAYMENT_REFERENCE), address: F.PAYMENT_ADAPTER, functionName: "usedReferences", args: [PAYMENT_REFERENCE] },
+  { label: "paymentAdapter._upgradeManager", run: (c) => paymentAdapter._upgradeManager(c), address: F.PAYMENT_ADAPTER, functionName: "upgradeManager", args: [] },
 ];
 
 describe("admin readContract calls", () => {
@@ -163,5 +178,15 @@ describe("admin readContract calls", () => {
     expect(read.mock.calls[0][0].functionName).toBe("deviceIdentifierToESIMDetails");
     expect(read.mock.calls[0][0].args).toEqual(["Device_11", "eid-1", 0n]);
     expect(details).toEqual({ id: HASH, priceUSDCents: 1000n, settlement: 0 });
+  });
+
+  it("paymentAdapter._assets maps the (allowed, isDollarUnit, decimals, token) tuple into an Asset", async () => {
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, readResult: [true, false, 6, TOKEN] });
+    const asset = await paymentAdapter._assets(client, ASSET);
+
+    const read = client.readContract as ReturnType<typeof vi.fn>;
+    expect(read.mock.calls[0][0].functionName).toBe("assets");
+    expect(read.mock.calls[0][0].args).toEqual([ASSET]);
+    expect(asset).toEqual({ allowed: true, isDollarUnit: false, decimals: 6, token: TOKEN });
   });
 });

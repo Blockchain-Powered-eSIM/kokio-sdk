@@ -17,6 +17,7 @@ const ZERO32 = "0x00000000000000000000000000000000000000000000000000000000000000
 const SALT = "0x00000000000000000000000000000000000000000000000000000000000000aa" as Hex;
 const OP_ID = "0x00000000000000000000000000000000000000000000000000000000000000d1" as Hex;
 const ROLE = "0x0000000000000000000000000000000000000000000000000000000000000e01" as Hex;
+const NEW_PAYMENT_ADAPTER = "0x00000000000000000000000000000000000ada99" as Address;
 
 const F = baseSepoliaFactoryAddresses;
 const PA = F.PROTOCOL_ADMIN;
@@ -422,6 +423,19 @@ describe("protocolAdmin registry payloads", () => {
 
     it("setDefaultPriceCapUSDCentsCall aims at an explicit target when given one", async () => {
         const call = await protocolAdmin._setDefaultPriceCapUSDCentsCall(client(), 1n, OTHER);
+        expect(call.address).toBe(OTHER);
+    });
+
+    it("setPaymentAdapterCall carries the adapter and defaults to the registry", async () => {
+        const call = await protocolAdmin._setPaymentAdapterCall(client(), NEW_PAYMENT_ADAPTER);
+
+        expect(call.address).toBe(F.REGISTRY);
+        expect(call.functionName).toBe("setPaymentAdapter");
+        expect(call.args).toEqual([NEW_PAYMENT_ADAPTER]);
+    });
+
+    it("setPaymentAdapterCall aims at an explicit target when given one", async () => {
+        const call = await protocolAdmin._setPaymentAdapterCall(client(), NEW_PAYMENT_ADAPTER, OTHER);
         expect(call.address).toBe(OTHER);
     });
 });
