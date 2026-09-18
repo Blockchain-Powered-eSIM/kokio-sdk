@@ -16,7 +16,7 @@ only drive the eSIM wallet admin want [README.md](README.md) instead.
 
 | Chain | ProtocolAdmin | Min delay | Floor |
 |---|---|---|---|
-| Base Sepolia (84532) | `0x77A1D6f27462c34BF038832d9Cff6b3E94a9Fe6F` | 2 days | 1 hour |
+| Base Sepolia (84532) | `0xdDeCC2C1345BC966337B5f4Fe57EC2D5bfad751A` | 2 days | 1 hour |
 
 No other chain is configured. Constructing `KokioAdmin` against one and calling
 anything throws `UnconfiguredChainError` before a transaction is built.
@@ -106,9 +106,7 @@ const call = {
 };
 ```
 
-`value` is optional and defaults to zero. If you set it, the timelock has to be
-holding that ETH when the operation runs, because the call is made from its
-address.
+`value` is optional and defaults to zero. If you set it, `executor.execute` sends that much ETH from the executing account along with the call, and the timelock passes it on. The timelock does not need to hold it beforehand.
 
 ### 2. Schedule
 
