@@ -264,8 +264,8 @@ export class ContractRevertError extends KokioError {
 }
 
 /**
- * Pulls a ContractRevertError out of an error thrown by viem, or `null` if it
- * isn't a revert viem could decode a selector for.
+ * Pulls a ContractRevertError out of an error thrown by viem, or `null` when
+ * the error carries no revert data (a network failure, a rejected signature).
  */
 export const toContractRevertError = (err: unknown): ContractRevertError | null => {
     if (!(err instanceof BaseError)) return null;
@@ -280,9 +280,10 @@ export const toContractRevertError = (err: unknown): ContractRevertError | null 
 };
 
 /**
- * `client.writeContract`, but a recognised on-chain revert comes back as a
- * ContractRevertError instead of viem's raw error chain. Anything else -
- * network failures, an unrecognised revert selector - is rethrown as-is.
+ * `client.writeContract`, but a revert comes back as a ContractRevertError
+ * instead of viem's raw error chain. Its `decoded` is null when the selector
+ * belongs to none of the Kokio contracts. Anything that is not a revert, such
+ * as a network failure, is rethrown as-is.
  *
  * Mirrors `WalletClient["writeContract"]`'s own generics rather than reading
  * them off `Parameters<...>`, since that would collapse the per-call overload
