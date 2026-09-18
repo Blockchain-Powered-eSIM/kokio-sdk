@@ -22,6 +22,11 @@ export {
     UnsupportedChainError,
     UnconfiguredChainError,
     CounterfactualMismatchError,
+    BatchSizeOutOfRangeError,
+    DepositOnResumeError,
+    ESIMWalletNotLazyDeployedError,
+    MissingBatchEventError,
+    StalledBatchError,
     ContractRevertError,
     decodeContractRevert,
 } from "./logic/errors.js";
