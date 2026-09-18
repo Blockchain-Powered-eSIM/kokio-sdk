@@ -158,6 +158,9 @@ describe("user journey on a Base Sepolia fork", () => {
 
     expect(await revertOf(kokio.eSIMWallet!.buyDataBundleWithToken(BUNDLE, USDC, quote - 1n, REF_2)))
       .toBe("SettlementAboveMax");
+
+    expect(await revertOf(kokio.eSIMWallet!.buyDataBundleWithToken(BUNDLE, testBytes32("coin"), quote, REF_2)))
+      .toBe("AssetNotAllowed");
   }, 120_000);
 
   it("stops pulling tokens once access is revoked", async () => {
