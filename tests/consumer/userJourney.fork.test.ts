@@ -3,7 +3,6 @@ import {
   createWalletClient, encodeAbiParameters, erc20Abi, http, keccak256, maxUint256, stringToHex,
   type Address, type Hex,
 } from "viem";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 
 // The passkey is the one thing Node cannot provide. Everything the SDK does with
@@ -47,10 +46,9 @@ describe("user journey on a Base Sepolia fork", () => {
     signer = createSoftSigner(RP_ID);
     passkeyGet.mockImplementation(asPasskey(signer));
 
-    // The app's own wallet client. The passkey signs user operations; this
-    // client only carries the chain and RPC.
+    // The app's own wallet client, with no account: the passkey signs every user
+    // operation, so this client only carries the chain and RPC.
     const walletClient = createWalletClient({
-      account: privateKeyToAccount(generatePrivateKey()),
       chain: baseSepolia,
       transport: http(stack.fork.rpcUrl),
     });

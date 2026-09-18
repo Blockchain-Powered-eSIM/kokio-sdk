@@ -39,10 +39,9 @@ is ever held in the app.
 
 You will need:
 
-- a viem `WalletClient` connected to the target chain, carrying an `account`
-  and an explicit RPC URL (see the note under the example),
+- a viem `WalletClient` connected to the target chain with an explicit RPC URL (see the note under the example). It needs no `account`: the passkey signs every user operation.
 - the passkey `credentialId` and `rpId` registered for the device,
-- a Pimlico API key and a gas policy id (used by the bundler and paymaster).
+- a Pimlico API key, and optionally a Pimlico sponsorship policy id (`sp_...`). Pass `""` to be sponsored without a policy.
 
 ```ts
 import { Kokio } from "kokio-sdk";
@@ -50,7 +49,6 @@ import { createWalletClient, http } from "viem";
 import { baseSepolia } from "viem/chains";
 
 const walletClient = createWalletClient({
-  account: knownAddress,
   chain: baseSepolia,
   transport: http(rpcUrl),
 });

@@ -430,8 +430,6 @@ export const _getSmartWallet = async (
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
-	if (!client.account) throw new Error ('Error: No signer account found with WalletClient')
-
 	const accountAddress = _counterfactualVerifiedChains.has(chainID)
 		? await getCounterFactualAddress(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt)
 		: await _assertCounterfactualMatchesOnChain(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt);
