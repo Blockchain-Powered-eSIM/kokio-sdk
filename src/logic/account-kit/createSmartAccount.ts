@@ -548,20 +548,27 @@ const _splitTransport = (pimlicoRpcURL: string, rpcURL: string): Transport => {
 	);
 }
 
-export const _getSmartWalletClient = async (client: WalletClient, pimlicoAPIKey: string, gasPolicyId: string, account: KokioSmartAccount): Promise<KokioSmartAccountClient> => {
+export const _getSmartWalletClient = async (
+	client: WalletClient,
+	pimlicoAPIKey: string,
+	gasPolicyId: string,
+	account: KokioSmartAccount,
+	bundlerUrl?: string
+): Promise<KokioSmartAccountClient> => {
 
 	const chainID = await client.getChainId();
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL, pimlicoAPIKey);
+	const bundlerURL = bundlerUrl ?? values.pimlicoRpcURL;
 
 	// Pimlico sponsors via ERC-7677, keyed by the gas policy.
-	const paymaster = createPaymasterClient({ transport: http(values.pimlicoRpcURL) });
+	const paymaster = createPaymasterClient({ transport: http(bundlerURL) });
 
 	return createBundlerClient({
 		account,
 		chain: values.chain,
 		client: createPublicClient({ chain: values.chain, transport: http(values.rpcURL) }),
-		transport: _splitTransport(values.pimlicoRpcURL, values.rpcURL),
+		transport: _splitTransport(bundlerURL, values.rpcURL),
 		paymaster,
 		paymasterContext: { policyId: gasPolicyId },
 	// extend() keeps the bundler fields at runtime but drops them from the
