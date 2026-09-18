@@ -1,27 +1,25 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
-  createWalletClient, encodeAbiParameters, erc20Abi, http, keccak256, maxUint256, stringToHex,
-  type Address, type Hex,
+  encodeAbiParameters, erc20Abi, keccak256, maxUint256, stringToHex, type Address, type Hex,
 } from "viem";
-import { baseSepolia } from "viem/chains";
 
 // The passkey is the one thing Node cannot provide. Everything the SDK does with
 // the assertion it returns runs as shipped.
 const passkeyGet = vi.hoisted(() => vi.fn());
 vi.mock("react-native-passkey", () => ({ Passkey: { get: passkeyGet } }));
 
-import { ContractRevertError, Kokio } from "kokio-sdk";
+import { ContractRevertError, type Kokio } from "kokio-sdk";
 import { KokioAdmin } from "kokio-sdk/admin";
 import { Registry } from "kokio-sdk/abis";
 import { Settlement, type KokioSmartAccountClient } from "kokio-sdk/types";
 
 import { impersonateAdmin } from "../utils/forkChain.js";
-import { createSoftSigner, type SoftSigner } from "../utils/softP256Signer.js";
-import { asPasskey } from "./fixtures/passkeyAuthenticator.js";
+import type { SoftSigner } from "../utils/softP256Signer.js";
 import { expectSponsored } from "./fixtures/sponsorship.js";
 import { startForkStack, type ForkStack } from "./fixtures/forkStack.js";
 import { setTokenBalance } from "./fixtures/tokens.js";
-import { CREDENTIAL_ID, FORK_POLICY_ID, RP_ID, testBytes32, testDeviceId } from "./fixtures/testLabels.js";
+import { FORK_POLICY_ID, testBytes32 } from "./fixtures/testLabels.js";
+import { createTestUser } from "./fixtures/user.js";
 
 const REGISTRY: Address = "0x916b6b554119c789EF3026EDeB0E1Ba741b42A49";
 
@@ -34,31 +32,14 @@ describe("user journey on a Base Sepolia fork", () => {
   let kokio: Kokio;
   let client: KokioSmartAccountClient;
   let deviceWallet: Address;
+  let uid: string;
+  let salt: bigint;
   let eSIMWallet: Address;
   let usdc: Address;
 
-  const uid = testDeviceId();
-  const salt = BigInt(Date.now());
-
   beforeAll(async () => {
     stack = await startForkStack();
-
-    signer = createSoftSigner(RP_ID);
-    passkeyGet.mockImplementation(asPasskey(signer));
-
-    // The app's own wallet client, with no account: the passkey signs every user
-    // operation, so this client only carries the chain and RPC.
-    const walletClient = createWalletClient({
-      chain: baseSepolia,
-      transport: http(stack.fork.rpcUrl),
-    });
-
-    const setup = new Kokio(walletClient, CREDENTIAL_ID, RP_ID, "unused-on-fork", FORK_POLICY_ID);
-    const account = await setup.smartAccount.getSmartWallet(uid, signer.ownerKey, salt);
-    client = await setup.smartAccount.getSmartWalletClient(account, { bundlerUrl: stack.bundlerUrl });
-
-    deviceWallet = account.address;
-    kokio = new Kokio(walletClient, CREDENTIAL_ID, RP_ID, "unused-on-fork", FORK_POLICY_ID, client, deviceWallet);
+    ({ signer, kokio, client, deviceWallet, uid, salt } = await createTestUser(stack, passkeyGet));
   }, 180_000);
 
   afterAll(async () => {
