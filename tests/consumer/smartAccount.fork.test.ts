@@ -8,7 +8,7 @@ import { asPasskey } from "./fixtures/passkeyAuthenticator.js";
 import { expectSponsored } from "./fixtures/sponsorship.js";
 import { startForkStack, type ForkStack } from "./fixtures/forkStack.js";
 import { TEST_TAG } from "./fixtures/testLabels.js";
-import { createTestUser } from "./fixtures/user.js";
+import { createTestUser, forkTarget } from "./fixtures/user.js";
 
 const ERC1271_MAGIC = "0x1626ba7e";
 const MESSAGE = `${TEST_TAG}: sign in`;
@@ -33,14 +33,14 @@ describe("smart account on a Base Sepolia fork", () => {
   });
 
   it("accepts an authenticator signature with a high s", async () => {
-    const user = await createTestUser(stack, passkeyGet);
+    const user = await createTestUser(forkTarget(stack), passkeyGet);
     passkeyGet.mockImplementation(asPasskey(user.signer, { highS: true }));
 
     await expectSponsored(user.client, stack.fork.publicClient, () => user.kokio.deviceWallet!.sendUserOperation([]));
   }, 120_000);
 
   it("signs messages and typed data that verify before and after the wallet is deployed", async () => {
-    const user = await createTestUser(stack, passkeyGet);
+    const user = await createTestUser(forkTarget(stack), passkeyGet);
     const verify = async () => {
       const [message, typed] = await Promise.all([
         stack.fork.publicClient.verifyMessage({
@@ -64,12 +64,12 @@ describe("smart account on a Base Sepolia fork", () => {
   }, 120_000);
 
   it("refuses a message signature made by another passkey", async () => {
-    const user = await createTestUser(stack, passkeyGet);
+    const user = await createTestUser(forkTarget(stack), passkeyGet);
     await expectSponsored(user.client, stack.fork.publicClient, () => user.kokio.deviceWallet!.sendUserOperation([]));
 
     // Creating a second user points the passkey prompt at that user's key, so
     // this signature comes from a key the first wallet does not know.
-    await createTestUser(stack, passkeyGet);
+    await createTestUser(forkTarget(stack), passkeyGet);
     const signature = await user.account.signMessage({ message: MESSAGE });
 
     expect(await stack.fork.publicClient.verifyMessage({ address: user.deviceWallet, message: MESSAGE, signature })).toBe(false);

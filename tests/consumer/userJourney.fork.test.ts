@@ -19,7 +19,7 @@ import { expectSponsored } from "./fixtures/sponsorship.js";
 import { startForkStack, type ForkStack } from "./fixtures/forkStack.js";
 import { setTokenBalance } from "./fixtures/tokens.js";
 import { FORK_POLICY_ID, testBytes32 } from "./fixtures/testLabels.js";
-import { createTestUser } from "./fixtures/user.js";
+import { createTestUser, forkTarget } from "./fixtures/user.js";
 
 const REGISTRY: Address = "0x916b6b554119c789EF3026EDeB0E1Ba741b42A49";
 
@@ -39,7 +39,7 @@ describe("user journey on a Base Sepolia fork", () => {
 
   beforeAll(async () => {
     stack = await startForkStack();
-    ({ signer, kokio, client, deviceWallet, uid, salt } = await createTestUser(stack, passkeyGet));
+    ({ signer, kokio, client, deviceWallet, uid, salt } = await createTestUser(forkTarget(stack), passkeyGet));
   }, 180_000);
 
   afterAll(async () => {
