@@ -22,6 +22,8 @@ import {
     P256Verifier,
     Registry,
     RegistryHelper,
+    ProtocolAdmin,
+    PaymentAdapter,
 } from "../abis/index.js";
 
 /**
@@ -212,6 +214,8 @@ const REVERTABLE_ABIS = [
     P256Verifier,
     Registry,
     RegistryHelper,
+    ProtocolAdmin,
+    PaymentAdapter,
 ] as const;
 
 export interface DecodedRevert {
