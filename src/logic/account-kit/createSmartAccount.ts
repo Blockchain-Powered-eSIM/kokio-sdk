@@ -18,9 +18,13 @@ import { _add0x, _concatUint8Arrays, _shouldRemoveLeadingZero } from "../utils.j
 import { P256Key, WebAuthnSignature, KokioSmartAccount, KokioSmartAccountClient } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
 
-import { isoBase64URL } from "@simplewebauthn/server/helpers";
+import { base64urlnopad } from "@scure/base";
 import { Passkey, PasskeyGetRequest, PasskeyGetResult } from "react-native-passkey";
 import { p256 } from "@noble/curves/nist.js";
+
+// Authenticators differ on padding and alphabet, so accept either form.
+const fromBase64URL = (value: string): Uint8Array =>
+	base64urlnopad.decode(value.replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_"));
 
 type BrokenPasskeyGetResult = PasskeyGetResult | string;
 
@@ -58,10 +62,7 @@ export const BEACON_PROXY_CREATION_CODE: Hex = "0x60a0806040526104e4803803809161
  */
 export const _stamp = async (credentialId: string, rpId: string, payload: Hex): Promise<WebAuthnSignature> => {
 	const signingOptions: PasskeyGetRequest = {
-		// `Uint8Array.from` gives a fresh ArrayBuffer-backed view, matching the
-		// `Uint8Array<ArrayBuffer>` that `fromBuffer` expects (viem's `hexToBytes`
-		// is typed over the wider `ArrayBufferLike`).
-		challenge: isoBase64URL.fromBuffer(Uint8Array.from(hexToBytes(payload))),
+		challenge: base64urlnopad.encode(hexToBytes(payload)),
 		allowCredentials: [{
 			id: credentialId,
 			type: "public-key",
@@ -92,7 +93,7 @@ export const _stamp = async (credentialId: string, rpId: string, payload: Hex): 
 	const { clientDataJSON, authenticatorData, signature } = authenticationResult.response;
 
 	// 1. Decode clientDataJSON
-	const clientDataJSONBuffer = isoBase64URL.toBuffer(clientDataJSON);
+	const clientDataJSONBuffer = fromBase64URL(clientDataJSON);
 	const clientDataJSONString = new TextDecoder().decode(clientDataJSONBuffer);
 
 	// 2. Calculate indices for the contract (byte offsets)
@@ -115,18 +116,11 @@ export const _stamp = async (credentialId: string, rpId: string, payload: Hex): 
 	}
 
 	// 3. Decode authenticatorData
-	const authenticatorDataBytes = isoBase64URL.toBuffer(authenticatorData);
+	const authenticatorDataBytes = fromBase64URL(authenticatorData);
 	const authenticatorDataHex = bytesToHex(authenticatorDataBytes);
 
 	// 4. Decode signature (ASN.1 DER encoded)
-	const signatureBytes = isoBase64URL.toBuffer(signature);
-	// let parsedSignature = p256.Signature.fromDER(signatureBytes);
-	let parsedSignature = p256.Signature.fromBytes(
-		signatureBytes instanceof Uint8Array
-			? signatureBytes
-			: new Uint8Array(signatureBytes),
-		"der"
-	);
+	let parsedSignature = p256.Signature.fromBytes(fromBase64URL(signature), "der");
 
 	// Normalize s
 	const n = p256.Point.CURVE().n;

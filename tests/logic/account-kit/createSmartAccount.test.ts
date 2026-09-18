@@ -270,6 +270,20 @@ describe("_stamp (passkey -> WebAuthnSignature)", () => {
     expect(result.clientDataJSON).toBe(CLIENT_DATA_JSON);
   });
 
+  it("reads an assertion encoded as padded standard base64", async () => {
+    passkeyGet.mockResolvedValue({
+      response: {
+        clientDataJSON: Buffer.from(CLIENT_DATA_JSON).toString("base64"),
+        authenticatorData: Buffer.from(AUTH_DATA).toString("base64"),
+        signature: Buffer.from(DER_HIGH_S).toString("base64"),
+      },
+    });
+
+    const result = await _stamp("cred-id", "kokio.test", keccak256("0xabcd"));
+    expect(result.r).toBe(RAW_R);
+    expect(result.clientDataJSON).toBe(CLIENT_DATA_JSON);
+  });
+
   it("falls back to typeIndex 0 when clientDataJSON has no compact type field", async () => {
     // Valid JSON, but the spacing defeats the substring search. The contract
     // then checks the wrong offset, so this assertion cannot verify on chain.
