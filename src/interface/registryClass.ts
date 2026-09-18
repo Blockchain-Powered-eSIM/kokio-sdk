@@ -27,6 +27,14 @@ export class RegistrySubPackage {
         this.client = client;
     }
 
+    /**
+     * Record in the registry that this device wallet holds the eSIM wallet.
+     *
+     * Registry side only: the device wallet itself still does not treat the eSIM
+     * wallet as its own (`isValidESIMWallet` stays false, so it cannot manage it or
+     * grant it fund access). To take on an eSIM wallet use `deviceWallet.addESIMWallet`,
+     * which writes both sides.
+     */
     bindESIMWallet (eSIMWalletAddress: Address) {
         return _bindESIMWallet(this.client, eSIMWalletAddress);
     }
