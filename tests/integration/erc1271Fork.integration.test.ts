@@ -67,7 +67,7 @@ describe.skipIf(!forkAvailable())("ERC-1271 message signing on a Base Sepolia fo
   let readWallet: ReturnType<typeof getContract>;
 
   beforeAll(async () => {
-    fork = await startFork(8549);
+    fork = await startFork();
     signer = createSoftSigner();
     passkeyGet.mockImplementation(asPasskey(signer));
 

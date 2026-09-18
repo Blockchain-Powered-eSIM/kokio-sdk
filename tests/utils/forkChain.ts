@@ -3,6 +3,7 @@
 // public endpoint, which is rate limited enough to fail the fork on startup.
 import "dotenv/config";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { createServer } from "node:net";
 import {
   createPublicClient,
   createTestClient,
@@ -66,10 +67,29 @@ export const anvilInstalled = (): boolean => {
 };
 
 /**
- * Gate for the whole fork tier: opt-in via INTEGRATION=1 AND Foundry present.
- * Keeps `npm test` / CI fully offline and green with no Foundry and no envs.
+ * Gate for the whole fork tier, opted into with INTEGRATION=1. Keeps `npm test`
+ * offline. Asking for the tier without Foundry is an error rather than a skip,
+ * so a run that tested nothing cannot pass as green.
  */
-export const forkAvailable = (): boolean => process.env.INTEGRATION === "1" && anvilInstalled();
+export const forkAvailable = (): boolean => {
+  if (process.env.INTEGRATION !== "1") return false;
+  if (!anvilInstalled()) throw new Error(`INTEGRATION=1 but "${getAnvilBin()}" is not runnable. Install Foundry or set ANVIL_BIN.`);
+  return true;
+};
+
+/** Block every fork starts from, so each run sees the same contract state. */
+export const FORK_BLOCK = 46_990_000n;
+
+/** A port nothing is listening on, so suites never collide. */
+export const freePort = (): Promise<number> =>
+  new Promise((resolve, reject) => {
+    const server = createServer();
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const { port } = server.address() as { port: number };
+      server.close(() => resolve(port));
+    });
+  });
 
 /** The upstream RPC the fork pulls state from (public endpoint unless overridden). */
 export const getForkUpstreamRpc = (): string => process.env.BASE_SEPOLIA_RPC_URL ?? DEFAULT_FORK_RPC;
@@ -94,7 +114,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * id is pinned to 84532 so the SDK treats it as Base Sepolia while serving the
  * forked state.
  */
-export const startFork = async (port = 8545, blockNumber?: bigint): Promise<Fork> => {
+export const startFork = async (port?: number, blockNumber: bigint = FORK_BLOCK): Promise<Fork> => {
+  port ??= await freePort();
   const upstream = getForkUpstreamRpc();
   const rpcUrl = `http://127.0.0.1:${port}`;
   const publicClient = createPublicClient({ chain: baseSepolia, transport: forkTransport(rpcUrl) });
@@ -108,7 +129,7 @@ export const startFork = async (port = 8545, blockNumber?: bigint): Promise<Fork
       getAnvilBin(),
       [
         "--fork-url", upstream,
-        ...(blockNumber === undefined ? [] : ["--fork-block-number", String(blockNumber)]),
+        "--fork-block-number", String(blockNumber),
         "--port", String(port),
         "--chain-id", "84532",
         "--hardfork", FORK_HARDFORK,
@@ -145,6 +166,11 @@ export const startFork = async (port = 8545, blockNumber?: bigint): Promise<Fork
   if (!proc) throw new Error(`anvil fork did not become ready within 30s (upstream: ${upstream})`);
 
   const testClient = createTestClient({ chain: baseSepolia, mode: "anvil", transport: forkTransport(rpcUrl) });
+
+  // The pinned block is older than the wall clock, while signatures carry a
+  // wall-clock expiry as they do on a phone. Bring the chain up to now.
+  await testClient.setNextBlockTimestamp({ timestamp: BigInt(Math.floor(Date.now() / 1000)) });
+  await testClient.mine({ blocks: 1 });
 
   // anvil's first default account, deterministic across runs.
   const FUNDED_PK = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" as const;

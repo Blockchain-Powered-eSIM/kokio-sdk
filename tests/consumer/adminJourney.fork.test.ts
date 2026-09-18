@@ -8,7 +8,6 @@ import { DeviceWalletFactory } from "kokio-sdk/abis";
 
 import { impersonateRegistryOwner, startFork, type Fork } from "../utils/forkChain.js";
 import { createSoftSigner } from "../utils/softP256Signer.js";
-import { FORK_BLOCK, freePort } from "./fixtures/forkStack.js";
 import { testDeviceId } from "./fixtures/testLabels.js";
 
 const DEVICE_WALLET_FACTORY: Address = "0x0BB3BA8D9233514a4aA6D72c243a2473f9cFf0bb";
@@ -23,7 +22,7 @@ describe("backend admin with a local private key on a Base Sepolia fork", () => 
   let admin: KokioAdmin;
 
   beforeAll(async () => {
-    fork = await startFork(await freePort(), FORK_BLOCK);
+    fork = await startFork();
 
     const account = privateKeyToAccount(generatePrivateKey());
     await fork.testClient.setBalance({ address: account.address, value: parseEther("1") });

@@ -54,7 +54,7 @@ describe.skipIf(!forkAvailable())("Device-wallet userOp on a Base Sepolia fork",
   let admin: Address;
 
   beforeAll(async () => {
-    fork = await startFork(8546);
+    fork = await startFork();
     admin = (await impersonateAdmin(fork)).admin;
   }, 60_000);
 
@@ -85,7 +85,8 @@ describe.skipIf(!forkAvailable())("Device-wallet userOp on a Base Sepolia fork",
       const sender = (await factory.read.getCounterFactualAddress([signer.ownerKey, uid, salt])) as Address;
       const deployHash = await factory.write.createAccount([uid, signer.ownerKey, salt], { value: 0n });
       await fork.publicClient.waitForTransactionReceipt({ hash: deployHash });
-      expect(await fork.publicClient.getCode({ address: sender })).not.toBe("0x");
+      // getCode answers undefined for an empty address, which would pass a `not.toBe("0x")`.
+      expect(await fork.publicClient.getCode({ address: sender })).toMatch(/^0x[0-9a-f]+$/i);
 
       // Fund the account's gas (EntryPoint deposit) and its ETH balance (for the
       // value it will forward through `execute`).

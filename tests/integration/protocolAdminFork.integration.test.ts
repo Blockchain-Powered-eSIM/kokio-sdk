@@ -6,7 +6,7 @@ import { getContract, type Address, type Hex } from "viem";
 // never signs a passkey, so stub it out of the graph as the other suites do.
 vi.mock("react-native-passkey", () => ({ Passkey: {} }));
 
-import { KokioAdmin } from "../../src/admin/config-admin.js";
+import { ContractRevertError, KokioAdmin } from "../../src/admin/config-admin.js";
 import { Registry } from "../../src/abis/index.js";
 import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import { OperationState } from "../../src/logic/admin/reads/protocolAdmin.reads.js";
@@ -33,9 +33,12 @@ const readRegistry = (fork: Fork) => getContract({
 // `writeContract` sends without simulating, so a call the chain refuses still
 // returns a hash and only shows up as a reverted receipt. Assert on that rather
 // than on a rejected promise.
-const expectReverted = async (fork: Fork, send: Promise<Hex>) => {
-  const receipt = await fork.publicClient.waitForTransactionReceipt({ hash: await send });
-  expect(receipt.status).toBe("reverted");
+// Every signer here but the impersonated ones signs locally, so viem estimates
+// gas first and a refused call comes back as a decoded error, never mined.
+const expectRefused = async (send: Promise<unknown>, errorName: string) => {
+  const err = await send.catch((e: unknown) => e);
+  expect(err).toBeInstanceOf(ContractRevertError);
+  expect((err as ContractRevertError).decoded?.errorName).toBe(errorName);
 };
 
 // The timelock path against a local Base Sepolia fork: schedule an owner call as
@@ -49,7 +52,7 @@ describe.skipIf(!forkAvailable())("ProtocolAdmin - timelock on a Base Sepolia fo
   let anyoneSdk: KokioAdmin;
 
   beforeAll(async () => {
-    fork = await startFork(8547);
+    fork = await startFork();
 
     proposerSdk = new KokioAdmin(await impersonate(fork, PROPOSER));
     guardianSdk = new KokioAdmin(await impersonate(fork, GUARDIAN));
@@ -72,7 +75,7 @@ describe.skipIf(!forkAvailable())("ProtocolAdmin - timelock on a Base Sepolia fo
   it("an owner call sent straight from an EOA reverts", async () => {
     // The whole reason the timelock path exists: the registry's owner is a
     // contract, so the direct wrapper cannot work on this deployment.
-    await expectReverted(fork, anyoneSdk.registry.updateVaultAddress(NEW_VAULT));
+    await expectRefused(anyoneSdk.registry.updateVaultAddress(NEW_VAULT), "OwnableUnauthorizedAccount");
   }, 60_000);
 
   it("schedules, waits out the delay, and executes from an account with no role", async () => {
@@ -99,7 +102,7 @@ describe.skipIf(!forkAvailable())("ProtocolAdmin - timelock on a Base Sepolia fo
     expect(await pa.getOperationState(operation.id)).toBe(OperationState.Waiting);
 
     // Executing early is rejected outright.
-    await expectReverted(fork, anyoneSdk.protocolAdmin.executor.execute(operation));
+    await expectRefused(anyoneSdk.protocolAdmin.executor.execute(operation), "TimelockUnexpectedOperationState");
 
     await fork.testClient.increaseTime({ seconds: Number(delay) + 1 });
     await fork.testClient.mine({ blocks: 1 });
@@ -154,7 +157,7 @@ describe.skipIf(!forkAvailable())("ProtocolAdmin - timelock on a Base Sepolia fo
   }, 180_000);
 
   it("the guardian's instant powers are refused to everyone else", async () => {
-    await expectReverted(fork, anyoneSdk.protocolAdmin.guardian.disableAdminInstantly(F.REGISTRY));
-    await expectReverted(fork, anyoneSdk.protocolAdmin.guardian.unpauseInstantly(F.REGISTRY));
+    await expectRefused(anyoneSdk.protocolAdmin.guardian.disableAdminInstantly(F.REGISTRY), "AccessControlUnauthorizedAccount");
+    await expectRefused(anyoneSdk.protocolAdmin.guardian.unpauseInstantly(F.REGISTRY), "AccessControlUnauthorizedAccount");
   }, 60_000);
 });

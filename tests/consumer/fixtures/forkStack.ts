@@ -1,21 +1,16 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { mkdtempSync } from "node:fs";
-import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { paymaster } from "@pimlico/mock-paymaster";
 
-import { startFork, type Fork } from "../../utils/forkChain.js";
+import { freePort, startFork, type Fork } from "../../utils/forkChain.js";
 
 // A local stand-in for Pimlico: an anvil fork of Base Sepolia, an Alto bundler on
 // it, and the mock paymaster in front of Alto. The mock paymaster answers the
 // ERC-7677 methods and forwards every bundler method to Alto, so one URL serves
 // both roles, as api.pimlico.io does.
-
-// Pinned so every run sees the same contract state. Live reads at this height
-// are recorded in TEST_PROGRESS.md.
-export const FORK_BLOCK = 46_990_000n;
 
 const ENTRY_POINT_08 = "0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108";
 
@@ -32,16 +27,6 @@ export interface ForkStack {
   bundlerUrl: string;
   stop: () => Promise<void>;
 }
-
-export const freePort = (): Promise<number> =>
-  new Promise((resolve, reject) => {
-    const server = createServer();
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const { port } = server.address() as { port: number };
-      server.close(() => resolve(port));
-    });
-  });
 
 const answersRpc = async (url: string): Promise<boolean> => {
   try {
@@ -99,7 +84,7 @@ const startAlto = async (rpcUrl: string, port: number): Promise<ChildProcess> =>
 export const startForkStack = async (): Promise<ForkStack> => {
   const [anvilPort, altoPort, paymasterPort] = await Promise.all([freePort(), freePort(), freePort()]);
 
-  const fork = await startFork(anvilPort, FORK_BLOCK);
+  const fork = await startFork(anvilPort);
   const alto = await startAlto(fork.rpcUrl, altoPort);
 
   const pm = paymaster({

@@ -50,7 +50,7 @@ describe.skipIf(!forkAvailable())("Lazy deployment - pagination on a Base Sepoli
   let sdk: KokioAdmin;
 
   beforeAll(async () => {
-    fork = await startFork(8548);
+    fork = await startFork();
     sdk = new KokioAdmin((await impersonateAdmin(fork)).client);
   }, 60_000);
 
@@ -101,7 +101,8 @@ describe.skipIf(!forkAvailable())("Lazy deployment - pagination on a Base Sepoli
       // contract rather than an address the SDK guessed at.
       expect(await lazy.read.eSIMWalletsDeployed([device])).toBe(5n);
       for (const wallet of [result.deviceWallet, ...result.eSIMWallets]) {
-        expect(await fork.publicClient.getCode({ address: wallet })).not.toBe("0x");
+        // getCode answers undefined for an empty address, which would pass a `not.toBe("0x")`.
+        expect(await fork.publicClient.getCode({ address: wallet })).toMatch(/^0x[0-9a-f]+$/i);
       }
 
       // Running it again finds nothing to do and sends no transaction.

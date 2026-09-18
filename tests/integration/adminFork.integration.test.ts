@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from "vitest";
 import { getAddress, getContract, toHex, zeroAddress, zeroHash, type Address, type Hex } from "viem";
 import { p256 } from "@noble/curves/nist.js";
 
@@ -8,7 +8,7 @@ import { p256 } from "@noble/curves/nist.js";
 // suites do. `vi.mock` is hoisted above the imports below.
 vi.mock("react-native-passkey", () => ({ Passkey: {} }));
 
-import { KokioAdmin } from "../../src/admin/config-admin.js";
+import { ContractRevertError, KokioAdmin } from "../../src/admin/config-admin.js";
 import { DeviceWalletFactory } from "../../src/abis/index.js";
 import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import type { P256Key } from "../../src/types.js";
@@ -54,7 +54,7 @@ describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia for
   let ownerSdk: KokioAdmin;
 
   beforeAll(async () => {
-    fork = await startFork(8545);
+    fork = await startFork();
     const impersonatedAdmin = await impersonateAdmin(fork);
     admin = impersonatedAdmin.admin;
     adminSdk = new KokioAdmin(impersonatedAdmin.client);
@@ -66,6 +66,16 @@ describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia for
 
   afterAll(async () => {
     await fork?.stop();
+  });
+
+  // Some tests move the admin role, so each starts from the same chain state
+  // rather than whatever the previous one left.
+  let snapshot: Hex;
+  beforeEach(async () => {
+    snapshot = await fork.testClient.snapshot();
+  });
+  afterEach(async () => {
+    await fork.testClient.revert({ id: snapshot });
   });
 
   it(
@@ -180,15 +190,13 @@ describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia for
       const nonOwnerSdk = new KokioAdmin(fork.funded);
       expect(fork.funded.account?.address).not.toBe(owner);
 
-      // The EOA logic sends via a bare-address account (`eth_sendTransaction`),
-      // so anvil mines the tx and returns a hash even though `onlyOwner` reverts
-      // it - the access-control failure surfaces as a reverted receipt, not a
-      // thrown promise.
-      const hash = (await nonOwnerSdk.registry.requestAdminUpdate(
-        "0x000000000000000000000000000000000000beef" as Address,
-      )) as Hex;
-      const receipt = await fork.publicClient.waitForTransactionReceipt({ hash });
-      expect(receipt.status).toBe("reverted");
+      // The key signs locally, so viem estimates gas before sending and the
+      // `onlyOwner` revert comes back as a decoded error with nothing mined.
+      const err = await nonOwnerSdk.registry
+        .requestAdminUpdate("0x000000000000000000000000000000000000beef" as Address)
+        .catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ContractRevertError);
+      expect((err as ContractRevertError).decoded?.errorName).toBe("OwnableUnauthorizedAccount");
     },
     60_000,
   );
