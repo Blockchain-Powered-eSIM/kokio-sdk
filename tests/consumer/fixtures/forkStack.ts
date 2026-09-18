@@ -33,7 +33,7 @@ export interface ForkStack {
   stop: () => Promise<void>;
 }
 
-const freePort = (): Promise<number> =>
+export const freePort = (): Promise<number> =>
   new Promise((resolve, reject) => {
     const server = createServer();
     server.once("error", reject);
