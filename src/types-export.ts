@@ -11,7 +11,13 @@ export type {
     OwnerCall,
     OperationOptions,
     ScheduledOperation,
-    ScheduledBatchOperation
-} from './types';
+    ScheduledBatchOperation,
+    LazyDeploymentBatch,
+    LazyDeployment,
+    LazyHistoryBatch,
+    LazyHistoryCopy
+} from './types.js';
 
-export { Settlement } from './types';
+export type { KokioConstants } from './interface/constantsClass.js';
+
+export { Settlement } from './types.js';
