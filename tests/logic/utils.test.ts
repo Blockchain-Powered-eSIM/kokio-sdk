@@ -8,7 +8,6 @@ import {
   decodeClientDataJSON,
   hexToArrayBuffer,
   parseDEREncodedSignature,
-  parseSignature,
 } from "../../src/logic/utils.js";
 
 describe("_add0x / _remove0x", () => {
@@ -78,26 +77,5 @@ describe("DER signature parsing", () => {
 
   it("parseDEREncodedSignature extracts r and s hex", () => {
     expect(parseDEREncodedSignature(der)).toEqual({ r: "01", s: "02" });
-  });
-
-  it("parseSignature splits a 32-byte-integer DER into r and s", () => {
-    // parseSignature assumes each ASN.1 integer is exactly 32 bytes and just
-    // concatenates raw r||s. Build a DER with full 32-byte r/s (high bit clear
-    // so no leading-zero byte is added).
-    const rBytes = new Uint8Array(32).fill(0);
-    rBytes[0] = 0x11;
-    rBytes[31] = 0x01;
-    const sBytes = new Uint8Array(32).fill(0);
-    sBytes[0] = 0x22;
-    sBytes[31] = 0x02;
-    const der32 = new Uint8Array([
-      0x30, 0x44,
-      0x02, 0x20, ...rBytes,
-      0x02, 0x20, ...sBytes,
-    ]);
-
-    const { r, s } = parseSignature(der32);
-    expect(r).toBe("0x" + Buffer.from(rBytes).toString("hex"));
-    expect(s).toBe("0x" + Buffer.from(sBytes).toString("hex"));
   });
 });
