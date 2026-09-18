@@ -18,6 +18,8 @@ const USDC = stringToHex("USDCt", { size: 32 });
 const BUNDLE = { id: testBytes32("live-bundle"), priceUSDCents: 100n, settlement: Settlement.DeviceWallet };
 // Unique per run, so a rerun never collides with an earlier purchase.
 const REF = testBytes32(`o-${Date.now()}`);
+// Hosted RPCs can answer from a node a block behind, so let each write settle.
+const SETTLED = { confirmations: 3 };
 
 // The user journey on Base Sepolia with the real Pimlico bundler and paymaster.
 // Every user operation must be sponsored: the device wallet never holds ETH.
@@ -38,7 +40,7 @@ describe("user journey on Base Sepolia with Pimlico", () => {
   });
 
   it("deploys the device wallet with a sponsored user operation", async () => {
-    await expectSponsored(user.client, live.publicClient, () => user.kokio.deviceWallet!.sendUserOperation([]));
+    await expectSponsored(user.client, live.publicClient, () => user.kokio.deviceWallet!.sendUserOperation([]), SETTLED);
     expect(await live.publicClient.getCode({ address: user.deviceWallet })).toMatch(/^0x[0-9a-f]+$/i);
   }, 180_000);
 
@@ -56,7 +58,7 @@ describe("user journey on Base Sepolia with Pimlico", () => {
     await expectSponsored(user.client, live.publicClient, async () => {
       result = await user.kokio.deviceWallet!.deployAndBindESIMWallet(1n, { grantAccessToFunds: true });
       return result.userOpHash;
-    });
+    }, SETTLED);
 
     eSIMWallet = result.eSIMWalletAddress;
     user.kokio.setESIMWalletAddress(eSIMWallet);
@@ -70,7 +72,7 @@ describe("user journey on Base Sepolia with Pimlico", () => {
     await fundFromAdmin(live, token, user.deviceWallet, quote);
 
     await expectSponsored(user.client, live.publicClient, () =>
-      user.kokio.eSIMWallet!.buyDataBundleWithToken(BUNDLE, USDC, quote, REF));
+      user.kokio.eSIMWallet!.buyDataBundleWithToken(BUNDLE, USDC, quote, REF), SETTLED);
 
     expect((await user.kokio.eSIMWallet!.transactionHistory(0n)).id).toBe(BUNDLE.id);
   }, 180_000);

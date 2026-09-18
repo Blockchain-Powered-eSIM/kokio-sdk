@@ -17,17 +17,24 @@ const spendable = async (reader: PublicClient, sender: Address) => ({
  * Run `send`, wait for its user operation, and check it succeeded with a paymaster
  * covering gas: the sender's ETH and EntryPoint deposit are both unchanged, which
  * an operation it paid for itself cannot manage.
+ *
+ * On a hosted RPC pass a few `confirmations`, so reads after this do not land on
+ * a node that has not seen the block yet.
  */
 export const expectSponsored = async (
   client: KokioSmartAccountClient,
   reader: PublicClient,
   send: () => Promise<Hex>,
+  { confirmations = 1 } = {},
 ) => {
   const sender = client.account!.address;
   const before = await spendable(reader, sender);
 
   const hash = await send();
   const receipt = await client.waitForUserOperationReceipt({ hash, timeout: 120_000 });
+  if (confirmations > 1) {
+    await reader.waitForTransactionReceipt({ hash: receipt.receipt.transactionHash, confirmations });
+  }
 
   expect(receipt.success, `user operation ${hash} reverted`).toBe(true);
   expect(receipt.paymaster).not.toBe(zeroAddress);
