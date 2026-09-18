@@ -12,8 +12,9 @@ import { fundFromAdmin, startLiveStack, type LiveStack } from "./fixtures/liveSt
 import { testBytes32 } from "./fixtures/testLabels.js";
 import { createTestUser, type TestUser } from "./fixtures/user.js";
 
-const USDC = stringToHex("USDC", { size: 32 });
-// $1.00, so a run costs 1 test USDC, paid to the protocol vault.
+// The test token, so live runs never spend Circle USDC.
+const USDC = stringToHex("USDCt", { size: 32 });
+// $1.00, so a run costs 1 USDCt, paid to the protocol vault.
 const BUNDLE = { id: testBytes32("live-bundle"), priceUSDCents: 100n, settlement: Settlement.DeviceWallet };
 // Unique per run, so a rerun never collides with an earlier purchase.
 const REF = testBytes32(`o-${Date.now()}`);
