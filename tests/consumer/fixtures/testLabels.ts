@@ -6,6 +6,8 @@ export const TEST_TAG = "kokio-sdk-test";
 
 export const RP_ID = `${TEST_TAG}.local`;
 export const CREDENTIAL_ID = `${TEST_TAG}-credential`;
+/** Stand-in policy id for the fork, where the mock paymaster sponsors everything. */
+export const FORK_POLICY_ID = `sp_${TEST_TAG}`;
 
 /** Device identifier, unique per run. Emitted as-is in `DeviceWalletInfoUpdated`. */
 export const testDeviceId = () => `${TEST_TAG}-device-${Date.now()}`;

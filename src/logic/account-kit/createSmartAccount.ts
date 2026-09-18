@@ -561,7 +561,8 @@ export const _getSmartWalletClient = async (
 	const values = _getChainSpecificConstants(chainID, rpcURL, pimlicoAPIKey);
 	const bundlerURL = bundlerUrl ?? values.pimlicoRpcURL;
 
-	// Pimlico sponsors via ERC-7677, keyed by the gas policy.
+	// Pimlico sponsors via ERC-7677 and reads the policy from `sponsorshipPolicyId`.
+	// A policy is optional there, so an empty id sends no context at all.
 	const paymaster = createPaymasterClient({ transport: http(bundlerURL) });
 
 	const bundlerClient = createBundlerClient({
@@ -570,7 +571,7 @@ export const _getSmartWalletClient = async (
 		client: createPublicClient({ chain: values.chain, transport: http(values.rpcURL) }),
 		transport: _splitTransport(bundlerURL, values.rpcURL),
 		paymaster,
-		paymasterContext: { policyId: gasPolicyId },
+		paymasterContext: gasPolicyId ? { sponsorshipPolicyId: gasPolicyId } : undefined,
 	}).extend(publicActions);
 
 	// Every user operation the SDK sends goes through here, so a revert is

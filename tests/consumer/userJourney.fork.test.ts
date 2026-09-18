@@ -22,7 +22,7 @@ import { asPasskey } from "./fixtures/passkeyAuthenticator.js";
 import { expectSponsored } from "./fixtures/sponsorship.js";
 import { startForkStack, type ForkStack } from "./fixtures/forkStack.js";
 import { setTokenBalance } from "./fixtures/tokens.js";
-import { CREDENTIAL_ID, RP_ID, testBytes32, testDeviceId } from "./fixtures/testLabels.js";
+import { CREDENTIAL_ID, FORK_POLICY_ID, RP_ID, testBytes32, testDeviceId } from "./fixtures/testLabels.js";
 
 const REGISTRY: Address = "0x916b6b554119c789EF3026EDeB0E1Ba741b42A49";
 
@@ -55,12 +55,12 @@ describe("user journey on a Base Sepolia fork", () => {
       transport: http(stack.fork.rpcUrl),
     });
 
-    const setup = new Kokio(walletClient, CREDENTIAL_ID, RP_ID, "unused-on-fork", "unused-on-fork");
+    const setup = new Kokio(walletClient, CREDENTIAL_ID, RP_ID, "unused-on-fork", FORK_POLICY_ID);
     const account = await setup.smartAccount.getSmartWallet(uid, signer.ownerKey, salt);
     client = await setup.smartAccount.getSmartWalletClient(account, { bundlerUrl: stack.bundlerUrl });
 
     deviceWallet = account.address;
-    kokio = new Kokio(walletClient, CREDENTIAL_ID, RP_ID, "unused-on-fork", "unused-on-fork", client, deviceWallet);
+    kokio = new Kokio(walletClient, CREDENTIAL_ID, RP_ID, "unused-on-fork", FORK_POLICY_ID, client, deviceWallet);
   }, 180_000);
 
   afterAll(async () => {
@@ -71,7 +71,17 @@ describe("user journey on a Base Sepolia fork", () => {
     expect(await kokio.deviceWalletFactory!.getAddress(uid, signer.ownerKey, salt)).toBe(deviceWallet);
     expect(await stack.fork.publicClient.getCode({ address: deviceWallet })).toBeUndefined();
 
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
     await expectSponsored(client, stack.fork.publicClient, () => kokio.deviceWallet!.sendUserOperation([]));
+
+    // The mock paymaster sponsors whatever it is sent, so check the policy went
+    // out under the key Pimlico reads.
+    const stubRequests = fetchSpy.mock.calls
+      .map(([, init]) => JSON.parse(String(init?.body ?? "{}")))
+      .filter((body) => body.method === "pm_getPaymasterStubData");
+    fetchSpy.mockRestore();
+    expect(stubRequests.length).toBeGreaterThan(0);
+    expect(stubRequests[0].params[3]).toEqual({ sponsorshipPolicyId: FORK_POLICY_ID });
 
     expect(await stack.fork.publicClient.getCode({ address: deviceWallet })).toMatch(/^0x[0-9a-f]+$/i);
     expect(await kokio.deviceWallet!.getOwner()).toEqual(signer.ownerKey);
