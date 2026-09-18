@@ -60,7 +60,7 @@ describe("protocolAdmin schedule", () => {
         expect(arg.functionName).toBe("schedule");
         // The payload targets the registry, the transaction targets the timelock.
         expect(arg.args).toEqual([F.REGISTRY, 0n, VAULT_PAYLOAD, ZERO32, ZERO32, MIN_DELAY]);
-        expect(arg.account).toBe(EOA);
+        expect(arg.account).toBe(client.account);
 
         // The returned object carries everything execute has to reproduce.
         expect(op).toEqual({
@@ -309,7 +309,7 @@ describe("protocolAdmin direct writes", () => {
         expect(arg.abi).toBe(ProtocolAdmin);
         expect(arg.functionName).toBe(functionName);
         expect(arg.args).toEqual(args);
-        expect(arg.account).toBe(EOA);
+        expect(arg.account).toBe(client.account);
     });
 
     it.each(directCases)("$label throws MISSING_EOA_WALLET without an account", async ({ run }) => {

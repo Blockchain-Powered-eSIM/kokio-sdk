@@ -23,7 +23,7 @@ export const _registerAsset = async (client: WalletClient, symbol: Hex, asset: A
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PAYMENT_ADAPTER,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: PaymentAdapter,
         functionName: 'registerAsset',
         args: [symbol, asset]
@@ -42,7 +42,7 @@ export const _updateAsset = async (client: WalletClient, symbol: Hex, asset: Ass
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PAYMENT_ADAPTER,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: PaymentAdapter,
         functionName: 'updateAsset',
         args: [symbol, asset]
@@ -141,7 +141,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PAYMENT_ADAPTER,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: PaymentAdapter,
         functionName: 'acceptOwnership',
         args: []

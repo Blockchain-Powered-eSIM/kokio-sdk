@@ -28,7 +28,7 @@ export const _addRegistryAddress = async (client: WalletClient, registryContract
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ESIMWalletFactory,
         functionName: 'addRegistryAddress',
         args: [registryContractAddress]
@@ -47,7 +47,7 @@ export const _updateESIMWalletImplementation = async (client: WalletClient, eSIM
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ESIMWalletFactory,
         functionName: 'updateESIMWalletImplementation',
         args: [eSIMWalletImpl]
@@ -123,7 +123,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ESIMWalletFactory,
         functionName: 'acceptOwnership',
         args: []

@@ -25,7 +25,7 @@ export const _addOrUpdateLazyWalletRegistryAddress = async (client: WalletClient
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'addOrUpdateLazyWalletRegistryAddress',
         args: [lazyWalletRegistry]
@@ -44,7 +44,7 @@ export const _updateVaultAddress = async (client: WalletClient, newVaultAddress:
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'updateVaultAddress',
         args: [newVaultAddress]
@@ -71,7 +71,7 @@ export const _requestAdminUpdate = async (client: WalletClient, newAdmin: Addres
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'requestAdminUpdate',
         args: [newAdmin]
@@ -96,7 +96,7 @@ export const _disableAdmin = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'disableAdmin',
         args: []
@@ -121,7 +121,7 @@ export const _enableAdmin = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'enableAdmin',
         args: []
@@ -148,7 +148,7 @@ export const _pause = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'pause',
         args: []
@@ -173,7 +173,7 @@ export const _unpause = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'unpause',
         args: []
@@ -199,7 +199,7 @@ export const _setDefaultPriceCapUSDCents = async (client: WalletClient, cap: big
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'setDefaultPriceCapUSDCents',
         args: [cap]
@@ -227,7 +227,7 @@ export const _assignESIMIdentifier = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'assignESIMIdentifier',
         args: [eSIMWalletAddress, eSIMUniqueIdentifier]
@@ -261,7 +261,7 @@ export const _recordSettledPurchase = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'recordSettledPurchase',
         args: [eSIMWalletAddress, dataBundleDetail, asset, tokenAmount, paymentReference]
@@ -284,7 +284,7 @@ export const _acceptAdminUpdate = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'acceptAdminUpdate',
         args: []
@@ -311,7 +311,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'acceptOwnership',
         args: []

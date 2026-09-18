@@ -40,7 +40,7 @@ export const _deployDeviceWalletForUsers = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'deployDeviceWalletForUsers',
         args: [deviceUniqueIdentifiers, deviceWalletOwnersKey, salts, depositAmounts],
@@ -70,7 +70,7 @@ export const _postCreateAccount = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'postCreateAccount',
         args: [deviceWallet, deviceUniqueIdentifier, deviceWalletOwnerKey, salt]
@@ -89,7 +89,7 @@ export const _addRegistryAddress = async (client: WalletClient, registryContract
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'addRegistryAddress',
         args: [registryContractAddress]
@@ -108,7 +108,7 @@ export const _updateDeviceWalletImplementation = async (client: WalletClient, ne
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'updateDeviceWalletImplementation',
         args: [newDeviceImpl]
@@ -185,7 +185,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'acceptOwnership',
         args: []

@@ -24,7 +24,7 @@ export const _createAccountWithEOA = async (
     return client.writeContract({
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'createAccount',
         args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt],

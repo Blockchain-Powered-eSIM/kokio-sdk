@@ -91,7 +91,7 @@ export const _batchPopulateHistory = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'batchPopulateHistory',
         args: [deviceUniqueIdentifiers, eSIMUniqueIdentifiers, dataBundleDetails]
@@ -123,7 +123,7 @@ export const _deployLazyWalletAndSetESIMIdentifier = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'deployLazyWalletAndSetESIMIdentifier',
         args: [deviceOwnerPublicKey, deviceUniqueIdentifier, salt, depositAmount, maxWallets],
@@ -153,7 +153,7 @@ export const _deployMoreESIMWalletsForLazyDevice = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'deployMoreESIMWalletsForLazyDevice',
         args: [deviceUniqueIdentifier, maxWallets]
@@ -180,7 +180,7 @@ export const _setHistoryForLazyWallet = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'setHistoryForLazyWallet',
         args: [eSIMIdentifier, maxEntries]
@@ -202,7 +202,7 @@ export const _switchESIMIdentifierToNewDeviceIdentifier = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'switchESIMIdentifierToNewDeviceIdentifier',
         args: [eSIMIdentifier, oldDeviceIdentifier, newDeviceIdentifier]
@@ -347,7 +347,7 @@ export const _deployLazyWalletAllBatches = async (
             abi: LazyWalletRegistry,
             functionName: "deployMoreESIMWalletsForLazyDevice",
             args: [deviceUniqueIdentifier, maxWallets],
-            account: client.account.address,
+            account: client.account,
         }, "AllESIMWalletsDeployed");
 
         if (finished) {
@@ -425,7 +425,7 @@ export const _setHistoryForLazyWalletAllBatches = async (
         abi: LazyWalletRegistry,
         functionName: "setHistoryForLazyWallet",
         args: [eSIMIdentifier, maxEntries],
-        account: client.account.address,
+        account: client.account,
     }, "HistoryAlreadyCopied");
 
     if (finished) return { eSIMWallet, copied: 0n, batches: [], alreadyComplete: true };
@@ -522,7 +522,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'acceptOwnership',
         args: []

@@ -31,7 +31,7 @@ export const _deployESIMWallet = async (
     return writeContractOrThrow(client, {
         address: deviceWalletAddress,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWallet,
         functionName: 'deployESIMWallet',
         args: [false, salt]
@@ -56,7 +56,7 @@ export const _addDeposit = async (client: WalletClient, deviceWalletAddress: Add
     return writeContractOrThrow(client, {
         address: deviceWalletAddress,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWallet,
         functionName: 'addDeposit',
         args: [],

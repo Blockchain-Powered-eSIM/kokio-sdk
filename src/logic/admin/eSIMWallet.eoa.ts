@@ -35,7 +35,7 @@ export const _buyDataBundleWithToken = async (
     return writeContractOrThrow(client, {
         address: eSIMWalletAddress,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ESIMWallet,
         functionName: 'buyDataBundleWithToken',
         args: [dataBundleDetails, asset, maxAmountIn, paymentReference]
