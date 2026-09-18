@@ -94,7 +94,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * id is pinned to 84532 so the SDK treats it as Base Sepolia while serving the
  * forked state.
  */
-export const startFork = async (port = 8545): Promise<Fork> => {
+export const startFork = async (port = 8545, blockNumber?: bigint): Promise<Fork> => {
   const upstream = getForkUpstreamRpc();
   const rpcUrl = `http://127.0.0.1:${port}`;
   const publicClient = createPublicClient({ chain: baseSepolia, transport: forkTransport(rpcUrl) });
@@ -108,6 +108,7 @@ export const startFork = async (port = 8545): Promise<Fork> => {
       getAnvilBin(),
       [
         "--fork-url", upstream,
+        ...(blockNumber === undefined ? [] : ["--fork-block-number", String(blockNumber)]),
         "--port", String(port),
         "--chain-id", "84532",
         "--hardfork", FORK_HARDFORK,
