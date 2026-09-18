@@ -34,6 +34,21 @@ export const _deployESIMWalletWithUserOp = async (client: KokioSmartAccountClien
     });
 }
 
+/** Address `deployESIMWallet` deploys to for this device wallet and salt. */
+export const _getESIMWalletCounterFactualAddress = async (client: KokioSmartAccountClient, deviceWalletAddress: Address, salt: bigint): Promise<Address> => {
+
+    const chainID = await client.getChainId();
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.readContract({
+        address: values.factoryAddresses.ESIM_WALLET_FACTORY,
+        abi: ESIMWalletFactory,
+        functionName: "getCounterFactualAddress",
+        args: [deviceWalletAddress, salt]
+    }) as Promise<Address>;
+}
+
 export const _getCurrentESIMWalletImplementation = async (client: KokioSmartAccountClient): Promise<Address> => {
 
     const chainID = await client.getChainId();
