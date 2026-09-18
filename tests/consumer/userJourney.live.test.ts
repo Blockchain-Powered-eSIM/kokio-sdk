@@ -8,7 +8,7 @@ import { ContractRevertError } from "kokio-sdk";
 import { Settlement } from "kokio-sdk/types";
 
 import { expectSponsored } from "./fixtures/sponsorship.js";
-import { fundFromAdmin, startLiveStack, type LiveStack } from "./fixtures/liveStack.js";
+import { confirmed, fundFromAdmin, startLiveStack, type LiveStack } from "./fixtures/liveStack.js";
 import { testBytes32 } from "./fixtures/testLabels.js";
 import { createTestUser, type TestUser } from "./fixtures/user.js";
 
@@ -46,7 +46,7 @@ describe("user journey on Base Sepolia with Pimlico", () => {
     const hash = await live.admin.deviceWalletFactory.postCreateAccount(
       user.deviceWallet, user.uid, user.signer.ownerKey, user.salt,
     );
-    await live.publicClient.waitForTransactionReceipt({ hash });
+    await confirmed(live, hash);
 
     expect(await live.admin.registry.isDeviceWalletValid(user.deviceWallet)).toBe(true);
   }, 180_000);

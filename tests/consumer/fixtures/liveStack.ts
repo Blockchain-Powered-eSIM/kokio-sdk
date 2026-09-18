@@ -2,7 +2,7 @@
 // same way the fork harness does.
 import "dotenv/config";
 import { createPublicClient, createWalletClient, erc20Abi, http, type Address, type Hex, type PublicClient, type WalletClient } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { nonceManager, privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 import { KokioAdmin } from "kokio-sdk/admin";
 
@@ -35,7 +35,9 @@ export const startLiveStack = async (): Promise<LiveStack> => {
   // Cast because viem types an OP Stack client's blocks more narrowly than the generic one.
   const publicClient = createPublicClient({ chain: baseSepolia, transport: http(rpcUrl) }) as PublicClient;
   const adminClient = createWalletClient({
-    account: privateKeyToAccount(required("ESIM_WALLET_ADMIN_PK") as Hex),
+    // Hosted RPCs balance reads across nodes, and a node that is a block behind
+    // hands out a nonce already used. Counting locally avoids that.
+    account: privateKeyToAccount(required("ESIM_WALLET_ADMIN_PK") as Hex, { nonceManager }),
     chain: baseSepolia,
     transport: http(rpcUrl),
   });
@@ -62,5 +64,15 @@ export const fundFromAdmin = async (live: LiveStack, token: Address, to: Address
     address: token, abi: erc20Abi, functionName: "transfer", args: [to, amount],
     account: live.adminClient.account!, chain: baseSepolia,
   });
-  await live.publicClient.waitForTransactionReceipt({ hash });
+  await confirmed(live, hash);
+};
+
+/**
+ * Wait until a transaction is a few blocks deep and check it succeeded. A single
+ * confirmation is not enough: the next read, or Pimlico's simulation, can land on
+ * a node that has not seen the block yet.
+ */
+export const confirmed = async (live: LiveStack, hash: Hex) => {
+  const receipt = await live.publicClient.waitForTransactionReceipt({ hash, confirmations: 3 });
+  if (receipt.status !== "success") throw new Error(`Transaction ${hash} reverted.`);
 };
