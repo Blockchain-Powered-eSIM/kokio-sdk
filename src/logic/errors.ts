@@ -267,9 +267,12 @@ export const toContractRevertError = (err: unknown): ContractRevertError | null 
     if (!(err instanceof BaseError)) return null;
 
     const revert = err.walk((e) => e instanceof ContractFunctionRevertedError);
-    if (!(revert instanceof ContractFunctionRevertedError) || !revert.raw) return null;
+    if (revert instanceof ContractFunctionRevertedError && revert.raw) return new ContractRevertError(revert.raw);
 
-    return new ContractRevertError(revert.raw);
+    // A bundler rejects a reverting user operation while estimating its gas, and
+    // puts the revert data only in the error message.
+    const data = err.details?.match(/reverted during simulation with reason: (0x[0-9a-fA-F]+)/)?.[1];
+    return data ? new ContractRevertError(data as Hex) : null;
 };
 
 /**

@@ -13,7 +13,7 @@ import {
 	_getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS,
 	STUB_VERIFICATION_GAS_PAD, STUB_PRE_VERIFICATION_GAS_PAD
 } from "../constants.js";
-import { CounterfactualMismatchError } from "../errors.js";
+import { CounterfactualMismatchError, toContractRevertError } from "../errors.js";
 import { _add0x, _concatUint8Arrays, _shouldRemoveLeadingZero } from "../utils.js";
 import { P256Key, WebAuthnSignature, KokioSmartAccount, KokioSmartAccountClient } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
@@ -564,14 +564,28 @@ export const _getSmartWalletClient = async (
 	// Pimlico sponsors via ERC-7677, keyed by the gas policy.
 	const paymaster = createPaymasterClient({ transport: http(bundlerURL) });
 
-	return createBundlerClient({
+	const bundlerClient = createBundlerClient({
 		account,
 		chain: values.chain,
 		client: createPublicClient({ chain: values.chain, transport: http(values.rpcURL) }),
 		transport: _splitTransport(bundlerURL, values.rpcURL),
 		paymaster,
 		paymasterContext: { policyId: gasPolicyId },
+	}).extend(publicActions);
+
+	// Every user operation the SDK sends goes through here, so a revert is
+	// decoded once for all of them, the same way admin writes are.
+	const sendUserOperation = bundlerClient.sendUserOperation;
+
 	// extend() keeps the bundler fields at runtime but drops them from the
 	// inferred type, so the result is re-asserted rather than narrowed.
-	}).extend(publicActions) as unknown as KokioSmartAccountClient;
+	return bundlerClient.extend(() => ({
+		sendUserOperation: (async (args: Parameters<typeof sendUserOperation>[0]) => {
+			try {
+				return await sendUserOperation(args);
+			} catch (err) {
+				throw toContractRevertError(err) ?? err;
+			}
+		}) as typeof sendUserOperation,
+	})) as unknown as KokioSmartAccountClient;
 }

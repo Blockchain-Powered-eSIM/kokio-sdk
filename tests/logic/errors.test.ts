@@ -116,6 +116,18 @@ describe("toContractRevertError", () => {
         expect(err?.data).toBe(data);
     });
 
+    it("decodes the revert a bundler reports while estimating a user operation", () => {
+        const data = encodeErrorResult({ abi: DeviceWalletFactory, errorName: "FailedCall" });
+        // Alto, and Pimlico which runs it, put the data only in the message (code -32521).
+        const thrown = new BaseError("RPC Request failed.", {
+            details: `UserOperation reverted during simulation with reason: ${data}`,
+        });
+
+        const err = toContractRevertError(thrown);
+        expect(err?.decoded?.errorName).toBe("FailedCall");
+        expect(err?.data).toBe(data);
+    });
+
     it("returns null for an error that isn't a viem BaseError", () => {
         expect(toContractRevertError(new Error("network down"))).toBeNull();
     });
