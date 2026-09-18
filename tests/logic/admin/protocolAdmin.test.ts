@@ -119,6 +119,23 @@ describe("protocolAdmin schedule", () => {
         expect(op.values).toEqual([0n, 2n]);
     });
 
+    it("operationIdBatch hashes the calls the way scheduleBatch sends them", async () => {
+        const client = scheduleClient();
+
+        await protocolAdmin._operationIdBatch(client, [VAULT_CALL, { ...VAULT_CALL, value: 2n }], { salt: SALT });
+
+        const read = (client.readContract as ReturnType<typeof vi.fn>).mock.calls[0][0];
+        expect(read.address).toBe(PA);
+        expect(read.functionName).toBe("hashOperationBatch");
+        expect(read.args).toEqual([
+            [F.REGISTRY, F.REGISTRY],
+            [0n, 2n],
+            [VAULT_PAYLOAD, VAULT_PAYLOAD],
+            ZERO32,
+            SALT,
+        ]);
+    });
+
     it("hashes a batch with hashOperationBatch, not hashOperation", async () => {
         const client = scheduleClient();
 
