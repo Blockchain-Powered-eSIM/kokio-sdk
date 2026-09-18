@@ -19,5 +19,8 @@ export default defineConfig({
       ? [...configDefaults.exclude]
       : [...configDefaults.exclude, ...INTEGRATION_FILES, ...LIVE_FILES],
     globals: false,
+    // The mock paymaster prints every bundler error it relays, including the
+    // reverts the refusal tests expect. The tests check those errors themselves.
+    onConsoleLog: (log) => !log.startsWith("JSON.stringify(err):"),
   },
 });
