@@ -88,15 +88,11 @@ const receipt = await smartAccountClient.waitForUserOperationReceipt({ hash });
 if (!receipt.success) throw new Error("operation reverted");
 ```
 
-Two things about the wallet client. It has to carry an `account`:
-`getSmartWallet` refuses a client without one, though it never asks it for a
-signature, since the passkey signs everything. And give `http()` a real RPC
-URL, because the SDK reads `client.transport.url` to build the public client
-it uses for contract reads.
+The wallet client needs no `account`, since the passkey signs everything. Give `http()` a real RPC URL, because the SDK reads `client.transport.url` to build the public client it uses for contract reads.
 
-Check `receipt.success`. An operation whose calls revert is still mined and
-still returns a receipt, so the await resolving is not on its own proof the
-write landed. `receipt.receipt.transactionHash` is the onchain transaction.
+Every write resolves with the user operation hash once the bundler accepts it, not once it is mined, so wait for the receipt as above. An operation the bundler can see will revert is refused before it is sent, and the write rejects with a `ContractRevertError` whose `decoded.errorName` names the contract error (for example `PaymentReferenceAlreadyUsed`). One that only reverts once mined still returns a receipt, so check `receipt.success` too. `receipt.receipt.transactionHash` is the onchain transaction.
+
+Calls that belong together have helpers that send them as one user operation, so the user sees one passkey prompt: `deviceWallet.deployAndBindESIMWallet(salt, { grantAccessToFunds: true })` deploys an eSIM wallet, binds it and grants it access to the device wallet's tokens, and `eSIMWallet.buyDataBundleWithTransfer(...)` sends the tokens and buys in one go, without pull access.
 
 The contract surfaces (`deviceWallet`, `eSIMWallet`, `deviceWalletFactory`,
 `eSIMWalletFactory`, `registry`, `paymentAdapter`, `P256Verifier`) are only
