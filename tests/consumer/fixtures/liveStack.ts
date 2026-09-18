@@ -54,7 +54,8 @@ export const fundFromAdmin = async (live: LiveStack, token: Address, to: Address
   const from = live.adminClient.account!.address;
   const held = await live.publicClient.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [from] });
   if (held < amount) {
-    throw new Error(`The admin ${from} holds ${held} of ${token} and the purchase needs ${amount}. Top it up from faucet.circle.com (Base Sepolia USDC).`);
+    // The token is whatever the adapter resolves the asset to, so name it rather than guess a faucet.
+    throw new Error(`The admin ${from} holds ${held} of ${token} and the purchase needs ${amount}. Send it some of that token.`);
   }
 
   const hash = await live.adminClient.writeContract({
