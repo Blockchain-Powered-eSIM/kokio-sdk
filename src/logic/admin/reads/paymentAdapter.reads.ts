@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../../constants.js";
 import { PaymentAdapter } from "../../../abis/index.js";
 import { Asset } from "../../../types.js";
 
@@ -11,7 +11,7 @@ import { Asset } from "../../../types.js";
 /** The registry this adapter reads `vault()` and `isESIMWalletValid()` from. */
 export const _registry = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -26,7 +26,7 @@ export const _registry = async (client: WalletClient): Promise<Address> => {
 /** The ERC-20 registered under the `USDC` symbol at configure time. */
 export const _settlementToken = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -45,7 +45,7 @@ export const _settlementToken = async (client: WalletClient): Promise<Address> =
  */
 export const _assets = async (client: WalletClient, symbol: Hex): Promise<Asset> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -62,7 +62,7 @@ export const _assets = async (client: WalletClient, symbol: Hex): Promise<Asset>
 /** A currency's full entry, reverting if the symbol was never registered. */
 export const _resolveAsset = async (client: WalletClient, symbol: Hex): Promise<Asset> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -81,7 +81,7 @@ export const _resolveAsset = async (client: WalletClient, symbol: Hex): Promise<
  */
 export const _quote = async (client: WalletClient, symbol: Hex, priceUSDCents: bigint): Promise<bigint> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -102,7 +102,7 @@ export const _quote = async (client: WalletClient, symbol: Hex, priceUSDCents: b
  */
 export const _usedReferences = async (client: WalletClient, paymentReference: Hex): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -117,7 +117,7 @@ export const _usedReferences = async (client: WalletClient, paymentReference: He
 /** The address holding upgrade authority over this adapter (its owner). */
 export const _upgradeManager = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 

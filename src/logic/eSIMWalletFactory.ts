@@ -1,5 +1,5 @@
 import { Address, encodeFunctionData } from "viem"
-import { _getChainSpecificConstants } from "./constants.js";
+import { _chainId, _getChainSpecificConstants } from "./constants.js";
 import { MissingSmartWalletError } from "./errors.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { ESIMWalletFactory } from "../abis/index.js";
@@ -14,7 +14,7 @@ import { ESIMWalletFactory } from "../abis/index.js";
 
 export const _deployESIMWalletWithUserOp = async (client: KokioSmartAccountClient, deviceWalletAddress: Address, salt: bigint) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -37,7 +37,7 @@ export const _deployESIMWalletWithUserOp = async (client: KokioSmartAccountClien
 /** Address `deployESIMWallet` deploys to for this device wallet and salt. */
 export const _getESIMWalletCounterFactualAddress = async (client: KokioSmartAccountClient, deviceWalletAddress: Address, salt: bigint): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -51,7 +51,7 @@ export const _getESIMWalletCounterFactualAddress = async (client: KokioSmartAcco
 
 export const _getCurrentESIMWalletImplementation = async (client: KokioSmartAccountClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 

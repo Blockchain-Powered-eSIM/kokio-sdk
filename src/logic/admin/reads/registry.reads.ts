@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../../constants.js";
 import { Registry } from "../../../abis/index.js";
 
 // Read-only admin logic for `Registry` (which inherits `RegistryHelper`, so its
@@ -14,7 +14,7 @@ import { Registry } from "../../../abis/index.js";
  */
 export const _eSIMWalletAdmin = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -33,7 +33,7 @@ export const _eSIMWalletAdmin = async (client: WalletClient): Promise<Address> =
  */
 export const _adminOfRecord = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -52,7 +52,7 @@ export const _adminOfRecord = async (client: WalletClient): Promise<Address> => 
  */
 export const _adminDisabled = async (client: WalletClient): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -70,7 +70,7 @@ export const _adminDisabled = async (client: WalletClient): Promise<boolean> => 
  */
 export const _paused = async (client: WalletClient): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -88,7 +88,7 @@ export const _paused = async (client: WalletClient): Promise<boolean> => {
  */
 export const _defaultPriceCapUSDCents = async (client: WalletClient): Promise<bigint> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -103,7 +103,7 @@ export const _defaultPriceCapUSDCents = async (client: WalletClient): Promise<bi
 /** The vault EOA recorded in the registry. */
 export const _vault = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -118,7 +118,7 @@ export const _vault = async (client: WalletClient): Promise<Address> => {
 /** The pending admin nominated via `requestAdminUpdate` (zero address if none). */
 export const _newRequestedAdmin = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -137,7 +137,7 @@ export const _newRequestedAdmin = async (client: WalletClient): Promise<Address>
  */
 export const _owner = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -152,7 +152,7 @@ export const _owner = async (client: WalletClient): Promise<Address> => {
 /** The upgrade-manager (owner) EOA recorded in the registry. */
 export const _upgradeManager = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -171,7 +171,7 @@ export const _upgradeManager = async (client: WalletClient): Promise<Address> =>
  */
 export const _pendingOwner = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -186,7 +186,7 @@ export const _pendingOwner = async (client: WalletClient): Promise<Address> => {
 /** The `DeviceWalletFactory` address wired into the registry. */
 export const _deviceWalletFactory = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -201,7 +201,7 @@ export const _deviceWalletFactory = async (client: WalletClient): Promise<Addres
 /** The `ESIMWalletFactory` address wired into the registry. */
 export const _eSIMWalletFactory = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -216,7 +216,7 @@ export const _eSIMWalletFactory = async (client: WalletClient): Promise<Address>
 /** The EntryPoint the registry recognises. One per chain. */
 export const _entryPoint = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -235,7 +235,7 @@ export const _entryPoint = async (client: WalletClient): Promise<Address> => {
  */
 export const _requireNotPaused = async (client: WalletClient): Promise<void> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -250,7 +250,7 @@ export const _requireNotPaused = async (client: WalletClient): Promise<void> => 
 /** The `LazyWalletRegistry` address wired into the registry. */
 export const _lazyWalletRegistry = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -265,7 +265,7 @@ export const _lazyWalletRegistry = async (client: WalletClient): Promise<Address
 /** The device wallet registered for a device unique identifier (zero if none). */
 export const _uniqueIdentifierToDeviceWallet = async (client: WalletClient, deviceIdentifier: string): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -283,7 +283,7 @@ export const _uniqueIdentifierToDeviceWallet = async (client: WalletClient, devi
  */
 export const _deviceWalletToOwner = async (client: WalletClient, deviceWallet: Address, index: bigint): Promise<Hex> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -298,7 +298,7 @@ export const _deviceWalletToOwner = async (client: WalletClient, deviceWallet: A
 /** The device wallet registered for a hash of owner P-256 keys (zero if none). */
 export const _registeredP256Keys = async (client: WalletClient, hashOfOwnerP256Keys: Hex): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -313,7 +313,7 @@ export const _registeredP256Keys = async (client: WalletClient, hashOfOwnerP256K
 /** Whether a device wallet is registered/valid. */
 export const _isDeviceWalletValid = async (client: WalletClient, deviceWallet: Address): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -336,7 +336,7 @@ export const _isDeviceWalletValid = async (client: WalletClient, deviceWallet: A
  */
 export const _isESIMWalletValid = async (client: WalletClient, eSIMWallet: Address): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -359,7 +359,7 @@ export const _isESIMWalletValid = async (client: WalletClient, eSIMWallet: Addre
  */
 export const _isESIMWalletOnStandby = async (client: WalletClient, eSIMWallet: Address): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -378,7 +378,7 @@ export const _isESIMWalletOnStandby = async (client: WalletClient, eSIMWallet: A
  */
 export const _isDeviceIdentifierAlreadyUsed = async (client: WalletClient, deviceUniqueIdentifier: string): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -393,7 +393,7 @@ export const _isDeviceIdentifierAlreadyUsed = async (client: WalletClient, devic
 /** Whether an eSIM identifier is already held by a wallet. */
 export const _isESIMIdentifierClaimed = async (client: WalletClient, eSIMUniqueIdentifier: string): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -412,7 +412,7 @@ export const _isESIMIdentifierClaimed = async (client: WalletClient, eSIMUniqueI
  */
 export const _eSIMWalletForIdentifier = async (client: WalletClient, eSIMUniqueIdentifier: string): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -431,7 +431,7 @@ export const _eSIMWalletForIdentifier = async (client: WalletClient, eSIMUniqueI
  */
 export const _claimedESIMIdentifiers = async (client: WalletClient, hashOfESIMIdentifier: Hex): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -454,7 +454,7 @@ export const _claimedESIMIdentifiers = async (client: WalletClient, hashOfESIMId
  */
 export const _requireDeviceIdentifierNotReserved = async (client: WalletClient, deviceUniqueIdentifier: string): Promise<void> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -473,7 +473,7 @@ export const _requireDeviceIdentifierNotReserved = async (client: WalletClient, 
  */
 export const _proxiableUUID = async (client: WalletClient): Promise<Hex> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -488,7 +488,7 @@ export const _proxiableUUID = async (client: WalletClient): Promise<Hex> => {
 /** The OpenZeppelin upgrade interface this proxy speaks, currently `"5.0.0"`. */
 export const _upgradeInterfaceVersion = async (client: WalletClient): Promise<string> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -503,7 +503,7 @@ export const _upgradeInterfaceVersion = async (client: WalletClient): Promise<st
 /** The payment adapter this registry currently points at. */
 export const _paymentAdapter = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -522,7 +522,7 @@ export const _paymentAdapter = async (client: WalletClient): Promise<Address> =>
  */
 export const _usedPaymentReferences = async (client: WalletClient, scopedReference: Hex): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 

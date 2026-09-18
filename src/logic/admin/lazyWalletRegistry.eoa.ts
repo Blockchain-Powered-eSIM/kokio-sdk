@@ -9,7 +9,7 @@ import {
     parseEventLogs,
     publicActions,
 } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../constants.js";
 import {
     BatchSizeOutOfRangeError,
     DepositOnResumeError,
@@ -67,7 +67,7 @@ export const DEFAULT_ESIM_WALLETS_PER_CALL = 10n;
 export const DEFAULT_HISTORY_ENTRIES_PER_CALL = 25n;
 
 const _resolve = async (client: WalletClient) => {
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     return _getChainSpecificConstants(chainID, rpcURL);
 }
@@ -468,7 +468,7 @@ export const _setHistoryForLazyWalletAllBatches = async (
  */
 export const _transferOwnershipCall = async (client: WalletClient, newOwner: Address): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -491,7 +491,7 @@ export const _transferOwnershipCall = async (client: WalletClient, newOwner: Add
  */
 export const _upgradeCall = async (client: WalletClient, newImplementation: Address, data: Hex = '0x'): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -513,7 +513,7 @@ export const _upgradeCall = async (client: WalletClient, newImplementation: Addr
  */
 export const _acceptOwnership = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 

@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../../constants.js";
 import { LazyWalletRegistry } from "../../../abis/index.js";
 import { DataBundleDetails } from "../../../types.js";
 
@@ -15,7 +15,7 @@ import { DataBundleDetails } from "../../../types.js";
 /** The upgrade-manager (owner) EOA of the lazy registry. */
 export const _upgradeManager = async (client: WalletClient): Promise<`0x${string}`> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -30,7 +30,7 @@ export const _upgradeManager = async (client: WalletClient): Promise<`0x${string
 /** The device identifier an eSIM identifier is currently associated with. */
 export const _eSIMIdentifierToDeviceIdentifier = async (client: WalletClient, eSIMIdentifier: string): Promise<string> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -50,7 +50,7 @@ export const _deviceIdentifierToESIMDetails = async (
     index: bigint
 ): Promise<DataBundleDetails> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -67,7 +67,7 @@ export const _deviceIdentifierToESIMDetails = async (
 /** Most eSIM wallets one `deployLazyWalletAndSetESIMIdentifier` call will deploy. */
 export const _maxESIMWalletsPerCall = async (client: WalletClient): Promise<bigint> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -82,7 +82,7 @@ export const _maxESIMWalletsPerCall = async (client: WalletClient): Promise<bigi
 /** Most history entries one `setHistoryForLazyWallet` call will copy. */
 export const _maxHistoryEntriesPerCall = async (client: WalletClient): Promise<bigint> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -101,7 +101,7 @@ export const _maxHistoryEntriesPerCall = async (client: WalletClient): Promise<b
  */
 export const _eSIMWalletsDeployed = async (client: WalletClient, deviceIdentifier: string): Promise<bigint> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -116,7 +116,7 @@ export const _eSIMWalletsDeployed = async (client: WalletClient, deviceIdentifie
 /** Salt the device's first deployment batch started from. Every later batch derives from it. */
 export const _lazyDeploymentSalt = async (client: WalletClient, deviceIdentifier: string): Promise<bigint> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -134,7 +134,7 @@ export const _lazyDeploymentSalt = async (client: WalletClient, deviceIdentifier
  */
 export const _lazyDeployedESIMWallet = async (client: WalletClient, eSIMIdentifier: string): Promise<`0x${string}`> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -149,7 +149,7 @@ export const _lazyDeployedESIMWallet = async (client: WalletClient, eSIMIdentifi
 /** How many of an eSIM's stored purchase entries have already reached its wallet. */
 export const _historyEntriesCopied = async (client: WalletClient, eSIMIdentifier: string): Promise<bigint> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -169,7 +169,7 @@ export const _historyEntriesCopied = async (client: WalletClient, eSIMIdentifier
  */
 export const _outstandingHistoryEntries = async (client: WalletClient, eSIMIdentifier: string): Promise<bigint> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -184,7 +184,7 @@ export const _outstandingHistoryEntries = async (client: WalletClient, eSIMIdent
 /** Whether a device identifier has purchases recorded against it here. */
 export const _isDeviceIdentifierReserved = async (client: WalletClient, deviceIdentifier: string): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -199,7 +199,7 @@ export const _isDeviceIdentifierReserved = async (client: WalletClient, deviceId
 /** Whether an eSIM identifier is bound to a device here. */
 export const _isESIMIdentifierReserved = async (client: WalletClient, eSIMIdentifier: string): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -218,7 +218,7 @@ export const _eSIMIdentifiersAssociatedWithDeviceIdentifier = async (
     index: bigint
 ): Promise<string> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -237,7 +237,7 @@ export const _eSIMIdentifiersAssociatedWithDeviceIdentifier = async (
  */
 export const _proxiableUUID = async (client: WalletClient): Promise<Hex> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -252,7 +252,7 @@ export const _proxiableUUID = async (client: WalletClient): Promise<Hex> => {
 /** The OpenZeppelin upgrade interface this proxy speaks, currently `"5.0.0"`. */
 export const _upgradeInterfaceVersion = async (client: WalletClient): Promise<string> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -271,7 +271,7 @@ export const _upgradeInterfaceVersion = async (client: WalletClient): Promise<st
  */
 export const _owner = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -290,7 +290,7 @@ export const _owner = async (client: WalletClient): Promise<Address> => {
  */
 export const _pendingOwner = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 

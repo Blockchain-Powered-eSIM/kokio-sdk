@@ -3,7 +3,7 @@ import { Call, KokioSmartAccountClient } from "../types.js";
 import { DeviceWallet, ESIMWalletFactory } from "../abis/index.js";
 import { MissingSmartWalletError } from "./errors.js";
 import { P256Key } from "../types.js";
-import { _getChainSpecificConstants } from "./constants.js";
+import { _chainId, _getChainSpecificConstants } from "./constants.js";
 import { _getESIMWalletCounterFactualAddress } from "./eSIMWalletFactory.js";
 
 // A userOp from a device wallet runs through `execute`, so at the target contract
@@ -99,7 +99,7 @@ export const _deployAndBindESIMWallet = async (
     grantAccessToFunds: boolean
 ): Promise<{ userOpHash: Hex; eSIMWalletAddress: Address }> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 

@@ -1,5 +1,5 @@
 import { Address, Hex, encodeFunctionData } from "viem";
-import { _getChainSpecificConstants } from "./constants.js";
+import { _chainId, _getChainSpecificConstants } from "./constants.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { Registry } from "../abis/index.js";
 import { MissingSmartWalletError } from "./errors.js";
@@ -31,7 +31,7 @@ export const _bindESIMWallet = async (client: KokioSmartAccountClient, eSIMWalle
 
     if(!client.account) throw new MissingSmartWalletError();
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -64,7 +64,7 @@ export const _toggleESIMWalletStandbyStatus = async (
 
     if(!client.account) throw new MissingSmartWalletError();
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -89,7 +89,7 @@ export const _toggleESIMWalletStandbyStatus = async (
  */
 export const _isDeviceIdentifierAlreadyUsed = async (client: KokioSmartAccountClient, deviceUniqueIdentifier: string): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -109,7 +109,7 @@ export const _isDeviceIdentifierAlreadyUsed = async (client: KokioSmartAccountCl
  */
 export const _paused = async (client: KokioSmartAccountClient): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -128,7 +128,7 @@ export const _paused = async (client: KokioSmartAccountClient): Promise<boolean>
  */
 export const _requireNotPaused = async (client: KokioSmartAccountClient): Promise<void> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -148,7 +148,7 @@ export const _requireNotPaused = async (client: KokioSmartAccountClient): Promis
  */
 export const _isESIMWalletValid = async (client: KokioSmartAccountClient, eSIMWalletAddress: Address): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -170,7 +170,7 @@ export const _isESIMWalletValid = async (client: KokioSmartAccountClient, eSIMWa
  */
 export const _isESIMWalletOnStandby = async (client: KokioSmartAccountClient, eSIMWalletAddress: Address): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -185,7 +185,7 @@ export const _isESIMWalletOnStandby = async (client: KokioSmartAccountClient, eS
 /** Whether a device wallet is registered with the protocol. */
 export const _isDeviceWalletValid = async (client: KokioSmartAccountClient, deviceWalletAddress: Address): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -200,7 +200,7 @@ export const _isDeviceWalletValid = async (client: KokioSmartAccountClient, devi
 /** The device wallet registered for a device identifier, zero if none. */
 export const _uniqueIdentifierToDeviceWallet = async (client: KokioSmartAccountClient, deviceUniqueIdentifier: string): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -215,7 +215,7 @@ export const _uniqueIdentifierToDeviceWallet = async (client: KokioSmartAccountC
 /** Whether an eSIM identifier is already held by a wallet. */
 export const _isESIMIdentifierClaimed = async (client: KokioSmartAccountClient, eSIMUniqueIdentifier: string): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -234,7 +234,7 @@ export const _isESIMIdentifierClaimed = async (client: KokioSmartAccountClient, 
  */
 export const _eSIMWalletForIdentifier = async (client: KokioSmartAccountClient, eSIMUniqueIdentifier: string): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -249,7 +249,7 @@ export const _eSIMWalletForIdentifier = async (client: KokioSmartAccountClient, 
 /** The fallback price ceiling in USD cents for a wallet holding no cap of its own. */
 export const _defaultPriceCapUSDCents = async (client: KokioSmartAccountClient): Promise<bigint> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -264,7 +264,7 @@ export const _defaultPriceCapUSDCents = async (client: KokioSmartAccountClient):
 /** The payment adapter this registry currently points at. */
 export const _paymentAdapter = async (client: KokioSmartAccountClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -283,7 +283,7 @@ export const _paymentAdapter = async (client: KokioSmartAccountClient): Promise<
  */
 export const _usedPaymentReferences = async (client: KokioSmartAccountClient, scopedReference: Hex): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -302,7 +302,7 @@ export const _usedPaymentReferences = async (client: KokioSmartAccountClient, sc
  */
 export const _requireLazyHistoryCopied = async (client: KokioSmartAccountClient, eSIMWallet: Address): Promise<void> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -322,7 +322,7 @@ export const _requireLazyHistoryCopied = async (client: KokioSmartAccountClient,
  */
 export const _requireDeviceIdentifierNotReserved = async (client: KokioSmartAccountClient, deviceUniqueIdentifier: string): Promise<void> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 

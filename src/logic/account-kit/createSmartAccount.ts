@@ -10,7 +10,7 @@ import {
 	getUserOperationHash, toSmartAccount, type UserOperation
 } from "viem/account-abstraction";
 import {
-	_getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS,
+	_chainId, _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS,
 	STUB_VERIFICATION_GAS_PAD, STUB_PRE_VERIFICATION_GAS_PAD
 } from "../constants.js";
 import { CounterfactualMismatchError, toContractRevertError } from "../errors.js";
@@ -178,7 +178,7 @@ export const _encodeCalls = async (calls: readonly Call[]): Promise<Hex> => {
 
 export const _getFactoryArgs = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint): Promise<{ factory: Address; factoryData: Hex }> => {
 
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -193,7 +193,7 @@ export const _getFactoryArgs = async (client: WalletClient, deviceUniqueIdentifi
 
 export const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<Hex> => {
   
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
   
@@ -236,7 +236,7 @@ export const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifi
 
 export const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint):Promise<Hex> => {
 
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 	const deviceWalletFactoryAddress = values.factoryAddresses.DEVICE_WALLET_FACTORY;
@@ -273,13 +273,9 @@ export const _assertCounterfactualMatchesOnChain = async (
 	deviceWalletOwnerKey: P256Key,
 	salt: bigint,
 ): Promise<Hex> => {
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
-
-	const offChain = await getCounterFactualAddress(
-		client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt,
-	);
 
 	const deviceWalletFactory = getContract({
 		abi: DeviceWalletFactory,
@@ -287,12 +283,16 @@ export const _assertCounterfactualMatchesOnChain = async (
 		client,
 	});
 
-	// on-chain view arg order is (ownerKey, uid, salt) - differs from createAccount
-	const onChain = await deviceWalletFactory.read.getCounterFactualAddress([
-		deviceWalletOwnerKey,
-		deviceUniqueIdentifier,
-		salt,
-	]) as Hex;
+	// Neither side needs the other, so both are asked for at once.
+	const [offChain, onChain] = await Promise.all([
+		getCounterFactualAddress(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt),
+		// on-chain view arg order is (ownerKey, uid, salt) - differs from createAccount
+		deviceWalletFactory.read.getCounterFactualAddress([
+			deviceWalletOwnerKey,
+			deviceUniqueIdentifier,
+			salt,
+		]) as Promise<Hex>,
+	]);
 
 	if (getAddress(offChain) !== getAddress(onChain)) {
 		throw new CounterfactualMismatchError(getAddress(offChain), getAddress(onChain));
@@ -426,7 +426,7 @@ export const _getSmartWallet = async (
 	salt: bigint
 ): Promise<KokioSmartAccount> => {
 
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -556,7 +556,7 @@ export const _getSmartWalletClient = async (
 	bundlerUrl?: string
 ): Promise<KokioSmartAccountClient> => {
 
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL, pimlicoAPIKey);
 	const bundlerURL = bundlerUrl ?? values.pimlicoRpcURL;

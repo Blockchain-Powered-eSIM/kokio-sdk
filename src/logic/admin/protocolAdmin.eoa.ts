@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient, encodeFunctionData, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { ProtocolAdmin, Registry } from "../../abis/index.js";
 import type {
@@ -23,7 +23,7 @@ import type {
 const ZERO_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000" as Hex;
 
 const _resolve = async (client: WalletClient) => {
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     return _getChainSpecificConstants(chainID, rpcURL);
 }

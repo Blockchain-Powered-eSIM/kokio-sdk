@@ -1,5 +1,5 @@
 import { Address, WalletClient } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { DeviceWallet } from "../../abis/index.js";
 
@@ -22,7 +22,7 @@ export const _deployESIMWallet = async (
     salt: bigint
 ) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -47,7 +47,7 @@ export const _deployESIMWallet = async (
  */
 export const _addDeposit = async (client: WalletClient, deviceWalletAddress: Address, amount: bigint) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 

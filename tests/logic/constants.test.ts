@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { baseSepolia } from "viem/chains";
 import {
+  _chainId,
   _getChainSpecificConstants,
   CHAIN_ID,
   baseSepoliaFactoryAddresses,
@@ -38,5 +39,26 @@ describe("_getChainSpecificConstants - unconfigured chains (P1 guard)", () => {
     expect(() => _getChainSpecificConstants(999999 as CHAIN_ID, RPC)).toThrow(
       /Unsupported chain id/,
     );
+  });
+});
+
+describe("_chainId", () => {
+  it("asks each client for its chain id once", async () => {
+    const client = { getChainId: vi.fn().mockResolvedValue(84532) };
+
+    const ids = await Promise.all([_chainId(client), _chainId(client), _chainId(client)]);
+    expect(ids).toEqual([84532, 84532, 84532]);
+    expect(client.getChainId).toHaveBeenCalledTimes(1);
+
+    const other = { getChainId: vi.fn().mockResolvedValue(8453) };
+    expect(await _chainId(other)).toBe(8453);
+  });
+
+  it("asks again after a failed lookup", async () => {
+    const client = { getChainId: vi.fn().mockRejectedValueOnce(new Error("down")).mockResolvedValue(84532) };
+
+    await expect(_chainId(client)).rejects.toThrow("down");
+    expect(await _chainId(client)).toBe(84532);
+    expect(client.getChainId).toHaveBeenCalledTimes(2);
   });
 });

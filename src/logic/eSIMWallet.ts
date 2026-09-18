@@ -3,7 +3,7 @@ import { DataBundleDetails } from "../types.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { MissingSmartWalletError } from "./errors.js";
 import { ESIMWallet, PaymentAdapter, Registry } from "../abis/index.js";
-import { _getChainSpecificConstants } from "./constants.js";
+import { _chainId, _getChainSpecificConstants } from "./constants.js";
 import { _defaultPriceCapUSDCents } from "./registry.js";
 
 // Not exposed on this surface:
@@ -93,7 +93,7 @@ export const _buyDataBundleWithTransfer = async (
     paymentReference: Hex
 ) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -103,12 +103,14 @@ export const _buyDataBundleWithTransfer = async (
     const adapter = await client.readContract({
         address: values.factoryAddresses.REGISTRY, abi: Registry, functionName: "paymentAdapter"
     }) as Address;
-    const { token } = await client.readContract({
-        address: adapter, abi: PaymentAdapter, functionName: "resolveAsset", args: [asset]
-    }) as { token: Address };
-    const amountIn = await client.readContract({
-        address: adapter, abi: PaymentAdapter, functionName: "quote", args: [asset, dataBundleDetails.priceUSDCents]
-    }) as bigint;
+    const [{ token }, amountIn] = await Promise.all([
+        client.readContract({
+            address: adapter, abi: PaymentAdapter, functionName: "resolveAsset", args: [asset]
+        }) as Promise<{ token: Address }>,
+        client.readContract({
+            address: adapter, abi: PaymentAdapter, functionName: "quote", args: [asset, dataBundleDetails.priceUSDCents]
+        }) as Promise<bigint>,
+    ]);
     const held = await client.readContract({
         address: token, abi: erc20Abi, functionName: "balanceOf", args: [address]
     });
