@@ -12,7 +12,7 @@ import {
     _setPriceCapUSDCents,
     _transactionHistory
 } from "../logic/eSIMWallet.js"
-import { DataBundleDetails } from "../types";
+import { DataBundleDetails } from "../types.js";
 import { KokioSmartAccountClient } from "../types.js";
 
 export class ESIMWalletSubPackage {
