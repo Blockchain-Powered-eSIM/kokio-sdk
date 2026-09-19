@@ -57,17 +57,25 @@
     "@types/node": "22.20.1",
     "dotenv": "17.4.2",
     "prool": "0.0.25",
+    "react-native-passkey": "3.6.1",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
   },
   "dependencies": {
     "@noble/curves": "2.3.0",
     "@scure/base": "1.2.6",
-    "react-native-passkey": "3.6.1",
     "viem": "2.55.19"
   },
   "overrides": {
     "ws": "8.21.0",
     "tar": "7.5.22"
+  },
+  "peerDependencies": {
+    "react-native-passkey": "^3.6.1"
+  },
+  "peerDependenciesMeta": {
+    "react-native-passkey": {
+      "optional": true
+    }
   }
 }

@@ -22,13 +22,19 @@ surface, with a code example and return type, see the
 
 ## Installation
 
+In the mobile app:
+
+```sh
+npm install kokio-sdk react-native-passkey
+```
+
+On a backend that only uses `kokio-sdk/admin`:
+
 ```sh
 npm install kokio-sdk
 ```
 
-The package ships as ES modules and requires Node 18 or newer (or a React Native
-runtime). `viem` is bundled as a dependency, so you do not need to install it
-separately.
+The package ships as ES modules and requires Node 18 or newer (or a React Native runtime). `viem` is bundled as a dependency, so you do not need to install it separately. `react-native-passkey` is a native module, so the app installs it itself: Expo only links native modules the app lists directly, and one copy avoids version clashes.
 
 ## Mobile client (Expo / React Native)
 
