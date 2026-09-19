@@ -64,3 +64,20 @@ Every method entry follows the same shape:
 A write (anything that changes state) either sends a user operation (mobile)
 or a transaction (admin) and resolves to a hash. A read is a plain `view` call
 and resolves to the value itself.
+
+A write the contract would refuse throws `ContractRevertError` before anything is sent, with the contract's error name in `decoded.errorName`:
+
+```ts
+import { ContractRevertError } from "kokio-sdk";
+
+try {
+  await kokio.eSIMWallet!.buyDataBundleWithToken(dataBundleDetails, asset, maxAmountIn, paymentReference);
+} catch (err) {
+  if (err instanceof ContractRevertError && err.decoded?.errorName === "PaymentReferenceAlreadyUsed") {
+    // this order was already paid for
+  }
+  throw err;
+}
+```
+
+The backend's wallet client can hold a local private key (`privateKeyToAccount`) or a connected wallet. Admin writes sign with whichever account the client carries.

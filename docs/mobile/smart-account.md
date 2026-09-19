@@ -33,6 +33,8 @@ const account = await kokio.smartAccount.getSmartWallet(
 Returns: `KokioSmartAccount`, a viem smart account object. Pass it to
 `getSmartWalletClient`.
 
+The wallet client given to `Kokio` does not need an `account`. The passkey signs, so a client with just a chain and transport is enough.
+
 ## getSmartWalletClient
 
 Builds the client that signs with the passkey and sends user operations
@@ -47,3 +49,15 @@ Returns: `KokioSmartAccountClient`, a bundler client that can also read
 contracts directly (it carries viem's public actions too). Pass it as
 `smartAccountClient` to a new `Kokio(...)` call so the contract surfaces
 (`deviceWallet`, `eSIMWallet`, and the rest) become available.
+
+Gas is sponsored by the paymaster at the same endpoint. The gas policy id given to `Kokio` is optional. Pass `""` to send no policy, or a Pimlico sponsorship policy id to have that policy's rules applied.
+
+To send user operations somewhere other than Pimlico, such as a local bundler in tests, pass `bundlerUrl`. That endpoint must also answer the ERC-7677 paymaster methods.
+
+```ts
+const smartAccountClient = await kokio.smartAccount.getSmartWalletClient(account, {
+  bundlerUrl: "http://127.0.0.1:4337",
+});
+```
+
+If a user operation would revert, sending it throws `ContractRevertError` with the contract's error name in `decoded.errorName`, and nothing is sent.

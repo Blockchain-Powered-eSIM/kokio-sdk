@@ -17,10 +17,9 @@ No keys or funds - read access only.
 
 ## Write / UserOp scenario tier - local Base Sepolia fork
 
-`adminFork.integration.test.ts`, `userOpFork.integration.test.ts`,
-`protocolAdminFork.integration.test.ts`,
-`lazyDeploymentFork.integration.test.ts` and
-`erc1271Fork.integration.test.ts` drive real state-changing flows against a
+`adminFork.integration.test.ts`, `protocolAdminFork.integration.test.ts`,
+`lazyDeploymentFork.integration.test.ts`, `erc1271Fork.integration.test.ts` and
+`stubSignatureFork.integration.test.ts` drive real state-changing flows against a
 local [`anvil`](https://book.getfoundry.sh/anvil/) fork of Base Sepolia. **No
 private keys and no bundler** are required:
 
@@ -30,8 +29,8 @@ private keys and no bundler** are required:
   `eSIMWalletAdmin` (anvil `impersonateAccount` + `setBalance`). The timelock
   suite impersonates the real proposer and guardian the same way, and moves the
   clock past the delay with `increaseTime`.
-- UserOps are submitted by a funded anvil account calling
-  `EntryPoint.handleOps` directly - no Pimlico, no gas policy.
+- User operations sent through a bundler and paymaster are covered by the consumer tier ([../consumer/](../consumer/)).
+- Each fork starts from block 46,990,000 on a free port, with its clock moved to the current time.
 - The passkey signature is produced by a **software** P-256 signer
   (`tests/utils/softP256Signer.ts`, test-only) that assembles the same
   `WebAuthnSignature` envelope the native passkey path produces and feeds it
@@ -43,8 +42,7 @@ private keys and no bundler** are required:
 
 - Foundry installed (`anvil` on `PATH`). Install via
   [`foundryup`](https://book.getfoundry.sh/getting-started/installation).
-- `INTEGRATION=1` (the script sets it). Without Foundry or the flag, the tier
-  `skipIf`-skips cleanly.
+- `INTEGRATION=1` (the script sets it). Without the flag the tier skips. With the flag but no runnable `anvil`, it fails, so a missing Foundry install is not mistaken for a pass.
 
 ### Run
 

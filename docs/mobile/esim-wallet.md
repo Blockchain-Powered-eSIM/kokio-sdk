@@ -20,8 +20,10 @@ const hash = await kokio.eSIMWallet!.buyDataBundleWithToken(dataBundleDetails, a
 ## buyDataBundleWithToken
 
 Buys a data bundle for this eSIM, paid for in an ERC-20 the payment adapter
-accepts (USDC on Base Sepolia today). Use this for the everyday purchase
+accepts (`USDC` and `USDCt` on Base Sepolia today). Use this for the everyday purchase
 flow.
+
+If this eSIM wallet holds less than the price, the contract pulls the rest from the device wallet. That needs `deviceWallet.toggleAccessToFunds(eSIMWalletAddress, true)` first, otherwise the purchase reverts with `FundsAccessRevoked`. Without that access, use `buyDataBundleWithTransfer`.
 
 Check `priceCapUSDCents()` first: a price above the cap reverts. Read
 `kokio.paymentAdapter!.quote(asset, priceUSDCents)` to size `maxAmountIn` -
@@ -44,6 +46,20 @@ const hash = await kokio.eSIMWallet!.buyDataBundleWithToken(
   asset, // bytes32 symbol, e.g. "USDC"
   maxAmountIn, // from paymentAdapter.quote(asset, priceUSDCents)
   paymentReference, // bytes32, from the backend
+);
+```
+
+Returns: `Promise<Hash>`, a user operation hash.
+
+## buyDataBundleWithTransfer
+
+The same purchase as `buyDataBundleWithToken`, for when the eSIM wallet has no access to the device wallet's funds. In one user operation the device wallet sends the eSIM wallet whatever it is short of the quote, then the purchase runs. Arguments are the same.
+
+The device wallet must hold enough of the asset's token. It sends only the shortfall, so tokens already on the eSIM wallet are used first.
+
+```ts
+const hash = await kokio.eSIMWallet!.buyDataBundleWithTransfer(
+  dataBundleDetails, asset, maxAmountIn, paymentReference,
 );
 ```
 
