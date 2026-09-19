@@ -26,8 +26,6 @@ export interface FlowTarget {
   admin: KokioAdmin;
   /** Puts `amount` of `token` in the user's device wallet. */
   fund: (token: Address, to: Address, amount: bigint) => Promise<void>;
-  /** Asset symbol to pay with. */
-  asset: string;
   priceUSDCents: bigint;
   /** Blocks to wait after each write before reading its result. */
   confirmations: number;
@@ -44,7 +42,9 @@ export const describeUserFlow = (
   name: string,
   setup: () => Promise<FlowTarget>,
   passkeyGet: Mock,
-  { timeout }: { timeout: number },
+  // The first asset pays for steps 6 and the top-up. Each other one gets its own
+  // purchase at the end, since the payment adapter accepts several.
+  { timeout, assets: [primaryAsset, ...otherAssets] }: { timeout: number; assets: [string, ...string[]] },
 ) => describe(name, () => {
   let target: FlowTarget;
   let admin: KokioAdmin;
@@ -67,7 +67,7 @@ export const describeUserFlow = (
   beforeAll(async () => {
     target = await setup();
     admin = target.admin;
-    asset = stringToHex(target.asset, { size: 32 });
+    asset = stringToHex(primaryAsset, { size: 32 });
     bundle = { id: testBytes32("flow-bundle"), priceUSDCents: target.priceUSDCents, settlement: Settlement.DeviceWallet };
     passkeyGet.mockImplementation(asPasskey(signer));
   }, 180_000);
@@ -210,6 +210,28 @@ export const describeUserFlow = (
     expect((await session.eSIMWallet!.transactionHistory(1n)).id).toBe(bundle.id);
     expect(await admin.eSIMWallet!.eSIMUniqueIdentifier()).toBe(E_SIM_ID);
   }, timeout);
+
+  otherAssets.forEach((symbol, i) => {
+    it(`a purchase can also pay with ${symbol}`, async () => {
+      const other = stringToHex(symbol, { size: 32 });
+      const otherToken = (await session.paymentAdapter!.resolveAsset(other)).token;
+      expect(otherToken).not.toBe(token);
+      const otherQuote = await session.paymentAdapter!.quote(other, bundle.priceUSDCents);
+      await target.fund(otherToken, db.deviceWallet, otherQuote);
+      const ref = testBytes32(`fa${i}-${Date.now()}`);
+
+      const receipt = await sponsored(symbol, () =>
+        session.eSIMWallet!.buyDataBundleWithTransfer(bundle, other, otherQuote, ref));
+
+      expect(await balanceOf(otherToken, db.deviceWallet)).toBe(0n);
+      expect((await session.eSIMWallet!.transactionHistory(2n + BigInt(i))).id).toBe(bundle.id);
+      const [event] = await target.publicClient.getContractEvents({
+        address: db.eSIMWallet, abi: ESIMWallet, eventName: "DataBundleBoughtWithToken",
+        args: { _paymentReference: ref }, fromBlock: receipt.receipt.blockNumber,
+      });
+      expect(event.args).toMatchObject({ _asset: other, _token: otherToken, _amountSpent: otherQuote });
+    }, timeout);
+  });
 
   const link = (hash: Hex) => (target.explorerTx ? `${target.explorerTx}${hash}` : hash);
   const log = (step: string, message: string) => console.log(`[step ${step}] ${message}`);

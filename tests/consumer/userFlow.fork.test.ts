@@ -37,9 +37,8 @@ describeUserFlow("user flow on a Base Sepolia fork", async () => {
     receiptUrl: stack.bundlerUrl,
     admin,
     fund: (token, to, amount) => setTokenBalance(stack.fork, token, to, amount),
-    asset: "USDC",
     priceUSDCents: 500n,
     confirmations: 1,
     stop: stack.stop,
   };
-}, passkeyGet, { timeout: 120_000 });
+}, passkeyGet, { timeout: 120_000, assets: ["USDC", "USDCt"] });
