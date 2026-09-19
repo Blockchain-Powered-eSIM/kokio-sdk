@@ -174,6 +174,22 @@ describe("user journey on a Base Sepolia fork", () => {
     expect((await kokio.eSIMWallet!.transactionHistory(1n)).id).toBe(BUNDLE.id);
   }, 120_000);
 
+  it("buys with the USDCt test token, the second asset the adapter accepts", async () => {
+    const { token } = await kokio.paymentAdapter!.resolveAsset(USDCT);
+    expect(token).not.toBe(usdc);
+    const quote = await kokio.paymentAdapter!.quote(USDCT, BUNDLE.priceUSDCents);
+    await setTokenBalance(stack.fork, token, deviceWallet, quote);
+    const vault = await readRegistry("vault", []) as Address;
+    const vaultBefore = await balanceOf(token, vault);
+
+    await expectSponsored(client, stack.fork.publicClient, () =>
+      kokio.eSIMWallet!.buyDataBundleWithTransfer(BUNDLE, USDCT, quote, REF_3));
+
+    expect(await balanceOf(token, deviceWallet)).toBe(0n);
+    expect(await balanceOf(token, vault)).toBe(vaultBefore + quote);
+    expect((await kokio.eSIMWallet!.transactionHistory(2n)).id).toBe(BUNDLE.id);
+  }, 120_000);
+
   it("deploys, binds and grants access to a second eSIM wallet in one user operation", async () => {
     const { eSIMWalletAddress } = await expectSponsoredResult(() =>
       kokio.deviceWallet!.deployAndBindESIMWallet(ESIM_SALT + 1n, { grantAccessToFunds: true }));
@@ -199,10 +215,13 @@ describe("user journey on a Base Sepolia fork", () => {
 });
 
 const ESIM_SALT = 1n;
+// Circle's test USDC, and the team's own test token.
 const USDC = stringToHex("USDC", { size: 32 });
+const USDCT = stringToHex("USDCt", { size: 32 });
 const BUNDLE = { id: testBytes32("bundle-1"), priceUSDCents: 500n, settlement: Settlement.DeviceWallet };
 const REF_1 = testBytes32("order-1");
 const REF_2 = testBytes32("order-2");
+const REF_3 = testBytes32("order-3");
 
 // Registry.usedPaymentReferences is keyed per eSIM wallet (Registry.sol:474).
 const scopedReference = (eSIMWallet: Address, ref: Hex) =>
