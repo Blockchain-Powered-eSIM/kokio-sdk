@@ -40,7 +40,12 @@ export const makeMockWalletClient = (opts: {
     getChainId: async () => chainId,
     transport: { url },
     account: account ? { address: account, type: "json-rpc" } : undefined,
-    writeContract: vi.fn(async () => (write ? write() : (receipts ? nextHash() : "0xwritehash"))),
+    // Every write must pass the client's own account object: with a bare address
+    // viem sends eth_sendTransaction, which a local private key cannot answer.
+    writeContract: vi.fn(async (arg: { account?: unknown }) => {
+      if (arg.account !== client.account) throw new Error("writeContract was not given the client's account object");
+      return write ? write() : (receipts ? nextHash() : "0xwritehash");
+    }),
     readContract: vi.fn(async ({ functionName }: { functionName: string }) =>
       reads && functionName in reads ? reads[functionName] : readResult),
     waitForTransactionReceipt: vi.fn(async () => {
