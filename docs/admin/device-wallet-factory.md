@@ -58,6 +58,8 @@ wallet is not registered until this runs.
 The salt has to match the one the deploy used: the factory recomputes the
 wallet's address from it to check the wallet is real.
 
+The same applies when the wallet was deployed by its first sponsored user operation: until this runs, the device wallet cannot deploy eSIM wallets. On a hosted RPC, wait a few confirmations before telling the app to go ahead. A bundler that simulates against a node one block behind will still see the wallet as unregistered.
+
 ```ts
 const hash = await admin.deviceWalletFactory.postCreateAccount(
   deviceWalletAddress, deviceUniqueIdentifier, ownerKey, salt,

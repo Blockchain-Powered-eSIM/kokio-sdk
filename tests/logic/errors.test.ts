@@ -13,7 +13,7 @@ import {
     decodeContractRevert,
     toContractRevertError,
 } from "../../src/logic/errors.js";
-import { DeviceWalletFactory } from "../../src/abis/index.js";
+import { DeviceWalletFactory, PaymentAdapter, ProtocolAdmin } from "../../src/abis/index.js";
 
 describe("typed errors", () => {
     it("every typed error is a KokioError with a stable code and its own name", () => {
@@ -81,6 +81,18 @@ describe("decodeContractRevert", () => {
     });
 });
 
+describe("decodeContractRevert for errors only ProtocolAdmin or PaymentAdapter define", () => {
+    it.each([
+        [ProtocolAdmin, "AccessControlUnauthorizedAccount", ["0x0000000000000000000000000000000000000001", toHex(1, { size: 32 })]],
+        [ProtocolAdmin, "TimelockUnexpectedOperationState", [toHex(1, { size: 32 }), toHex(2, { size: 32 })]],
+        [PaymentAdapter, "AssetNotAllowed", [toHex(3, { size: 32 })]],
+        [PaymentAdapter, "SettlementNotFunded", [5n, 4n]],
+    ] as const)("decodes %$", (abi, errorName, args) => {
+        const data = encodeErrorResult({ abi, errorName, args } as never);
+        expect(decodeContractRevert(data)?.errorName).toBe(errorName);
+    });
+});
+
 describe("ContractRevertError", () => {
     it("decodes recognised revert data into a readable message", () => {
         const data = encodeErrorResult({ abi: DeviceWalletFactory, errorName: "FailedCall" });
@@ -112,6 +124,18 @@ describe("toContractRevertError", () => {
 
         const err = toContractRevertError(thrown);
         expect(err).toBeInstanceOf(ContractRevertError);
+        expect(err?.decoded?.errorName).toBe("FailedCall");
+        expect(err?.data).toBe(data);
+    });
+
+    it("decodes the revert a bundler reports while estimating a user operation", () => {
+        const data = encodeErrorResult({ abi: DeviceWalletFactory, errorName: "FailedCall" });
+        // Alto, and Pimlico which runs it, put the data only in the message (code -32521).
+        const thrown = new BaseError("RPC Request failed.", {
+            details: `UserOperation reverted during simulation with reason: ${data}`,
+        });
+
+        const err = toContractRevertError(thrown);
         expect(err?.decoded?.errorName).toBe("FailedCall");
         expect(err?.data).toBe(data);
     });

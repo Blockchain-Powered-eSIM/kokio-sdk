@@ -1,8 +1,10 @@
 import { Address, encodeFunctionData, getContract, Hex, WalletClient } from "viem";
 import { Call, KokioSmartAccountClient } from "../types.js";
-import { DeviceWallet } from "../abis/index.js";
+import { DeviceWallet, ESIMWalletFactory } from "../abis/index.js";
 import { MissingSmartWalletError } from "./errors.js";
 import { P256Key } from "../types.js";
+import { _chainId, _getChainSpecificConstants } from "./constants.js";
+import { _getESIMWalletCounterFactualAddress } from "./eSIMWalletFactory.js";
 
 // A userOp from a device wallet runs through `execute`, so at the target contract
 // msg.sender is the device-wallet account itself. That constrains which DeviceWallet
@@ -80,6 +82,48 @@ export const _addESIMWallet = async (client: KokioSmartAccountClient, address: A
             })
         }]
     });
+}
+
+/**
+ * Deploy an eSIM wallet for this device wallet and bind it, in one user operation.
+ *
+ * Fund access cannot be granted at bind time, so `grantAccessToFunds` adds a
+ * `toggleAccessToFunds` after the bind in the same operation. The device wallet
+ * must already be registered (`registry.isDeviceWalletValid`), or the factory
+ * refuses it.
+ */
+export const _deployAndBindESIMWallet = async (
+    client: KokioSmartAccountClient,
+    address: Address,
+    salt: bigint,
+    grantAccessToFunds: boolean
+): Promise<{ userOpHash: Hex; eSIMWalletAddress: Address }> => {
+
+    const chainID = await _chainId(client);
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if(!client.account) throw new MissingSmartWalletError();
+
+    const eSIMWalletAddress = await _getESIMWalletCounterFactualAddress(client, address, salt);
+    const self = (functionName: "addESIMWallet" | "toggleAccessToFunds", hasAccessToFunds: boolean) => ({
+        to: address,
+        data: encodeFunctionData({ abi: DeviceWallet, functionName, args: [eSIMWalletAddress, hasAccessToFunds] })
+    });
+
+    const userOpHash = await client.sendUserOperation({
+        account: client.account,
+        calls: [
+            {
+                to: values.factoryAddresses.ESIM_WALLET_FACTORY,
+                data: encodeFunctionData({ abi: ESIMWalletFactory, functionName: "deployESIMWallet", args: [address, salt] })
+            },
+            self("addESIMWallet", false),
+            ...(grantAccessToFunds ? [self("toggleAccessToFunds", true)] : [])
+        ]
+    });
+
+    return { userOpHash, eSIMWalletAddress };
 }
 
 /**

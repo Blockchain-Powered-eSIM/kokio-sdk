@@ -23,7 +23,7 @@ export type OwnerCall = {
     abi: Abi;
     functionName: string;
     args?: readonly unknown[];
-    /** ETH sent with the call. The timelock has to be holding it. */
+    /** ETH sent with the call. `executor.execute` attaches it from the executing account. */
     value?: bigint;
 }
 

@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { ESIMWalletFactory } from "../../abis/index.js";
 import type { OwnerCall } from "../../types.js";
@@ -19,7 +19,7 @@ import type { OwnerCall } from "../../types.js";
 /** One-time wiring of the registry into the eSIM factory. Owner only. */
 export const _addRegistryAddress = async (client: WalletClient, registryContractAddress: Address) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -28,7 +28,7 @@ export const _addRegistryAddress = async (client: WalletClient, registryContract
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ESIMWalletFactory,
         functionName: 'addRegistryAddress',
         args: [registryContractAddress]
@@ -38,7 +38,7 @@ export const _addRegistryAddress = async (client: WalletClient, registryContract
 /** Point the eSIM-wallet beacon at a new implementation. `onlyOwner`. */
 export const _updateESIMWalletImplementation = async (client: WalletClient, eSIMWalletImpl: Address) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -47,7 +47,7 @@ export const _updateESIMWalletImplementation = async (client: WalletClient, eSIM
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ESIMWalletFactory,
         functionName: 'updateESIMWalletImplementation',
         args: [eSIMWalletImpl]
@@ -71,7 +71,7 @@ export const _updateESIMWalletImplementation = async (client: WalletClient, eSIM
  */
 export const _transferOwnershipCall = async (client: WalletClient, newOwner: Address): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -92,7 +92,7 @@ export const _transferOwnershipCall = async (client: WalletClient, newOwner: Add
  */
 export const _upgradeCall = async (client: WalletClient, newImplementation: Address, data: Hex = '0x'): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -114,7 +114,7 @@ export const _upgradeCall = async (client: WalletClient, newImplementation: Addr
  */
 export const _acceptOwnership = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -123,7 +123,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.ESIM_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ESIMWalletFactory,
         functionName: 'acceptOwnership',
         args: []

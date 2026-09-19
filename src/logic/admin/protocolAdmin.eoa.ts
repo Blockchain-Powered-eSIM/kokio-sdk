@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient, encodeFunctionData, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { ProtocolAdmin, Registry } from "../../abis/index.js";
 import type {
@@ -23,7 +23,7 @@ import type {
 const ZERO_BYTES32 = "0x0000000000000000000000000000000000000000000000000000000000000000" as Hex;
 
 const _resolve = async (client: WalletClient) => {
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     return _getChainSpecificConstants(chainID, rpcURL);
 }
@@ -168,7 +168,7 @@ export const _schedule = async (
     const hash = await writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'schedule',
         args: [target, value, payload, predecessor, salt, resolvedDelay]
@@ -220,7 +220,7 @@ export const _scheduleBatch = async (
     const hash = await writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'scheduleBatch',
         args: [targets, callValues, payloads, predecessor, salt, resolvedDelay]
@@ -260,7 +260,7 @@ export const _scheduleRaw = async (
     const hash = await writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'schedule',
         args: [target, value, payload, predecessor, salt, delay]
@@ -290,7 +290,7 @@ export const _execute = async (client: WalletClient, operation: ScheduledOperati
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'execute',
         args: [operation.target, operation.value, operation.payload, operation.predecessor, operation.salt],
@@ -308,7 +308,7 @@ export const _executeBatch = async (client: WalletClient, operation: ScheduledBa
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'executeBatch',
         args: [operation.targets, operation.values, operation.payloads, operation.predecessor, operation.salt],
@@ -333,7 +333,7 @@ export const _executeRaw = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'execute',
         args: [target, value, payload, predecessor, salt],
@@ -358,7 +358,7 @@ export const _cancel = async (client: WalletClient, id: Hex) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'cancel',
         args: [id]
@@ -384,7 +384,7 @@ export const _unpauseInstantly = async (client: WalletClient, target: Address) =
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'unpauseInstantly',
         args: [target]
@@ -407,7 +407,7 @@ export const _revokeCancellersInstantly = async (client: WalletClient, accounts:
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'revokeCancellersInstantly',
         args: [accounts]
@@ -433,7 +433,7 @@ export const _disableAdminInstantly = async (client: WalletClient, target?: Addr
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'disableAdminInstantly',
         args: [target ?? values.factoryAddresses.REGISTRY]
@@ -458,7 +458,7 @@ export const _acceptOwnershipBatch = async (client: WalletClient, targets: reado
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'acceptOwnershipBatch',
         args: [targets]
@@ -478,7 +478,7 @@ export const _renounceRole = async (client: WalletClient, role: Hex, account: Ad
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PROTOCOL_ADMIN,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ProtocolAdmin,
         functionName: 'renounceRole',
         args: [role, account]

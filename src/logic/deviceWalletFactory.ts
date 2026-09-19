@@ -1,6 +1,6 @@
 import { Address, WalletClient } from "viem";
 import { KokioSmartAccountClient } from "../types.js";
-import { _getChainSpecificConstants } from "./constants.js";
+import { _chainId, _getChainSpecificConstants } from "./constants.js";
 import { MissingEOAWalletError } from "./errors.js";
 import { DeviceWalletFactory } from "../abis/index.js";
 import { P256Key } from "../types.js";
@@ -13,7 +13,7 @@ export const _createAccountWithEOA = async (
     depositAmount: bigint
 ) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -24,7 +24,7 @@ export const _createAccountWithEOA = async (
     return client.writeContract({
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'createAccount',
         args: [deviceUniqueIdentifier, deviceWalletOwnerKey, salt],
@@ -42,7 +42,7 @@ export const _getAddress = async (
     salt: bigint,
 ): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -57,7 +57,7 @@ export const _getAddress = async (
 // `getCurrentDeviceWalletImplementation` is a `view` - read it directly instead of a userOp.
 export const _getCurrentDeviceWalletImplementation = async (client: KokioSmartAccountClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -86,7 +86,7 @@ export const _preCreateAccountValidation = async (
     deviceWalletOwnerKey: P256Key
 ): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -105,7 +105,7 @@ export const _preCreateAccountValidation = async (
  */
 export const _deviceWalletInfoAdded = async (client: KokioSmartAccountClient, deviceWallet: Address): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -123,7 +123,7 @@ export const _deviceWalletInfoAdded = async (client: KokioSmartAccountClient, de
  */
 export const _beacon = async (client: KokioSmartAccountClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -138,7 +138,7 @@ export const _beacon = async (client: KokioSmartAccountClient): Promise<Address>
 /** The registry the factory writes new wallets into. */
 export const _registry = async (client: KokioSmartAccountClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -153,7 +153,7 @@ export const _registry = async (client: KokioSmartAccountClient): Promise<Addres
 /** The EntryPoint baked into every device wallet this factory deploys. */
 export const _entryPoint = async (client: KokioSmartAccountClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -168,7 +168,7 @@ export const _entryPoint = async (client: KokioSmartAccountClient): Promise<Addr
 /** The contract new device wallets verify WebAuthn assertions through. */
 export const _verifier = async (client: KokioSmartAccountClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 

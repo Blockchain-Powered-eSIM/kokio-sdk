@@ -308,8 +308,9 @@ describe("admin-EOA writeContract calls", () => {
     expect(arg.functionName).toBe(functionName);
     expect(arg.args).toEqual(args);
     expect(arg.value).toBe(value);
-    // EOA account + resolved chain are always threaded through.
-    expect(arg.account).toBe(EOA);
+    // The client's own account object is passed, not its address: viem signs
+    // locally only for a local account, and a bare address goes to eth_sendTransaction.
+    expect(arg.account).toBe(client.account);
     expect(arg.chain).toBeDefined();
   });
 

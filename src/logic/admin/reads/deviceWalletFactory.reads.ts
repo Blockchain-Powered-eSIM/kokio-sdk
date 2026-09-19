@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../../constants.js";
 import { DeviceWalletFactory } from "../../../abis/index.js";
 import { P256Key } from "../../../types.js";
 
@@ -14,7 +14,7 @@ import { P256Key } from "../../../types.js";
 /** The admin EOA (`eSIMWalletAdmin`) currently set on the factory. */
 export const _eSIMWalletAdmin = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -29,7 +29,7 @@ export const _eSIMWalletAdmin = async (client: WalletClient): Promise<Address> =
 /** Whether a device wallet has been registered with the factory. */
 export const _deviceWalletInfoAdded = async (client: WalletClient, deviceWallet: Address): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -44,7 +44,7 @@ export const _deviceWalletInfoAdded = async (client: WalletClient, deviceWallet:
 /** The current device-wallet beacon implementation. */
 export const _getCurrentDeviceWalletImplementation = async (client: WalletClient): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -74,7 +74,7 @@ export const _preCreateAccountValidation = async (
     deviceWalletOwnerKey: P256Key
 ): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -91,7 +91,7 @@ type AddressGetter = "beacon" | "registry" | "entryPoint" | "verifier" | "owner"
 
 const _addressGetter = async (client: WalletClient, functionName: AddressGetter): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -143,7 +143,7 @@ export const _getCounterFactualAddress = async (
     salt: bigint
 ): Promise<Address> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -162,7 +162,7 @@ export const _getCounterFactualAddress = async (
  */
 export const _proxiableUUID = async (client: WalletClient): Promise<Hex> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -177,7 +177,7 @@ export const _proxiableUUID = async (client: WalletClient): Promise<Hex> => {
 /** The OpenZeppelin upgrade interface this proxy speaks, currently `"5.0.0"`. */
 export const _upgradeInterfaceVersion = async (client: WalletClient): Promise<string> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 

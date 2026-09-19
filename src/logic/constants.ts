@@ -83,12 +83,27 @@ export const customErrors: Record<string, string> = {
     MISSING_EOA_WALLET: "Error: Client does not have EOA wallet associated"
 }
 
+// A client's RPC URL is fixed, so its chain id is too. Asking once per client
+// saves every later SDK call a round trip to the node.
+const chainIds = new WeakMap<object, Promise<number>>();
+
+export const _chainId = (client: { getChainId: () => Promise<number> }): Promise<number> => {
+    let chainId = chainIds.get(client);
+    if (!chainId) {
+        chainId = client.getChainId();
+        chainIds.set(client, chainId);
+        // A failed lookup is not remembered, so the next call asks again.
+        chainId.catch(() => chainIds.delete(client));
+    }
+    return chainId;
+}
+
 export const _extractChainID = async (client: WalletClient) => {
 
     if (!client) {
         throw new InvalidClientError();
     }
-    return client.getChainId();
+    return _chainId(client);
 }
 
 // Maps each supported chain id to its factory-address book + viem chain. Base

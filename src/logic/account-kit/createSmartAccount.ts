@@ -10,17 +10,21 @@ import {
 	getUserOperationHash, toSmartAccount, type UserOperation
 } from "viem/account-abstraction";
 import {
-	_getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS,
+	_chainId, _getChainSpecificConstants, ZERO, SIGNATURE_VALIDITY_SECONDS,
 	STUB_VERIFICATION_GAS_PAD, STUB_PRE_VERIFICATION_GAS_PAD
 } from "../constants.js";
-import { CounterfactualMismatchError } from "../errors.js";
+import { CounterfactualMismatchError, toContractRevertError } from "../errors.js";
 import { _add0x, _concatUint8Arrays, _shouldRemoveLeadingZero } from "../utils.js";
 import { P256Key, WebAuthnSignature, KokioSmartAccount, KokioSmartAccountClient } from "../../types.js";
 import { DeviceWallet, DeviceWalletFactory } from "../../abis/index.js";
 
-import { isoBase64URL } from "@simplewebauthn/server/helpers";
+import { base64urlnopad } from "@scure/base";
 import { Passkey, PasskeyGetRequest, PasskeyGetResult } from "react-native-passkey";
 import { p256 } from "@noble/curves/nist.js";
+
+// Authenticators differ on padding and alphabet, so accept either form.
+const fromBase64URL = (value: string): Uint8Array =>
+	base64urlnopad.decode(value.replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_"));
 
 type BrokenPasskeyGetResult = PasskeyGetResult | string;
 
@@ -58,10 +62,7 @@ export const BEACON_PROXY_CREATION_CODE: Hex = "0x60a0806040526104e4803803809161
  */
 export const _stamp = async (credentialId: string, rpId: string, payload: Hex): Promise<WebAuthnSignature> => {
 	const signingOptions: PasskeyGetRequest = {
-		// `Uint8Array.from` gives a fresh ArrayBuffer-backed view, matching the
-		// `Uint8Array<ArrayBuffer>` that `fromBuffer` expects (viem's `hexToBytes`
-		// is typed over the wider `ArrayBufferLike`).
-		challenge: isoBase64URL.fromBuffer(Uint8Array.from(hexToBytes(payload))),
+		challenge: base64urlnopad.encode(hexToBytes(payload)),
 		allowCredentials: [{
 			id: credentialId,
 			type: "public-key",
@@ -92,7 +93,7 @@ export const _stamp = async (credentialId: string, rpId: string, payload: Hex): 
 	const { clientDataJSON, authenticatorData, signature } = authenticationResult.response;
 
 	// 1. Decode clientDataJSON
-	const clientDataJSONBuffer = isoBase64URL.toBuffer(clientDataJSON);
+	const clientDataJSONBuffer = fromBase64URL(clientDataJSON);
 	const clientDataJSONString = new TextDecoder().decode(clientDataJSONBuffer);
 
 	// 2. Calculate indices for the contract (byte offsets)
@@ -115,18 +116,11 @@ export const _stamp = async (credentialId: string, rpId: string, payload: Hex): 
 	}
 
 	// 3. Decode authenticatorData
-	const authenticatorDataBytes = isoBase64URL.toBuffer(authenticatorData);
+	const authenticatorDataBytes = fromBase64URL(authenticatorData);
 	const authenticatorDataHex = bytesToHex(authenticatorDataBytes);
 
 	// 4. Decode signature (ASN.1 DER encoded)
-	const signatureBytes = isoBase64URL.toBuffer(signature);
-	// let parsedSignature = p256.Signature.fromDER(signatureBytes);
-	let parsedSignature = p256.Signature.fromBytes(
-		signatureBytes instanceof Uint8Array
-			? signatureBytes
-			: new Uint8Array(signatureBytes),
-		"der"
-	);
+	let parsedSignature = p256.Signature.fromBytes(fromBase64URL(signature), "der");
 
 	// Normalize s
 	const n = p256.Point.CURVE().n;
@@ -178,7 +172,7 @@ export const _encodeCalls = async (calls: readonly Call[]): Promise<Hex> => {
 
 export const _getFactoryArgs = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint): Promise<{ factory: Address; factoryData: Hex }> => {
 
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -193,7 +187,7 @@ export const _getFactoryArgs = async (client: WalletClient, deviceUniqueIdentifi
 
 export const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key): Promise<Hex> => {
   
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
   
@@ -236,7 +230,7 @@ export const getInitCodeHash = async (client: WalletClient, deviceUniqueIdentifi
 
 export const getCounterFactualAddress = async (client: WalletClient, deviceUniqueIdentifier: string, deviceWalletOwnerKey: P256Key, salt: bigint):Promise<Hex> => {
 
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 	const deviceWalletFactoryAddress = values.factoryAddresses.DEVICE_WALLET_FACTORY;
@@ -273,13 +267,9 @@ export const _assertCounterfactualMatchesOnChain = async (
 	deviceWalletOwnerKey: P256Key,
 	salt: bigint,
 ): Promise<Hex> => {
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
-
-	const offChain = await getCounterFactualAddress(
-		client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt,
-	);
 
 	const deviceWalletFactory = getContract({
 		abi: DeviceWalletFactory,
@@ -287,12 +277,16 @@ export const _assertCounterfactualMatchesOnChain = async (
 		client,
 	});
 
-	// on-chain view arg order is (ownerKey, uid, salt) - differs from createAccount
-	const onChain = await deviceWalletFactory.read.getCounterFactualAddress([
-		deviceWalletOwnerKey,
-		deviceUniqueIdentifier,
-		salt,
-	]) as Hex;
+	// Neither side needs the other, so both are asked for at once.
+	const [offChain, onChain] = await Promise.all([
+		getCounterFactualAddress(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt),
+		// on-chain view arg order is (ownerKey, uid, salt) - differs from createAccount
+		deviceWalletFactory.read.getCounterFactualAddress([
+			deviceWalletOwnerKey,
+			deviceUniqueIdentifier,
+			salt,
+		]) as Promise<Hex>,
+	]);
 
 	if (getAddress(offChain) !== getAddress(onChain)) {
 		throw new CounterfactualMismatchError(getAddress(offChain), getAddress(onChain));
@@ -426,11 +420,9 @@ export const _getSmartWallet = async (
 	salt: bigint
 ): Promise<KokioSmartAccount> => {
 
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
-
-	if (!client.account) throw new Error ('Error: No signer account found with WalletClient')
 
 	const accountAddress = _counterfactualVerifiedChains.has(chainID)
 		? await getCounterFactualAddress(client, deviceUniqueIdentifier, deviceWalletOwnerKey, salt)
@@ -548,23 +540,45 @@ const _splitTransport = (pimlicoRpcURL: string, rpcURL: string): Transport => {
 	);
 }
 
-export const _getSmartWalletClient = async (client: WalletClient, pimlicoAPIKey: string, gasPolicyId: string, account: KokioSmartAccount): Promise<KokioSmartAccountClient> => {
+export const _getSmartWalletClient = async (
+	client: WalletClient,
+	pimlicoAPIKey: string,
+	gasPolicyId: string,
+	account: KokioSmartAccount,
+	bundlerUrl?: string
+): Promise<KokioSmartAccountClient> => {
 
-	const chainID = await client.getChainId();
+	const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL, pimlicoAPIKey);
+	const bundlerURL = bundlerUrl ?? values.pimlicoRpcURL;
 
-	// Pimlico sponsors via ERC-7677, keyed by the gas policy.
-	const paymaster = createPaymasterClient({ transport: http(values.pimlicoRpcURL) });
+	// Pimlico sponsors via ERC-7677 and reads the policy from `sponsorshipPolicyId`.
+	// A policy is optional there, so an empty id sends no context at all.
+	const paymaster = createPaymasterClient({ transport: http(bundlerURL) });
 
-	return createBundlerClient({
+	const bundlerClient = createBundlerClient({
 		account,
 		chain: values.chain,
 		client: createPublicClient({ chain: values.chain, transport: http(values.rpcURL) }),
-		transport: _splitTransport(values.pimlicoRpcURL, values.rpcURL),
+		transport: _splitTransport(bundlerURL, values.rpcURL),
 		paymaster,
-		paymasterContext: { policyId: gasPolicyId },
+		paymasterContext: gasPolicyId ? { sponsorshipPolicyId: gasPolicyId } : undefined,
+	}).extend(publicActions);
+
+	// Every user operation the SDK sends goes through here, so a revert is
+	// decoded once for all of them, the same way admin writes are.
+	const sendUserOperation = bundlerClient.sendUserOperation;
+
 	// extend() keeps the bundler fields at runtime but drops them from the
 	// inferred type, so the result is re-asserted rather than narrowed.
-	}).extend(publicActions) as unknown as KokioSmartAccountClient;
+	return bundlerClient.extend(() => ({
+		sendUserOperation: (async (args: Parameters<typeof sendUserOperation>[0]) => {
+			try {
+				return await sendUserOperation(args);
+			} catch (err) {
+				throw toContractRevertError(err) ?? err;
+			}
+		}) as typeof sendUserOperation,
+	})) as unknown as KokioSmartAccountClient;
 }

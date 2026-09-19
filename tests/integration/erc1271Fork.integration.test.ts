@@ -3,13 +3,11 @@ import {
   concat,
   getContract,
   hashMessage,
-  hashTypedData,
   hexToBytes,
   sliceHex,
   toHex,
   type Address,
   type Hex,
-  type TypedDataDefinition,
 } from "viem";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { p256 } from "@noble/curves/nist.js";
@@ -27,7 +25,6 @@ import { baseSepoliaFactoryAddresses, CHAIN_ID, SIGNATURE_VALIDITY_SECONDS } fro
 import {
   _encodeSignature,
   _signMessage,
-  _signTypedData,
 } from "../../src/logic/account-kit/createSmartAccount.js";
 import { forkAvailable, startFork, type Fork } from "../utils/forkChain.js";
 import { createSoftSigner, type SoftSigner } from "../utils/softP256Signer.js";
@@ -49,12 +46,6 @@ const asPasskey = (signer: SoftSigner) => async (options: { challenge: string })
   };
 };
 
-const typedData: TypedDataDefinition = {
-  domain: { name: "Kokio", version: "1", chainId: 11155111 },
-  types: { Mail: [{ name: "from", type: "address" }, { name: "contents", type: "string" }] },
-  primaryType: "Mail",
-  message: { from: "0x0000000000000000000000000000000000000001", contents: "gm" },
-};
 
 // ERC-1271 message signing against a real device wallet on a local Base Sepolia
 // fork. The unit tests pin the challenge the SDK builds; this proves the wallet
@@ -67,7 +58,7 @@ describe.skipIf(!forkAvailable())("ERC-1271 message signing on a Base Sepolia fo
   let readWallet: ReturnType<typeof getContract>;
 
   beforeAll(async () => {
-    fork = await startFork(8549);
+    fork = await startFork();
     signer = createSoftSigner();
     passkeyGet.mockImplementation(asPasskey(signer));
 
@@ -92,19 +83,7 @@ describe.skipIf(!forkAvailable())("ERC-1271 message signing on a Base Sepolia fo
   const check = (digest: Hex, signature: Hex) =>
     readWallet.read.isValidSignature([digest, signature]) as Promise<Hex>;
 
-  it("the wallet accepts a signature the SDK produced for it", async () => {
-    const message = "gm from kokio";
-    const signature = await _signMessage(message, "cred-id", "kokio.test", CHAIN_ID.BASE_SEPOLIA, wallet);
-
-    expect(await check(hashMessage(message), signature)).toBe(MAGIC_VALUE);
-  }, 60_000);
-
-  it("the wallet accepts typed data the SDK signed for it", async () => {
-    const signature = await _signTypedData(typedData, "cred-id", "kokio.test", CHAIN_ID.BASE_SEPOLIA, wallet);
-
-    expect(await check(hashTypedData(typedData), signature)).toBe(MAGIC_VALUE);
-  }, 60_000);
-
+  // Valid signatures are covered through the public SDK in tests/consumer/smartAccount.fork.test.ts.
   it("a signature over the bare digest is refused", async () => {
     // What the SDK sent before it bound the wallet and the chain. The wallet
     // derives its challenge from the digest rather than reading it, so a

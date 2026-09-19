@@ -22,13 +22,19 @@ surface, with a code example and return type, see the
 
 ## Installation
 
+In the mobile app:
+
+```sh
+npm install kokio-sdk react-native-passkey
+```
+
+On a backend that only uses `kokio-sdk/admin`:
+
 ```sh
 npm install kokio-sdk
 ```
 
-The package ships as ES modules and requires Node 18 or newer (or a React Native
-runtime). `viem` is bundled as a dependency, so you do not need to install it
-separately.
+The package ships as ES modules and requires Node 18 or newer (or a React Native runtime). `viem` is bundled as a dependency, so you do not need to install it separately. `react-native-passkey` is a native module, so the app installs it itself: Expo only links native modules the app lists directly, and one copy avoids version clashes.
 
 ## Mobile client (Expo / React Native)
 
@@ -39,10 +45,9 @@ is ever held in the app.
 
 You will need:
 
-- a viem `WalletClient` connected to the target chain, carrying an `account`
-  and an explicit RPC URL (see the note under the example),
+- a viem `WalletClient` connected to the target chain with an explicit RPC URL (see the note under the example). It needs no `account`: the passkey signs every user operation.
 - the passkey `credentialId` and `rpId` registered for the device,
-- a Pimlico API key and a gas policy id (used by the bundler and paymaster).
+- a Pimlico API key, and optionally a Pimlico sponsorship policy id (`sp_...`). Pass `""` to be sponsored without a policy.
 
 ```ts
 import { Kokio } from "kokio-sdk";
@@ -50,7 +55,6 @@ import { createWalletClient, http } from "viem";
 import { baseSepolia } from "viem/chains";
 
 const walletClient = createWalletClient({
-  account: knownAddress,
   chain: baseSepolia,
   transport: http(rpcUrl),
 });
@@ -90,15 +94,11 @@ const receipt = await smartAccountClient.waitForUserOperationReceipt({ hash });
 if (!receipt.success) throw new Error("operation reverted");
 ```
 
-Two things about the wallet client. It has to carry an `account`:
-`getSmartWallet` refuses a client without one, though it never asks it for a
-signature, since the passkey signs everything. And give `http()` a real RPC
-URL, because the SDK reads `client.transport.url` to build the public client
-it uses for contract reads.
+The wallet client needs no `account`, since the passkey signs everything. Give `http()` a real RPC URL, because the SDK reads `client.transport.url` to build the public client it uses for contract reads.
 
-Check `receipt.success`. An operation whose calls revert is still mined and
-still returns a receipt, so the await resolving is not on its own proof the
-write landed. `receipt.receipt.transactionHash` is the onchain transaction.
+Every write resolves with the user operation hash once the bundler accepts it, not once it is mined, so wait for the receipt as above. An operation the bundler can see will revert is refused before it is sent, and the write rejects with a `ContractRevertError` whose `decoded.errorName` names the contract error (for example `PaymentReferenceAlreadyUsed`). One that only reverts once mined still returns a receipt, so check `receipt.success` too. `receipt.receipt.transactionHash` is the onchain transaction.
+
+Calls that belong together have helpers that send them as one user operation, so the user sees one passkey prompt: `deviceWallet.deployAndBindESIMWallet(salt, { grantAccessToFunds: true })` deploys an eSIM wallet, binds it and grants it access to the device wallet's tokens, and `eSIMWallet.buyDataBundleWithTransfer(...)` sends the tokens and buys in one go, without pull access.
 
 The contract surfaces (`deviceWallet`, `eSIMWallet`, `deviceWalletFactory`,
 `eSIMWalletFactory`, `registry`, `paymentAdapter`, `P256Verifier`) are only

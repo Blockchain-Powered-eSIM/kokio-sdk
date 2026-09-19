@@ -70,7 +70,7 @@ describe.skipIf(!forkAvailable())("Stub signature validation cost", () => {
   let fork: Fork;
 
   beforeAll(async () => {
-    fork = await startFork(8550);
+    fork = await startFork();
   }, 60_000);
 
   afterAll(async () => {

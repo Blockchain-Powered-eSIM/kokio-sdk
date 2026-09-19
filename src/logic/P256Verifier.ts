@@ -1,7 +1,7 @@
 import { Hex } from "viem";
 import { WebAuthnSignature } from "../types.js";
 import { KokioSmartAccountClient } from "../types.js";
-import { _getChainSpecificConstants } from "./constants.js";
+import { _chainId, _getChainSpecificConstants } from "./constants.js";
 import { P256Verifier } from "../abis/index.js";
 
 // `verifySignature` is a `view` - read it directly instead of spending a userOp
@@ -15,7 +15,7 @@ export const _verifySignature = async (
     y: bigint
 ): Promise<boolean> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 

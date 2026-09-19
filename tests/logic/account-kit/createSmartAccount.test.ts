@@ -260,6 +260,63 @@ describe("_stamp (passkey -> WebAuthnSignature)", () => {
       new Uint8Array(Buffer.from(payload.slice(2), "hex")),
     );
   });
+
+  it("reads the assertion when Android hands it back as a JSON string", async () => {
+    passkeyGet.mockResolvedValue(JSON.stringify(mockPasskeyResponse()));
+
+    const result = await _stamp("cred-id", "kokio.test", keccak256("0xabcd"));
+    expect(result.r).toBe(RAW_R);
+    expect(result.s).toBe(5n);
+    expect(result.clientDataJSON).toBe(CLIENT_DATA_JSON);
+  });
+
+  it("reads an assertion encoded as padded standard base64", async () => {
+    passkeyGet.mockResolvedValue({
+      response: {
+        clientDataJSON: Buffer.from(CLIENT_DATA_JSON).toString("base64"),
+        authenticatorData: Buffer.from(AUTH_DATA).toString("base64"),
+        signature: Buffer.from(DER_HIGH_S).toString("base64"),
+      },
+    });
+
+    const result = await _stamp("cred-id", "kokio.test", keccak256("0xabcd"));
+    expect(result.r).toBe(RAW_R);
+    expect(result.clientDataJSON).toBe(CLIENT_DATA_JSON);
+  });
+
+  it("falls back to typeIndex 0 when clientDataJSON has no compact type field", async () => {
+    // Valid JSON, but the spacing defeats the substring search. The contract
+    // then checks the wrong offset, so this assertion cannot verify on chain.
+    const spaced = '{"type": "webauthn.get","challenge":"AAAA"}';
+    const response = mockPasskeyResponse();
+    response.response.clientDataJSON = isoBase64URL.fromBuffer(new TextEncoder().encode(spaced));
+    passkeyGet.mockResolvedValue(response);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = await _stamp("cred-id", "kokio.test", keccak256("0xabcd"));
+    expect(result.typeIndex).toBe(0n);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("throws when clientDataJSON carries no challenge", async () => {
+    const response = mockPasskeyResponse();
+    response.response.clientDataJSON = isoBase64URL.fromBuffer(new TextEncoder().encode('{"type":"webauthn.get"}'));
+    passkeyGet.mockResolvedValue(response);
+
+    await expect(_stamp("cred-id", "kokio.test", keccak256("0xabcd"))).rejects.toThrow(/challenge/);
+  });
+
+  it("rethrows when the passkey prompt fails or is cancelled", async () => {
+    const cancelled = new Error("The operation was cancelled");
+    passkeyGet.mockRejectedValue(cancelled);
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(_stamp("cred-id", "kokio.test", keccak256("0xabcd"))).rejects.toBe(cancelled);
+    log.mockRestore();
+    error.mockRestore();
+  });
 });
 
 // The two ERC-1271 signers bind the wallet and the chain into the challenge, so

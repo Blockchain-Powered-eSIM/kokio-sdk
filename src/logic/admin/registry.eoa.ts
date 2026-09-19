@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { Registry } from "../../abis/index.js";
 import type { DataBundleDetails, OwnerCall } from "../../types.js";
@@ -16,7 +16,7 @@ import type { DataBundleDetails, OwnerCall } from "../../types.js";
 /** Wire (or rewire) the LazyWalletRegistry into the Registry. `onlyOwner`. */
 export const _addOrUpdateLazyWalletRegistryAddress = async (client: WalletClient, lazyWalletRegistry: Address) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -25,7 +25,7 @@ export const _addOrUpdateLazyWalletRegistryAddress = async (client: WalletClient
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'addOrUpdateLazyWalletRegistryAddress',
         args: [lazyWalletRegistry]
@@ -35,7 +35,7 @@ export const _addOrUpdateLazyWalletRegistryAddress = async (client: WalletClient
 /** Update the vault that receives eSIM payments. `onlyOwner`. */
 export const _updateVaultAddress = async (client: WalletClient, newVaultAddress: Address) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -44,7 +44,7 @@ export const _updateVaultAddress = async (client: WalletClient, newVaultAddress:
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'updateVaultAddress',
         args: [newVaultAddress]
@@ -62,7 +62,7 @@ export const _updateVaultAddress = async (client: WalletClient, newVaultAddress:
  */
 export const _requestAdminUpdate = async (client: WalletClient, newAdmin: Address) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -71,7 +71,7 @@ export const _requestAdminUpdate = async (client: WalletClient, newAdmin: Addres
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'requestAdminUpdate',
         args: [newAdmin]
@@ -87,7 +87,7 @@ export const _requestAdminUpdate = async (client: WalletClient, newAdmin: Addres
  */
 export const _disableAdmin = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -96,7 +96,7 @@ export const _disableAdmin = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'disableAdmin',
         args: []
@@ -112,7 +112,7 @@ export const _disableAdmin = async (client: WalletClient) => {
  */
 export const _enableAdmin = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -121,7 +121,7 @@ export const _enableAdmin = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'enableAdmin',
         args: []
@@ -139,7 +139,7 @@ export const _enableAdmin = async (client: WalletClient) => {
  */
 export const _pause = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -148,7 +148,7 @@ export const _pause = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'pause',
         args: []
@@ -164,7 +164,7 @@ export const _pause = async (client: WalletClient) => {
  */
 export const _unpause = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -173,7 +173,7 @@ export const _unpause = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'unpause',
         args: []
@@ -190,7 +190,7 @@ export const _unpause = async (client: WalletClient) => {
  */
 export const _setDefaultPriceCapUSDCents = async (client: WalletClient, cap: bigint) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -199,7 +199,7 @@ export const _setDefaultPriceCapUSDCents = async (client: WalletClient, cap: big
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'setDefaultPriceCapUSDCents',
         args: [cap]
@@ -218,7 +218,7 @@ export const _assignESIMIdentifier = async (
     eSIMUniqueIdentifier: string
 ) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -227,7 +227,7 @@ export const _assignESIMIdentifier = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'assignESIMIdentifier',
         args: [eSIMWalletAddress, eSIMUniqueIdentifier]
@@ -252,7 +252,7 @@ export const _recordSettledPurchase = async (
     paymentReference: Hex
 ) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -261,7 +261,7 @@ export const _recordSettledPurchase = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'recordSettledPurchase',
         args: [eSIMWalletAddress, dataBundleDetail, asset, tokenAmount, paymentReference]
@@ -275,7 +275,7 @@ export const _recordSettledPurchase = async (
  */
 export const _acceptAdminUpdate = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -284,7 +284,7 @@ export const _acceptAdminUpdate = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'acceptAdminUpdate',
         args: []
@@ -302,7 +302,7 @@ export const _acceptAdminUpdate = async (client: WalletClient) => {
  */
 export const _acceptOwnership = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -311,7 +311,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: Registry,
         functionName: 'acceptOwnership',
         args: []
@@ -336,7 +336,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
  */
 export const _transferOwnershipCall = async (client: WalletClient, newOwner: Address): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -362,7 +362,7 @@ export const _transferOwnershipCall = async (client: WalletClient, newOwner: Add
  */
 export const _upgradeCall = async (client: WalletClient, newImplementation: Address, data: Hex = '0x'): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 

@@ -11,6 +11,7 @@ import * as lazyWalletRegistry from "../../../src/logic/admin/reads/lazyWalletRe
 import * as deviceWallet from "../../../src/logic/admin/reads/deviceWallet.reads.js";
 import * as eSIMWallet from "../../../src/logic/admin/reads/eSIMWallet.reads.js";
 import * as paymentAdapter from "../../../src/logic/admin/reads/paymentAdapter.reads.js";
+import * as protocolAdmin from "../../../src/logic/admin/reads/protocolAdmin.reads.js";
 
 // --- Fixtures ---------------------------------------------------------------
 const WALLET = "0x00000000000000000000000000000000000dead1" as Address;
@@ -138,6 +139,23 @@ const readCases: Array<{
   { label: "paymentAdapter._quote", run: (c) => paymentAdapter._quote(c, ASSET, 1000n), address: F.PAYMENT_ADAPTER, functionName: "quote", args: [ASSET, 1000n] },
   { label: "paymentAdapter._usedReferences", run: (c) => paymentAdapter._usedReferences(c, PAYMENT_REFERENCE), address: F.PAYMENT_ADAPTER, functionName: "usedReferences", args: [PAYMENT_REFERENCE] },
   { label: "paymentAdapter._upgradeManager", run: (c) => paymentAdapter._upgradeManager(c), address: F.PAYMENT_ADAPTER, functionName: "upgradeManager", args: [] },
+
+  // protocolAdmin.reads (target = PROTOCOL_ADMIN, the timelock)
+  { label: "protocolAdmin._getMinDelay", run: (c) => protocolAdmin._getMinDelay(c), address: F.PROTOCOL_ADMIN, functionName: "getMinDelay", args: [] },
+  { label: "protocolAdmin._minDelayFloor", run: (c) => protocolAdmin._minDelayFloor(c), address: F.PROTOCOL_ADMIN, functionName: "minDelayFloor", args: [] },
+  { label: "protocolAdmin._getOperationState", run: (c) => protocolAdmin._getOperationState(c, HASH), address: F.PROTOCOL_ADMIN, functionName: "getOperationState", args: [HASH] },
+  { label: "protocolAdmin._getTimestamp", run: (c) => protocolAdmin._getTimestamp(c, HASH), address: F.PROTOCOL_ADMIN, functionName: "getTimestamp", args: [HASH] },
+  { label: "protocolAdmin._isOperation", run: (c) => protocolAdmin._isOperation(c, HASH), address: F.PROTOCOL_ADMIN, functionName: "isOperation", args: [HASH] },
+  { label: "protocolAdmin._isOperationPending", run: (c) => protocolAdmin._isOperationPending(c, HASH), address: F.PROTOCOL_ADMIN, functionName: "isOperationPending", args: [HASH] },
+  { label: "protocolAdmin._isOperationReady", run: (c) => protocolAdmin._isOperationReady(c, HASH), address: F.PROTOCOL_ADMIN, functionName: "isOperationReady", args: [HASH] },
+  { label: "protocolAdmin._isOperationDone", run: (c) => protocolAdmin._isOperationDone(c, HASH), address: F.PROTOCOL_ADMIN, functionName: "isOperationDone", args: [HASH] },
+  { label: "protocolAdmin._hasRole", run: (c) => protocolAdmin._hasRole(c, HASH, WALLET), address: F.PROTOCOL_ADMIN, functionName: "hasRole", args: [HASH, WALLET] },
+  { label: "protocolAdmin._getRoleAdmin", run: (c) => protocolAdmin._getRoleAdmin(c, HASH), address: F.PROTOCOL_ADMIN, functionName: "getRoleAdmin", args: [HASH] },
+  { label: "protocolAdmin._defaultAdminRole", run: (c) => protocolAdmin._defaultAdminRole(c), address: F.PROTOCOL_ADMIN, functionName: "DEFAULT_ADMIN_ROLE", args: [] },
+  { label: "protocolAdmin._proposerRole", run: (c) => protocolAdmin._proposerRole(c), address: F.PROTOCOL_ADMIN, functionName: "PROPOSER_ROLE", args: [] },
+  { label: "protocolAdmin._cancellerRole", run: (c) => protocolAdmin._cancellerRole(c), address: F.PROTOCOL_ADMIN, functionName: "CANCELLER_ROLE", args: [] },
+  { label: "protocolAdmin._executorRole", run: (c) => protocolAdmin._executorRole(c), address: F.PROTOCOL_ADMIN, functionName: "EXECUTOR_ROLE", args: [] },
+  { label: "protocolAdmin._guardianRole", run: (c) => protocolAdmin._guardianRole(c), address: F.PROTOCOL_ADMIN, functionName: "GUARDIAN_ROLE", args: [] },
 ];
 
 describe("admin readContract calls", () => {

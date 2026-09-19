@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient, publicActions } from "viem";
-import { _getChainSpecificConstants } from "../../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../../constants.js";
 import { ProtocolAdmin } from "../../../abis/index.js";
 
 // Read-only logic for `ProtocolAdmin`, the timelock that owns the four
@@ -15,7 +15,7 @@ export enum OperationState {
 }
 
 const _resolve = async (client: WalletClient) => {
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     return _getChainSpecificConstants(chainID, rpcURL);
 }

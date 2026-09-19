@@ -60,7 +60,7 @@ describe("protocolAdmin schedule", () => {
         expect(arg.functionName).toBe("schedule");
         // The payload targets the registry, the transaction targets the timelock.
         expect(arg.args).toEqual([F.REGISTRY, 0n, VAULT_PAYLOAD, ZERO32, ZERO32, MIN_DELAY]);
-        expect(arg.account).toBe(EOA);
+        expect(arg.account).toBe(client.account);
 
         // The returned object carries everything execute has to reproduce.
         expect(op).toEqual({
@@ -117,6 +117,23 @@ describe("protocolAdmin schedule", () => {
         ]);
         expect(op.targets).toEqual([F.REGISTRY, F.REGISTRY]);
         expect(op.values).toEqual([0n, 2n]);
+    });
+
+    it("operationIdBatch hashes the calls the way scheduleBatch sends them", async () => {
+        const client = scheduleClient();
+
+        await protocolAdmin._operationIdBatch(client, [VAULT_CALL, { ...VAULT_CALL, value: 2n }], { salt: SALT });
+
+        const read = (client.readContract as ReturnType<typeof vi.fn>).mock.calls[0][0];
+        expect(read.address).toBe(PA);
+        expect(read.functionName).toBe("hashOperationBatch");
+        expect(read.args).toEqual([
+            [F.REGISTRY, F.REGISTRY],
+            [0n, 2n],
+            [VAULT_PAYLOAD, VAULT_PAYLOAD],
+            ZERO32,
+            SALT,
+        ]);
     });
 
     it("hashes a batch with hashOperationBatch, not hashOperation", async () => {
@@ -309,7 +326,7 @@ describe("protocolAdmin direct writes", () => {
         expect(arg.abi).toBe(ProtocolAdmin);
         expect(arg.functionName).toBe(functionName);
         expect(arg.args).toEqual(args);
-        expect(arg.account).toBe(EOA);
+        expect(arg.account).toBe(client.account);
     });
 
     it.each(directCases)("$label throws MISSING_EOA_WALLET without an account", async ({ run }) => {

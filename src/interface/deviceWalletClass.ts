@@ -3,6 +3,7 @@ import {
     _addDeposit,
     _addESIMWallet,
     _canPullFunds,
+    _deployAndBindESIMWallet,
     _deviceUniqueIdentifier,
     _entryPoint,
     _eSIMWalletFactory,
@@ -43,6 +44,16 @@ export class DeviceWalletSubPackage {
 
     addESIMWallet (eSIMWalletAddress: Address) {
         return _addESIMWallet(this.smartAccountClient, this.address, eSIMWalletAddress);
+    }
+
+    /**
+     * Deploy an eSIM wallet and bind it to this device wallet in one user
+     * operation, optionally granting it access to this wallet's tokens too.
+     * Resolves once the operation is sent, with its hash and the eSIM wallet's
+     * address.
+     */
+    deployAndBindESIMWallet (salt: bigint, options: { grantAccessToFunds?: boolean } = {}) {
+        return _deployAndBindESIMWallet(this.smartAccountClient, this.address, salt, options.grantAccessToFunds ?? false);
     }
 
     getVaultAddress () {

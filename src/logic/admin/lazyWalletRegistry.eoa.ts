@@ -9,7 +9,7 @@ import {
     parseEventLogs,
     publicActions,
 } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../constants.js";
 import {
     BatchSizeOutOfRangeError,
     DepositOnResumeError,
@@ -67,7 +67,7 @@ export const DEFAULT_ESIM_WALLETS_PER_CALL = 10n;
 export const DEFAULT_HISTORY_ENTRIES_PER_CALL = 25n;
 
 const _resolve = async (client: WalletClient) => {
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     return _getChainSpecificConstants(chainID, rpcURL);
 }
@@ -91,7 +91,7 @@ export const _batchPopulateHistory = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'batchPopulateHistory',
         args: [deviceUniqueIdentifiers, eSIMUniqueIdentifiers, dataBundleDetails]
@@ -123,7 +123,7 @@ export const _deployLazyWalletAndSetESIMIdentifier = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'deployLazyWalletAndSetESIMIdentifier',
         args: [deviceOwnerPublicKey, deviceUniqueIdentifier, salt, depositAmount, maxWallets],
@@ -153,7 +153,7 @@ export const _deployMoreESIMWalletsForLazyDevice = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'deployMoreESIMWalletsForLazyDevice',
         args: [deviceUniqueIdentifier, maxWallets]
@@ -180,7 +180,7 @@ export const _setHistoryForLazyWallet = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'setHistoryForLazyWallet',
         args: [eSIMIdentifier, maxEntries]
@@ -202,7 +202,7 @@ export const _switchESIMIdentifierToNewDeviceIdentifier = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'switchESIMIdentifierToNewDeviceIdentifier',
         args: [eSIMIdentifier, oldDeviceIdentifier, newDeviceIdentifier]
@@ -347,7 +347,7 @@ export const _deployLazyWalletAllBatches = async (
             abi: LazyWalletRegistry,
             functionName: "deployMoreESIMWalletsForLazyDevice",
             args: [deviceUniqueIdentifier, maxWallets],
-            account: client.account.address,
+            account: client.account,
         }, "AllESIMWalletsDeployed");
 
         if (finished) {
@@ -425,7 +425,7 @@ export const _setHistoryForLazyWalletAllBatches = async (
         abi: LazyWalletRegistry,
         functionName: "setHistoryForLazyWallet",
         args: [eSIMIdentifier, maxEntries],
-        account: client.account.address,
+        account: client.account,
     }, "HistoryAlreadyCopied");
 
     if (finished) return { eSIMWallet, copied: 0n, batches: [], alreadyComplete: true };
@@ -468,7 +468,7 @@ export const _setHistoryForLazyWalletAllBatches = async (
  */
 export const _transferOwnershipCall = async (client: WalletClient, newOwner: Address): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -491,7 +491,7 @@ export const _transferOwnershipCall = async (client: WalletClient, newOwner: Add
  */
 export const _upgradeCall = async (client: WalletClient, newImplementation: Address, data: Hex = '0x'): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -513,7 +513,7 @@ export const _upgradeCall = async (client: WalletClient, newImplementation: Addr
  */
 export const _acceptOwnership = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -522,7 +522,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.LAZY_WALLET_REGISTRY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: LazyWalletRegistry,
         functionName: 'acceptOwnership',
         args: []

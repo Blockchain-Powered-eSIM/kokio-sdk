@@ -1,23 +1,26 @@
 import { defineConfig, configDefaults } from "vitest/config";
 
-// Integration tests (`*.integration.test.ts`) hit live Base Sepolia and are
-// opt-in via `npm run test:integration` (which sets INTEGRATION=1). The default
-// run stays offline: it includes only the unit tests and excludes the
-// integration suffix. Both modes reuse this one config so they share an
-// identical transform pipeline.
+// Three opt-in tiers share this config so they share one transform pipeline:
+//   default          unit tests only, fully offline
+//   INTEGRATION=1    `*.integration.test.ts` and `*.fork.test.ts`, local anvil forks
+//   KOKIO_LIVE=1     `*.live.test.ts`, real Base Sepolia and Pimlico
 const integration = !!process.env.INTEGRATION;
+const live = !!process.env.KOKIO_LIVE;
+
+const INTEGRATION_FILES = ["tests/**/*.integration.test.ts", "tests/**/*.fork.test.ts"];
+const LIVE_FILES = ["tests/**/*.live.test.ts"];
 
 export default defineConfig({
   test: {
-    // Node environment — the SDK targets the Expo app / backend server,
-    // but every unit test here runs against mocked clients (no live RPC).
+    // The SDK targets the Expo app and a Node backend. No test needs a DOM.
     environment: "node",
-    include: integration
-      ? ["tests/**/*.integration.test.ts"]
-      : ["tests/**/*.test.ts"],
-    exclude: integration
+    include: live ? LIVE_FILES : integration ? INTEGRATION_FILES : ["tests/**/*.test.ts"],
+    exclude: live || integration
       ? [...configDefaults.exclude]
-      : [...configDefaults.exclude, "tests/**/*.integration.test.ts"],
+      : [...configDefaults.exclude, ...INTEGRATION_FILES, ...LIVE_FILES],
     globals: false,
+    // The mock paymaster prints every bundler error it relays, including the
+    // reverts the refusal tests expect. The tests check those errors themselves.
+    onConsoleLog: (log) => !log.startsWith("JSON.stringify(err):"),
   },
 });

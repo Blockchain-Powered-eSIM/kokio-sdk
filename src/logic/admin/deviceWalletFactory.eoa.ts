@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { DeviceWalletFactory } from "../../abis/index.js";
 import { OwnerCall, P256Key } from "../../types.js";
@@ -31,7 +31,7 @@ export const _deployDeviceWalletForUsers = async (
     value: bigint
 ) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -40,7 +40,7 @@ export const _deployDeviceWalletForUsers = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'deployDeviceWalletForUsers',
         args: [deviceUniqueIdentifiers, deviceWalletOwnersKey, salts, depositAmounts],
@@ -61,7 +61,7 @@ export const _postCreateAccount = async (
     salt: bigint
 ) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -70,7 +70,7 @@ export const _postCreateAccount = async (
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'postCreateAccount',
         args: [deviceWallet, deviceUniqueIdentifier, deviceWalletOwnerKey, salt]
@@ -80,7 +80,7 @@ export const _postCreateAccount = async (
 /** One-time wiring of the registry into the factory. `onlyAdmin`. */
 export const _addRegistryAddress = async (client: WalletClient, registryContractAddress: Address) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -89,7 +89,7 @@ export const _addRegistryAddress = async (client: WalletClient, registryContract
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'addRegistryAddress',
         args: [registryContractAddress]
@@ -99,7 +99,7 @@ export const _addRegistryAddress = async (client: WalletClient, registryContract
 /** Point the device-wallet beacon at a new implementation. `onlyOwner` (upgradeManager). */
 export const _updateDeviceWalletImplementation = async (client: WalletClient, newDeviceImpl: Address) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -108,7 +108,7 @@ export const _updateDeviceWalletImplementation = async (client: WalletClient, ne
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'updateDeviceWalletImplementation',
         args: [newDeviceImpl]
@@ -132,7 +132,7 @@ export const _updateDeviceWalletImplementation = async (client: WalletClient, ne
  */
 export const _transferOwnershipCall = async (client: WalletClient, newOwner: Address): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -154,7 +154,7 @@ export const _transferOwnershipCall = async (client: WalletClient, newOwner: Add
  */
 export const _upgradeCall = async (client: WalletClient, newImplementation: Address, data: Hex = '0x'): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -176,7 +176,7 @@ export const _upgradeCall = async (client: WalletClient, newImplementation: Addr
  */
 export const _acceptOwnership = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -185,7 +185,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.DEVICE_WALLET_FACTORY,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: DeviceWalletFactory,
         functionName: 'acceptOwnership',
         args: []

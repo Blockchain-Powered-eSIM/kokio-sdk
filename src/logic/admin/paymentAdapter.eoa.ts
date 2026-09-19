@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { PaymentAdapter } from "../../abis/index.js";
 import type { Asset, OwnerCall } from "../../types.js";
@@ -14,7 +14,7 @@ import type { Asset, OwnerCall } from "../../types.js";
 /** Add a currency the adapter has never seen. Reverts if `_symbol` is already registered. Owner only. */
 export const _registerAsset = async (client: WalletClient, symbol: Hex, asset: Asset) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -23,7 +23,7 @@ export const _registerAsset = async (client: WalletClient, symbol: Hex, asset: A
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PAYMENT_ADAPTER,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: PaymentAdapter,
         functionName: 'registerAsset',
         args: [symbol, asset]
@@ -33,7 +33,7 @@ export const _registerAsset = async (client: WalletClient, symbol: Hex, asset: A
 /** Change a currency already in the table (its decimals, token, or allowed flag). Owner only. */
 export const _updateAsset = async (client: WalletClient, symbol: Hex, asset: Asset) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -42,7 +42,7 @@ export const _updateAsset = async (client: WalletClient, symbol: Hex, asset: Ass
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PAYMENT_ADAPTER,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: PaymentAdapter,
         functionName: 'updateAsset',
         args: [symbol, asset]
@@ -60,7 +60,7 @@ export const _updateAsset = async (client: WalletClient, symbol: Hex, asset: Ass
 /** Add or change a currency, scheduled through the timelock. Pass the result to `schedule`. */
 export const _registerAssetCall = async (client: WalletClient, symbol: Hex, asset: Asset): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -75,7 +75,7 @@ export const _registerAssetCall = async (client: WalletClient, symbol: Hex, asse
 /** Change a currency already in the table, scheduled through the timelock. Pass the result to `schedule`. */
 export const _updateAssetCall = async (client: WalletClient, symbol: Hex, asset: Asset): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -95,7 +95,7 @@ export const _updateAssetCall = async (client: WalletClient, symbol: Hex, asset:
  */
 export const _transferOwnershipCall = async (client: WalletClient, newOwner: Address): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -110,7 +110,7 @@ export const _transferOwnershipCall = async (client: WalletClient, newOwner: Add
 /** Point the adapter's proxy at a new implementation. Builds `upgradeToAndCall`. Pass the result to `schedule`. */
 export const _upgradeCall = async (client: WalletClient, newImplementation: Address, data: Hex = '0x'): Promise<OwnerCall> => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -132,7 +132,7 @@ export const _upgradeCall = async (client: WalletClient, newImplementation: Addr
  */
 export const _acceptOwnership = async (client: WalletClient) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
     const rpcURL = client.transport.url;
     const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -141,7 +141,7 @@ export const _acceptOwnership = async (client: WalletClient) => {
     return writeContractOrThrow(client, {
         address: values.factoryAddresses.PAYMENT_ADAPTER,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: PaymentAdapter,
         functionName: 'acceptOwnership',
         args: []

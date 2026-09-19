@@ -1,6 +1,6 @@
 {
   "name": "kokio-sdk",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "description": "",
   "type": "module",
   "main": "./dist/esm/config.js",
@@ -32,10 +32,13 @@
   "scripts": {
     "build": "tsc",
     "prepack": "npm run build",
+    "pretest": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "INTEGRATION=1 vitest run",
-    "test:integration:fork": "INTEGRATION=1 vitest run tests/integration --no-file-parallelism"
+    "test:integration:fork": "INTEGRATION=1 vitest run tests/integration --no-file-parallelism",
+    "test:consumer:fork": "npm run build && INTEGRATION=1 vitest run tests/consumer --no-file-parallelism",
+    "test:consumer:live": "npm run build && KOKIO_LIVE=1 vitest run tests/consumer --no-file-parallelism"
   },
   "repository": {
     "type": "git",
@@ -48,20 +51,31 @@
   },
   "homepage": "https://github.com/Blockchain-Powered-eSIM/kokio-sdk#readme",
   "devDependencies": {
+    "@pimlico/alto": "0.0.21",
+    "@pimlico/mock-paymaster": "0.0.8",
+    "@simplewebauthn/server": "13.3.2",
     "@types/node": "22.20.1",
     "dotenv": "17.4.2",
+    "prool": "0.0.25",
+    "react-native-passkey": "3.6.1",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
   },
   "dependencies": {
     "@noble/curves": "2.3.0",
-    "@peculiar/asn1-ecc": "2.9.3",
-    "@peculiar/asn1-schema": "2.9.3",
-    "@simplewebauthn/server": "13.3.2",
-    "react-native-passkey": "3.6.1",
+    "@scure/base": "1.2.6",
     "viem": "2.55.19"
   },
   "overrides": {
-    "ws": "8.21.0"
+    "ws": "8.21.0",
+    "tar": "7.5.22"
+  },
+  "peerDependencies": {
+    "react-native-passkey": "^3.6.1"
+  },
+  "peerDependenciesMeta": {
+    "react-native-passkey": {
+      "optional": true
+    }
   }
 }

@@ -14,8 +14,7 @@ const receipt = await smartAccountClient.waitForUserOperationReceipt({ hash });
 if (!receipt.success) throw new Error("operation reverted");
 ```
 
-An operation whose calls revert is still mined and still returns a receipt,
-so check `success` rather than treating a resolved await as confirmation.
+A call that would revert is caught before sending: the write throws `ContractRevertError` with the contract's error name in `decoded.errorName`. If the chain changes between that check and inclusion, the operation can still revert on chain. It is then mined and returns a receipt, so check `success` rather than treating a resolved await as confirmation.
 
 ## sendUserOperation
 
@@ -32,6 +31,22 @@ const hash = await kokio.deviceWallet!.sendUserOperation([
 ```
 
 Returns: `Promise<Hash>`, the user operation hash.
+
+## deployAndBindESIMWallet
+
+Deploys a new eSIM wallet for this device wallet and adds it to the device wallet's list, in one user operation and one passkey prompt. Use it when a user adds a new eSIM. Pass `grantAccessToFunds: true` to also let the new eSIM wallet pull tokens from this device wallet, which `buyDataBundleWithToken` needs when the eSIM wallet holds less than the price.
+
+The device wallet must already be registered by the backend (`admin.deviceWalletFactory.postCreateAccount`), or the deploy reverts. Each salt gives one address, so use a new salt for each eSIM wallet on the same device.
+
+```ts
+const { userOpHash, eSIMWalletAddress } = await kokio.deviceWallet!.deployAndBindESIMWallet(
+  1n, // salt
+  { grantAccessToFunds: true },
+);
+kokio.setESIMWalletAddress(eSIMWalletAddress);
+```
+
+Returns: `Promise<{ userOpHash: Hash; eSIMWalletAddress: Address }>`. The address is known before the operation lands, so wait for the receipt before reading from it.
 
 ## addESIMWallet
 

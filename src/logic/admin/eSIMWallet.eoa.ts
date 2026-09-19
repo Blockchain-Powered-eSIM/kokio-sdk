@@ -1,5 +1,5 @@
 import { Address, Hex, WalletClient } from "viem";
-import { _getChainSpecificConstants } from "../constants.js";
+import { _chainId, _getChainSpecificConstants } from "../constants.js";
 import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
 import { ESIMWallet } from "../../abis/index.js";
 import { DataBundleDetails } from "../../types.js";
@@ -26,7 +26,7 @@ export const _buyDataBundleWithToken = async (
     paymentReference: Hex
 ) => {
 
-    const chainID = await client.getChainId();
+    const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
@@ -35,7 +35,7 @@ export const _buyDataBundleWithToken = async (
     return writeContractOrThrow(client, {
         address: eSIMWalletAddress,
         chain: values.chain,
-        account: client.account.address,
+        account: client.account,
         abi: ESIMWallet,
         functionName: 'buyDataBundleWithToken',
         args: [dataBundleDetails, asset, maxAmountIn, paymentReference]

@@ -1,8 +1,9 @@
-import { Address, Hex, encodeFunctionData, maxUint256 } from "viem"
+import { Address, Hex, encodeFunctionData, erc20Abi, maxUint256 } from "viem"
 import { DataBundleDetails } from "../types.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { MissingSmartWalletError } from "./errors.js";
-import { ESIMWallet } from "../abis/index.js";
+import { ESIMWallet, PaymentAdapter, Registry } from "../abis/index.js";
+import { _chainId, _getChainSpecificConstants } from "./constants.js";
 import { _defaultPriceCapUSDCents } from "./registry.js";
 
 // Not exposed on this surface:
@@ -73,6 +74,65 @@ export const _buyDataBundleWithToken = async (
                 args: [dataBundleDetails, asset, maxAmountIn, paymentReference]
             })
         }]
+    });
+}
+
+/**
+ * Buy a data bundle with tokens the device wallet sends over in the same user
+ * operation, so the eSIM wallet needs no access to the device wallet's funds.
+ *
+ * Only the shortfall is sent: the quote for the bundle minus what this eSIM
+ * wallet already holds of `asset`. Arguments are as for `buyDataBundleWithToken`.
+ */
+export const _buyDataBundleWithTransfer = async (
+    client: KokioSmartAccountClient,
+    address: Address,
+    dataBundleDetails: DataBundleDetails,
+    asset: Hex,
+    maxAmountIn: bigint,
+    paymentReference: Hex
+) => {
+
+    const chainID = await _chainId(client);
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    if(!client.account) throw new MissingSmartWalletError()
+
+    // The eSIM wallet pays through whichever adapter the registry names, so read it there.
+    const adapter = await client.readContract({
+        address: values.factoryAddresses.REGISTRY, abi: Registry, functionName: "paymentAdapter"
+    }) as Address;
+    const [{ token }, amountIn] = await Promise.all([
+        client.readContract({
+            address: adapter, abi: PaymentAdapter, functionName: "resolveAsset", args: [asset]
+        }) as Promise<{ token: Address }>,
+        client.readContract({
+            address: adapter, abi: PaymentAdapter, functionName: "quote", args: [asset, dataBundleDetails.priceUSDCents]
+        }) as Promise<bigint>,
+    ]);
+    const held = await client.readContract({
+        address: token, abi: erc20Abi, functionName: "balanceOf", args: [address]
+    });
+
+    const buy = {
+        to: address,
+        data: encodeFunctionData({
+            abi: ESIMWallet,
+            functionName: "buyDataBundleWithToken",
+            args: [dataBundleDetails, asset, maxAmountIn, paymentReference]
+        })
+    };
+
+    return client.sendUserOperation({
+        account: client.account,
+        calls: held >= amountIn ? [buy] : [
+            {
+                to: token,
+                data: encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [address, amountIn - held] })
+            },
+            buy
+        ]
     });
 }
 
