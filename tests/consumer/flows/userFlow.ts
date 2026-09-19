@@ -1,10 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it, type Mock } from "vitest";
-import { createWalletClient, erc20Abi, http, stringToHex, type Address, type Hex, type PublicClient } from "viem";
+import {
+  createWalletClient, encodeAbiParameters, erc20Abi, http, keccak256, stringToHex,
+  type Address, type Hex, type PublicClient,
+} from "viem";
 import { createBundlerClient } from "viem/account-abstraction";
 import { baseSepolia } from "viem/chains";
 import { ContractRevertError, Kokio } from "kokio-sdk";
 import type { KokioAdmin } from "kokio-sdk/admin";
-import { ESIMWallet, ESIMWalletFactory } from "kokio-sdk/abis";
+import { ESIMWallet, ESIMWalletFactory, Registry } from "kokio-sdk/abis";
 import { Settlement, type KokioSmartAccountClient } from "kokio-sdk/types";
 
 import { createSoftSigner } from "../../utils/softP256Signer.js";
@@ -233,6 +236,65 @@ export const describeUserFlow = (
     }, timeout);
   });
 
+  // Paid outside the protocol, from an external wallet or by card. The backend
+  // confirms the payment offchain, then records it. No money moves onchain.
+  const recorded = [
+    { label: "from an external wallet", symbol: "USDC", settlement: Settlement.ExternalWallet },
+    { label: "by card", symbol: "USD", settlement: Settlement.Fiat },
+  ];
+  // Everything bought above comes first in the eSIM wallet's history.
+  const historyBefore = 2n + BigInt(otherAssets.length);
+
+  recorded.forEach(({ label, symbol, settlement }, i) => {
+    it(`a top-up paid ${label} is recorded by the backend`, async () => {
+      const recordedAsset = stringToHex(symbol, { size: 32 });
+      const { token: recordedToken } = await admin.paymentAdapter.resolveAsset(recordedAsset);
+      const tokenAmount = await admin.paymentAdapter.quote(recordedAsset, bundle.priceUSDCents);
+      const ref = testBytes32(`ro${i}-${Date.now()}`);
+      const details = { ...bundle, settlement };
+
+      const vault = await admin.registry.vault();
+      const balances = () => Promise.all([db.deviceWallet, db.eSIMWallet, vault].map((holder) => balanceOf(token, holder)));
+      const before = await balances();
+
+      const receipt = await waitFor(label, await admin.registry.recordSettledPurchase(db.eSIMWallet, details, recordedAsset, tokenAmount, ref));
+
+      const [event] = await target.publicClient.getContractEvents({
+        address: (await admin.constants).factoryAddresses.REGISTRY as Address,
+        abi: Registry,
+        eventName: "DataBundleSettled",
+        args: { _eSIMWallet: db.eSIMWallet, _paymentReference: ref },
+        fromBlock: receipt.blockNumber,
+      });
+      expect(event.args).toMatchObject({
+        _dataBundleID: bundle.id,
+        _priceUSDCents: bundle.priceUSDCents,
+        _settlement: settlement,
+        _asset: recordedAsset,
+        _token: recordedToken,
+        _tokenAmount: tokenAmount,
+      });
+      expect(await session.eSIMWallet!.transactionHistory(historyBefore + BigInt(i))).toMatchObject({ id: bundle.id, settlement });
+      expect(await admin.registry.usedPaymentReferences(scoped(ref))).toBe(true);
+      // Nothing moved: the payment happened outside the protocol.
+      expect(await balances()).toEqual(before);
+    }, timeout);
+  });
+
+  it("the backend cannot record a purchase the contract refuses", async () => {
+    const usd = stringToHex("USD", { size: 32 });
+    const fiat = { ...bundle, settlement: Settlement.Fiat };
+    const cap = await session.eSIMWallet!.priceCapUSDCents();
+    const record = (details: typeof bundle, symbol: Hex, ref: Hex) =>
+      revertOf(admin.registry.recordSettledPurchase(db.eSIMWallet, details, symbol, 0n, ref));
+
+    // Refused before sending, so none of these costs anything even on a live chain.
+    expect(await record(bundle, usd, testBytes32(`rx0-${Date.now()}`))).toBe("SettlementNotAsserted");
+    expect(await record(fiat, usd, REF_1)).toBe("PaymentReferenceAlreadyUsed");
+    expect(await record({ ...fiat, priceUSDCents: cap + 1n }, usd, testBytes32(`rx1-${Date.now()}`))).toBe("DataBundlePriceAboveCap");
+    expect(await record(fiat, testBytes32("coin"), testBytes32(`rx2-${Date.now()}`))).toBe("AssetNotAllowed");
+  }, timeout);
+
   const link = (hash: Hex) => (target.explorerTx ? `${target.explorerTx}${hash}` : hash);
   const log = (step: string, message: string) => console.log(`[step ${step}] ${message}`);
 
@@ -243,9 +305,22 @@ export const describeUserFlow = (
   };
 
   const waitFor = async (step: string, hash: Hex) => {
-    const { status } = await target.publicClient.waitForTransactionReceipt({ hash, confirmations: target.confirmations });
+    const receipt = await target.publicClient.waitForTransactionReceipt({ hash, confirmations: target.confirmations });
     log(step, `transaction ${link(hash)}`);
-    expect(status).toBe("success");
+    expect(receipt.status).toBe("success");
+    return receipt;
+  };
+
+  // Registry.usedPaymentReferences is keyed per eSIM wallet.
+  const scoped = (ref: Hex) =>
+    keccak256(encodeAbiParameters([{ type: "address" }, { type: "bytes32" }], [db.eSIMWallet, ref]));
+
+  // The custom error name a refused write carries, as the SDK reports it.
+  const revertOf = async (pending: Promise<unknown>): Promise<string> => {
+    const err = await pending.then(() => undefined, (e: unknown) => e);
+    if (err === undefined) return "did not revert";
+    if (!(err instanceof ContractRevertError)) throw err;
+    return err.decoded?.errorName ?? `undecoded ${err.data}`;
   };
 
   const balanceOf = (tokenAddress: Address, holder: Address) =>
