@@ -278,7 +278,9 @@ export const describeLazyWalletDeployFlow = (
     }
   }, timeout);
 
- 
+  // The settlement token on Base Sepolia, and the one the test admin holds plenty of.
+  const ASSET_SYMBOL = "USDCt";
+  const ASSET = stringToHex(ASSET_SYMBOL, { size: 32 });
   // Payment references are spendable once per eSIM wallet, so each purchase gets its own.
   const RUN = Date.now().toString(36);
   let refs = 0;
