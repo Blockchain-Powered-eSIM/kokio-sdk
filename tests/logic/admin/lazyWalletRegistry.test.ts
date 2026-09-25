@@ -74,6 +74,14 @@ const revertsWith = (errorName: "AllESIMWalletsDeployed" | "HistoryAlreadyCopied
     });
 };
 
+// What the registry holds for a device an earlier call already started deploying:
+// identifier i is "eid-i", and its wallet is walletAt(i).
+const deployedSoFar = {
+    uniqueIdentifierToDeviceWallet: DEVICE_WALLET,
+    eSIMIdentifiersAssociatedWithDeviceIdentifier: ([, index]: readonly unknown[]) => `eid-${index}`,
+    lazyDeployedESIMWallet: ([id]: readonly unknown[]) => walletAt(Number(String(id).slice("eid-".length))),
+};
+
 const writesOf = (client: ReturnType<typeof makeMockWalletClient>) =>
     (client.writeContract as ReturnType<typeof vi.fn>).mock.calls.map((call) => call[0]);
 
@@ -131,14 +139,11 @@ describe("_deployLazyWalletAllBatches", () => {
         expect(result.batches.map((b) => b.remaining)).toEqual([2n, 1n, 0n]);
     });
 
-    it("resumes a part-deployed device instead of restarting it", async () => {
+    it("resumes a part-deployed device, reporting the earlier wallets too", async () => {
         const client = makeMockWalletClient({
             chainId: CHAIN_ID,
             account: EOA,
-            reads: {
-                eSIMWalletsDeployed: 3n,
-                uniqueIdentifierToDeviceWallet: DEVICE_WALLET,
-            },
+            reads: { ...deployedSoFar, eSIMWalletsDeployed: 3n },
             receipts: [{ logs: [deployedLog([walletAt(3)], ["eid-3"], 0n)] }],
         });
 
@@ -148,18 +153,19 @@ describe("_deployLazyWalletAllBatches", () => {
         expect(writes).toHaveLength(1);
         expect(writes[0].functionName).toBe("deployMoreESIMWalletsForLazyDevice");
         expect(result.deviceWallet).toBe(DEVICE_WALLET);
-        expect(result.eSIMWallets).toEqual([walletAt(3)]);
+        // A caller copying history from this result must not miss the first three.
+        expect(result.eSIMWallets).toEqual([walletAt(0), walletAt(1), walletAt(2), walletAt(3)]);
+        expect(result.eSIMIdentifiers).toEqual(["eid-0", "eid-1", "eid-2", "eid-3"]);
+        // Only what this call sent.
+        expect(result.batches.map((b) => b.eSIMWallets)).toEqual([[walletAt(3)]]);
         expect(result.alreadyComplete).toBe(false);
     });
 
-    it("sends nothing for a device that is already fully deployed", async () => {
+    it("sends nothing for a device that is already fully deployed, and still lists its wallets", async () => {
         const client = makeMockWalletClient({
             chainId: CHAIN_ID,
             account: EOA,
-            reads: {
-                eSIMWalletsDeployed: 5n,
-                uniqueIdentifierToDeviceWallet: DEVICE_WALLET,
-            },
+            reads: { ...deployedSoFar, eSIMWalletsDeployed: 5n },
             simulate: revertsWith("AllESIMWalletsDeployed", DEVICE),
         });
 
@@ -169,6 +175,8 @@ describe("_deployLazyWalletAllBatches", () => {
         expect(result.alreadyComplete).toBe(true);
         expect(result.deviceWallet).toBe(DEVICE_WALLET);
         expect(result.batches).toEqual([]);
+        expect(result.eSIMWallets).toEqual([0, 1, 2, 3, 4].map(walletAt));
+        expect(result.eSIMIdentifiers).toEqual(["eid-0", "eid-1", "eid-2", "eid-3", "eid-4"]);
     });
 
     it("refuses a deposit on a resume, since the first batch already took one", async () => {

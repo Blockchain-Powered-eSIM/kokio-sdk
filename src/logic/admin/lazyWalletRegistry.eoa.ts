@@ -20,7 +20,11 @@ import {
     writeContractOrThrow,
 } from "../errors.js";
 import { LazyWalletRegistry, Registry } from "../../abis/index.js";
-import { _eSIMWalletsDeployed, _lazyDeployedESIMWallet } from "./reads/lazyWalletRegistry.reads.js";
+import {
+    _eSIMIdentifiersAssociatedWithDeviceIdentifier,
+    _eSIMWalletsDeployed,
+    _lazyDeployedESIMWallet,
+} from "./reads/lazyWalletRegistry.reads.js";
 import type {
     DataBundleDetails,
     LazyDeployment,
@@ -302,6 +306,7 @@ export const _deployLazyWalletAllBatches = async (
 
     const alreadyDeployed = await _eSIMWalletsDeployed(client, deviceUniqueIdentifier);
     const batches: LazyDeploymentBatch[] = [];
+    let earlier: { eSIMWallets: readonly Address[]; eSIMIdentifiers: readonly string[] } = { eSIMWallets: [], eSIMIdentifiers: [] };
 
     let deviceWallet: Address;
     let outstanding: boolean;
@@ -335,6 +340,10 @@ export const _deployLazyWalletAllBatches = async (
     else {
         if (depositAmount !== 0n) throw new DepositOnResumeError(deviceUniqueIdentifier, depositAmount);
 
+        // Wallets an earlier call deployed. Without them a resume would report only its
+        // own batches, and a caller walking the result would skip the rest of the device.
+        earlier = await _readDeployedESIMWallets(client, deviceUniqueIdentifier, alreadyDeployed);
+
         deviceWallet = await publicClient.readContract({
             address: values.factoryAddresses.REGISTRY,
             abi: Registry,
@@ -351,7 +360,7 @@ export const _deployLazyWalletAllBatches = async (
         }, "AllESIMWalletsDeployed");
 
         if (finished) {
-            return { deviceWallet, eSIMWallets: [], eSIMIdentifiers: [], batches: [], alreadyComplete: true };
+            return { deviceWallet, ...earlier, batches: [], alreadyComplete: true };
         }
         outstanding = true;
     }
@@ -378,11 +387,25 @@ export const _deployLazyWalletAllBatches = async (
 
     return {
         deviceWallet,
-        eSIMWallets: batches.flatMap((batch) => [...batch.eSIMWallets]),
-        eSIMIdentifiers: batches.flatMap((batch) => [...batch.eSIMIdentifiers]),
+        eSIMWallets: [...earlier.eSIMWallets, ...batches.flatMap((batch) => [...batch.eSIMWallets])],
+        eSIMIdentifiers: [...earlier.eSIMIdentifiers, ...batches.flatMap((batch) => [...batch.eSIMIdentifiers])],
         batches,
         alreadyComplete: false,
     };
+}
+
+/**
+ * The first `count` eSIM wallets deployed for a device, in deploy order. The
+ * deploy walks the device's identifier list from the start, so the first
+ * `count` identifiers are exactly the ones with wallets.
+ */
+const _readDeployedESIMWallets = async (client: WalletClient, deviceUniqueIdentifier: string, count: bigint) => {
+
+    const eSIMIdentifiers = await Promise.all(Array.from({ length: Number(count) }, (_, i) =>
+        _eSIMIdentifiersAssociatedWithDeviceIdentifier(client, deviceUniqueIdentifier, BigInt(i))));
+    const eSIMWallets = await Promise.all(eSIMIdentifiers.map((id) => _lazyDeployedESIMWallet(client, id)));
+
+    return { eSIMWallets, eSIMIdentifiers };
 }
 
 /**

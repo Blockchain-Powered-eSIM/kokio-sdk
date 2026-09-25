@@ -12,7 +12,10 @@ export const makeMockWalletClient = (opts: {
   url?: string;
   account?: `0x${string}`;
   readResult?: unknown;
-  /** Per-function read results, for logic that reads several values in one call. */
+  /**
+   * Per-function read results, for logic that reads several values in one call.
+   * A function is called with the read's args, for getters read by index or key.
+   */
   reads?: Record<string, unknown>;
   /**
    * Receipts `waitForTransactionReceipt` hands back, one per call in order. Supply
@@ -46,8 +49,11 @@ export const makeMockWalletClient = (opts: {
       if (arg.account !== client.account) throw new Error("writeContract was not given the client's account object");
       return write ? write() : (receipts ? nextHash() : "0xwritehash");
     }),
-    readContract: vi.fn(async ({ functionName }: { functionName: string }) =>
-      reads && functionName in reads ? reads[functionName] : readResult),
+    readContract: vi.fn(async ({ functionName, args }: { functionName: string; args?: readonly unknown[] }) => {
+      if (!reads || !(functionName in reads)) return readResult;
+      const result = reads[functionName];
+      return typeof result === "function" ? result(args ?? []) : result;
+    }),
     waitForTransactionReceipt: vi.fn(async () => {
       const receipt = receipts?.[delivered++];
       if (!receipt) throw new Error(`Mock client has no receipt for transaction ${delivered}`);
