@@ -13,6 +13,7 @@ import { Settlement, type KokioSmartAccountClient } from "kokio-sdk/types";
 import { createSoftSigner } from "../../utils/softP256Signer.js";
 import { asPasskey } from "../fixtures/passkeyAuthenticator.js";
 import { expectSponsored } from "../fixtures/sponsorship.js";
+import { createTestUser } from "../fixtures/user.js";
 import { CREDENTIAL_ID, RP_ID, TEST_TAG, testBytes32, testDeviceId } from "../fixtures/testLabels.js";
 
 /** Where the flow runs, and the few things that differ between a fork and Base Sepolia. */
@@ -319,11 +320,42 @@ export const describeUserFlow = (
     expect(await balanceOf(token, db.eSIMWallet)).toBe(0n);
   }, timeout);
 
+  it("the eSIM moves to a new device, which signs calls the backend built", async () => {
+    // New device: its own passkey and device wallet, set up like steps 1 to 3.
+    const next = await createTestUser(target, passkeyGet);
+    await sponsored("new device", () => next.kokio.deviceWallet!.sendUserOperation([]), next.client);
+    await waitFor("new device", await admin.deviceWalletFactory.postCreateAccount(next.deviceWallet, next.uid, next.signer.ownerKey, next.salt));
+
+    // Old device: asks to hand the eSIM wallet over.
+    passkeyGet.mockImplementation(asPasskey(signer));
+    const request = await sponsored("transfer request", () => session.eSIMWallet!.requestTransferOwnership(next.deviceWallet));
+    expect(await admin.registry.isESIMWalletOnStandby(db.eSIMWallet)).toBe(true);
+
+    // Backend: its webhook receives the request, which names the new device wallet.
+    const [event] = await target.publicClient.getContractEvents({
+      address: db.eSIMWallet, abi: ESIMWallet, eventName: "OwnershipTransferRequested",
+      args: { _newOwner: next.deviceWallet }, fromBlock: request.receipt.blockNumber,
+    });
+    expect(event.args._currentOwner).toBe(db.deviceWallet);
+    const calls = admin.calls.acceptAndBindESIMWallet(db.eSIMWallet, event.args._newOwner!, { grantAccessToFunds: true });
+
+    // New device: signs the calls as given.
+    passkeyGet.mockImplementation(asPasskey(next.signer));
+    await sponsored("accept and bind", () => next.kokio.deviceWallet!.sendUserOperation(calls), next.client);
+
+    expect(await admin.eSIMWallet!.owner()).toBe(next.deviceWallet);
+    expect(await admin.registry.isESIMWalletValid(db.eSIMWallet)).toBe(next.deviceWallet);
+    expect(await admin.registry.isESIMWalletOnStandby(db.eSIMWallet)).toBe(false);
+    expect(await next.kokio.deviceWallet!.isValidESIMWallet(db.eSIMWallet)).toBe(true);
+    expect(await next.kokio.deviceWallet!.canPullFunds(db.eSIMWallet)).toBe(true);
+    expect(await session.deviceWallet!.isValidESIMWallet(db.eSIMWallet)).toBe(false);
+  }, timeout);
+
   const link = (hash: Hex) => (target.explorerTx ? `${target.explorerTx}${hash}` : hash);
   const log = (step: string, message: string) => console.log(`[step ${step}] ${message}`);
 
-  const sponsored = async (step: string, send: () => Promise<Hex>) => {
-    const receipt = await expectSponsored(client, target.publicClient, send, { confirmations: target.confirmations });
+  const sponsored = async (step: string, send: () => Promise<Hex>, sender: KokioSmartAccountClient = client) => {
+    const receipt = await expectSponsored(sender, target.publicClient, send, { confirmations: target.confirmations });
     log(step, `user operation ${receipt.userOpHash}, transaction ${link(receipt.receipt.transactionHash)}`);
     return receipt;
   };
