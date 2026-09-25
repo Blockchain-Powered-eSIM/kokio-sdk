@@ -116,6 +116,41 @@ describe.skipIf(!forkAvailable())("Lazy deployment - pagination on a Base Sepoli
       expect(again.alreadyComplete).toBe(true);
       expect(again.batches).toEqual([]);
       expect(again.deviceWallet).toBe(result.deviceWallet);
+      // Still the whole device, so a caller retrying after a crash can walk it.
+      expect(again.eSIMWallets).toEqual(result.eSIMWallets);
+      expect(again.eSIMIdentifiers).toEqual(eSIMs);
+    },
+    300_000,
+  );
+
+  it(
+    "reports the whole device when a deploy interrupted after its first batch is resumed",
+    async () => {
+      const device = "fork-lazy-resumed-device";
+      const eSIMs = Array.from({ length: 5 }, (_, i) => `${device}-esim-${i}`);
+      const ownerKey = freshOwnerKey();
+
+      const populate = await sdk.lazyWalletRegistry.batchPopulateHistory([device], [eSIMs], [bundles(eSIMs.length)]);
+      await fork.publicClient.waitForTransactionReceipt({ hash: populate });
+
+      // Only the first batch lands, as if the call threw before sending the next one.
+      const first = await sdk.lazyWalletRegistry.deployLazyWalletFirstBatch(ownerKey, device, 7_301n, 0n, 2n);
+      await fork.publicClient.waitForTransactionReceipt({ hash: first });
+
+      const resumed = await sdk.lazyWalletRegistry.deployLazyWalletAndSetESIMIdentifier(ownerKey, device, 7_301n, 0n, 2n);
+
+      expect(resumed.alreadyComplete).toBe(false);
+      expect(resumed.batches.map((batch) => batch.eSIMIdentifiers)).toEqual([eSIMs.slice(2, 4), eSIMs.slice(4)]);
+      expect(resumed.eSIMIdentifiers).toEqual(eSIMs);
+      for (const [i, eSIM] of eSIMs.entries()) {
+        expect(resumed.eSIMWallets[i]).toBe(await readLazy(fork).read.lazyDeployedESIMWallet([eSIM]));
+      }
+
+      // Copying from the result reaches every eSIM, the first batch's included.
+      for (const eSIM of resumed.eSIMIdentifiers) await sdk.lazyWalletRegistry.setHistoryForLazyWallet(eSIM);
+      for (const eSIM of eSIMs) {
+        expect(await sdk.lazyWalletRegistry.outstandingHistoryEntries(eSIM)).toBe(0n);
+      }
     },
     300_000,
   );

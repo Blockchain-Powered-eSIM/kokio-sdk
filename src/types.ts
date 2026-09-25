@@ -144,8 +144,8 @@ export type LazyDeploymentBatch = {
 
 /**
  * What a fully paginated lazy deployment did. `eSIMWallets` and `eSIMIdentifiers`
- * cover only the batches this call ran, so a resume reports what it finished
- * rather than the device's whole set.
+ * cover the device's whole set, including wallets an earlier call deployed, so a
+ * resume can be walked like a fresh deploy. `batches` holds only what this call sent.
  */
 export type LazyDeployment = {
     deviceWallet: Address;
