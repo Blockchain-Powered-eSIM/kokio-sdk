@@ -83,6 +83,7 @@ export const _buyDataBundleWithToken = async (
  *
  * Only the shortfall is sent: the quote for the bundle minus what this eSIM
  * wallet already holds of `asset`. Arguments are as for `buyDataBundleWithToken`.
+ * The backend builds the same calls with `admin.calls.buyDataBundleWithTransfer`.
  */
 export const _buyDataBundleWithTransfer = async (
     client: KokioSmartAccountClient,

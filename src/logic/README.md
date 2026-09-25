@@ -14,6 +14,7 @@ Layout:
   [deviceWallet.ts](deviceWallet.ts) and [eSIMWallet.ts](eSIMWallet.ts).
 - [admin/](admin/) holds the EOA equivalents used by `KokioAdmin`; each function
   sends a direct transaction with the admin or owner account.
+- [calls/](calls/) builds the calls a device wallet signs as one user operation, without sending them. The mobile functions send what these return, and `KokioAdmin` hands them to the backend so it can pass them to the app to sign.
 - [account-kit/createSmartAccount.ts](account-kit/createSmartAccount.ts) builds the
   ERC-4337 smart account and its client, and handles the passkey signing envelope.
 - [constants.ts](constants.ts) resolves chain-specific addresses and custom errors.
