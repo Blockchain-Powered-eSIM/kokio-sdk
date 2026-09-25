@@ -63,6 +63,8 @@ const deployment = await admin.lazyWalletRegistry.deployLazyWalletAndSetESIMIden
 
 Returns: `Promise<LazyDeployment>`, `{ deviceWallet, eSIMWallets, eSIMIdentifiers, batches, alreadyComplete }`.
 
+`eSIMWallets` and `eSIMIdentifiers` always list every eSIM wallet the device has, in deploy order, even when this call resumed a deploy or found it already complete. Walk them to copy each eSIM's history with `setHistoryForLazyWallet`. `batches` lists only the transactions this call sent.
+
 ## setHistoryForLazyWallet
 
 Copies one eSIM's whole recorded purchase history onto its deployed wallet,
