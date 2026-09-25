@@ -1,10 +1,10 @@
-import { Address, Hex, encodeFunctionData, erc20Abi, maxUint256 } from "viem"
+import { Address, Hex, encodeFunctionData, maxUint256 } from "viem"
 import { DataBundleDetails } from "../types.js";
 import { KokioSmartAccountClient } from "../types.js";
 import { MissingSmartWalletError } from "./errors.js";
-import { ESIMWallet, PaymentAdapter, Registry } from "../abis/index.js";
-import { _chainId, _getChainSpecificConstants } from "./constants.js";
+import { ESIMWallet } from "../abis/index.js";
 import { _defaultPriceCapUSDCents } from "./registry.js";
+import { _acceptAndBindESIMWalletCalls, _buyDataBundleWithTransferCalls } from "./calls/eSIMWallet.calls.js";
 
 // Not exposed on this surface:
 //   - populateHistory and setESIMUniqueIdentifier are `onlyRegistry` - callable
@@ -83,6 +83,7 @@ export const _buyDataBundleWithToken = async (
  *
  * Only the shortfall is sent: the quote for the bundle minus what this eSIM
  * wallet already holds of `asset`. Arguments are as for `buyDataBundleWithToken`.
+ * The backend builds the same calls with `admin.calls.buyDataBundleWithTransfer`.
  */
 export const _buyDataBundleWithTransfer = async (
     client: KokioSmartAccountClient,
@@ -93,46 +94,11 @@ export const _buyDataBundleWithTransfer = async (
     paymentReference: Hex
 ) => {
 
-    const chainID = await _chainId(client);
-	const rpcURL = client.transport.url;
-	const values = _getChainSpecificConstants(chainID, rpcURL);
-
     if(!client.account) throw new MissingSmartWalletError()
-
-    // The eSIM wallet pays through whichever adapter the registry names, so read it there.
-    const adapter = await client.readContract({
-        address: values.factoryAddresses.REGISTRY, abi: Registry, functionName: "paymentAdapter"
-    }) as Address;
-    const [{ token }, amountIn] = await Promise.all([
-        client.readContract({
-            address: adapter, abi: PaymentAdapter, functionName: "resolveAsset", args: [asset]
-        }) as Promise<{ token: Address }>,
-        client.readContract({
-            address: adapter, abi: PaymentAdapter, functionName: "quote", args: [asset, dataBundleDetails.priceUSDCents]
-        }) as Promise<bigint>,
-    ]);
-    const held = await client.readContract({
-        address: token, abi: erc20Abi, functionName: "balanceOf", args: [address]
-    });
-
-    const buy = {
-        to: address,
-        data: encodeFunctionData({
-            abi: ESIMWallet,
-            functionName: "buyDataBundleWithToken",
-            args: [dataBundleDetails, asset, maxAmountIn, paymentReference]
-        })
-    };
 
     return client.sendUserOperation({
         account: client.account,
-        calls: held >= amountIn ? [buy] : [
-            {
-                to: token,
-                data: encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [address, amountIn - held] })
-            },
-            buy
-        ]
+        calls: await _buyDataBundleWithTransferCalls(client, address, dataBundleDetails, asset, maxAmountIn, paymentReference)
     });
 }
 
@@ -269,7 +235,24 @@ export const _acceptOwnershipTransfer = async (client: KokioSmartAccountClient, 
     });
 }
 
-export const _sendETHToDeviceWallet = async (client: KokioSmartAccountClient, address: Address, amount: bigint) => {
+/**
+ * Accept an eSIM wallet another device wallet asked to hand over, and bind it,
+ * in one user operation. `grantAccessToFunds` also lets it pull this device
+ * wallet's tokens. The backend builds the same calls with
+ * `admin.calls.acceptAndBindESIMWallet`.
+ */
+export const _acceptAndBindESIMWallet = async (client: KokioSmartAccountClient, address: Address, grantAccessToFunds: boolean) => {
+
+    if(!client.account) throw new MissingSmartWalletError()
+
+    // UserOp - the sender is the pending `newRequestedOwner`, and then the owner the bind needs.
+    return client.sendUserOperation({
+        account: client.account,
+        calls: _acceptAndBindESIMWalletCalls(address, client.account.address, grantAccessToFunds)
+    });
+}
+
+export const _sendETHToDeviceWallet =async (client: KokioSmartAccountClient, address: Address, amount: bigint) => {
 
     if(!client.account) throw new MissingSmartWalletError()
 

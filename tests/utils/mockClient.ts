@@ -71,9 +71,11 @@ const SENT_USER_OP = "0xuserophash" as const;
 export const makeMockSmartAccountClient = (opts?: {
   chainId?: number;
   withAccount?: boolean;
+  /** Per-function read results, for logic that reads before it sends. */
+  reads?: Record<string, unknown>;
 }): KokioSmartAccountClient => {
   // Base Sepolia: the only chain with a configured address book.
-  const { chainId = 84532, withAccount = true } = opts ?? {};
+  const { chainId = 84532, withAccount = true, reads } = opts ?? {};
 
   return {
     getChainId: async () => chainId,
@@ -83,6 +85,7 @@ export const makeMockSmartAccountClient = (opts?: {
       : undefined,
     sendUserOperation: vi.fn(async () => SENT_USER_OP),
     // `view` calls are issued via readContract (PublicActions), not userOps.
-    readContract: vi.fn(async () => "0xreadresult"),
+    readContract: vi.fn(async ({ functionName }: { functionName: string }) =>
+      reads && functionName in reads ? reads[functionName] : "0xreadresult"),
   } as unknown as KokioSmartAccountClient;
 };

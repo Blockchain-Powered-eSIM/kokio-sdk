@@ -1,5 +1,6 @@
 import { Address, Hex } from "viem";
 import {
+    _acceptAndBindESIMWallet,
     _acceptOwnershipTransfer,
     _buyDataBundleWithToken,
     _buyDataBundleWithTransfer,
@@ -27,6 +28,15 @@ export class ESIMWalletSubPackage {
 
     acceptOwnershipTransfer () {
         return _acceptOwnershipTransfer(this.client, this.address);
+    }
+
+    /**
+     * Accept this eSIM wallet's transfer and bind it to the signing device
+     * wallet in one user operation, optionally granting it access to that
+     * wallet's tokens too.
+     */
+    acceptAndBindESIMWallet (options: { grantAccessToFunds?: boolean } = {}) {
+        return _acceptAndBindESIMWallet(this.client, this.address, options.grantAccessToFunds ?? false);
     }
 
     buyDataBundleWithToken (dataBundleDetails: DataBundleDetails, asset: Hex, maxAmountIn: bigint, paymentReference: Hex) {

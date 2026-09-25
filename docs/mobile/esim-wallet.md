@@ -57,6 +57,8 @@ The same purchase as `buyDataBundleWithToken`, for when the eSIM wallet has no a
 
 The device wallet must hold enough of the asset's token. It sends only the shortfall, so tokens already on the eSIM wallet are used first.
 
+When the backend builds these calls with [`admin.calls.buyDataBundleWithTransfer`](../admin/calls.md), sign what it returns with `kokio.deviceWallet!.sendUserOperation(calls)` instead.
+
 ```ts
 const hash = await kokio.eSIMWallet!.buyDataBundleWithTransfer(
   dataBundleDetails, asset, maxAmountIn, paymentReference,
@@ -113,6 +115,19 @@ const hash = await kokio.eSIMWallet!.acceptOwnershipTransfer();
 ```
 
 Returns: `Promise<Hash>`.
+
+## acceptAndBindESIMWallet
+
+Accepts the transfer and adds the eSIM wallet to this device wallet's list, in one user operation and one passkey prompt. Use it instead of `acceptOwnershipTransfer` followed by `deviceWallet.addESIMWallet`. Pass `grantAccessToFunds: true` to also let the eSIM wallet pull tokens from this device wallet.
+
+```ts
+kokio.setESIMWalletAddress(eSIMWalletAddress);
+const hash = await kokio.eSIMWallet!.acceptAndBindESIMWallet({ grantAccessToFunds: true });
+```
+
+When the backend builds these calls with [`admin.calls.acceptAndBindESIMWallet`](../admin/calls.md), sign what it returns with `kokio.deviceWallet!.sendUserOperation(calls)` instead.
+
+Returns: `Promise<Hash>`, a user operation hash.
 
 ## sendETHToDeviceWallet
 

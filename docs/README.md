@@ -49,6 +49,8 @@ ordinary transaction, no bundler or passkey involved.
   they had one, and copy their purchase history in.
 - [Payment adapter](admin/payment-adapter.md), `admin.paymentAdapter`. Manage
   the currencies data bundle purchases can be paid in.
+- [Calls](admin/calls.md), `admin.calls`. Build the calls a device wallet
+  signs as one user operation, for the app to sign.
 - [Protocol admin](admin/protocol-admin.md), `admin.protocolAdmin`. The
   timelock that owns the contracts above. Schedule, execute, and cancel
   delayed admin calls.

@@ -121,6 +121,42 @@ describe("KokioAdmin setters", () => {
   });
 });
 
+describe("KokioAdmin calls", () => {
+  const TOKEN = "0x0000000000000000000000000000000000706b31" as Address;
+  const bundle = { id: "0x0000000000000000000000000000000000000000000000000000000000000001" as Hex, priceUSDCents: 1000n, settlement: 0 };
+  const asset = "0x5553444300000000000000000000000000000000000000000000000000000000" as Hex;
+  const ref = "0x000000000000000000000000000000000000000000000000000000000000ee11" as Hex;
+  const reads = { paymentAdapter: DEVICE_B, resolveAsset: { token: TOKEN }, quote: 100n, balanceOf: 40n };
+
+  it("builds buyDataBundleWithTransfer for the app to sign, sending nothing itself", async () => {
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA, reads });
+    const calls = await new KokioAdmin(client).calls.buyDataBundleWithTransfer(ESIM_A, bundle, asset, 100n, ref);
+
+    expect(calls.map((c) => c.to)).toEqual([TOKEN, ESIM_A]);
+    expect(client.writeContract).not.toHaveBeenCalled();
+  });
+
+  it("builds acceptAndBindESIMWallet for the new device wallet, reading and sending nothing", () => {
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
+    const admin = new KokioAdmin(client);
+
+    expect(admin.calls.acceptAndBindESIMWallet(ESIM_A, DEVICE_B).map((c) => c.to)).toEqual([ESIM_A, DEVICE_B]);
+    expect(admin.calls.acceptAndBindESIMWallet(ESIM_A, DEVICE_B, { grantAccessToFunds: true })).toHaveLength(3);
+    expect(client.readContract).not.toHaveBeenCalled();
+    expect(client.writeContract).not.toHaveBeenCalled();
+  });
+
+  it("builds through the new client after setWalletClient", async () => {
+    const first = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA, reads });
+    const second = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA, reads });
+    const admin = new KokioAdmin(first).setWalletClient(second);
+
+    await admin.calls.buyDataBundleWithTransfer(ESIM_A, bundle, asset, 100n, ref);
+    expect(first.readContract).not.toHaveBeenCalled();
+    expect(second.readContract).toHaveBeenCalled();
+  });
+});
+
 describe("KokioAdmin constants", () => {
   it("resolves chain-specific constants for the connected chain, with no Pimlico key", async () => {
     const admin = new KokioAdmin(makeMockWalletClient({ chainId: CHAIN_ID, account: EOA }));
