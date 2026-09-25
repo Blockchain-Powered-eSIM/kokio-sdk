@@ -238,7 +238,8 @@ export const _acceptOwnershipTransfer = async (client: KokioSmartAccountClient, 
 /**
  * Accept an eSIM wallet another device wallet asked to hand over, and bind it,
  * in one user operation. `grantAccessToFunds` also lets it pull this device
- * wallet's tokens.
+ * wallet's tokens. The backend builds the same calls with
+ * `admin.calls.acceptAndBindESIMWallet`.
  */
 export const _acceptAndBindESIMWallet = async (client: KokioSmartAccountClient, address: Address, grantAccessToFunds: boolean) => {
 

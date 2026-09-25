@@ -1,6 +1,6 @@
 import { Address, Hex, WalletClient, publicActions } from "viem";
 import { DataBundleDetails } from "../../types.js";
-import { _buyDataBundleWithTransferCalls } from "../../logic/calls/eSIMWallet.calls.js";
+import { _acceptAndBindESIMWalletCalls, _buyDataBundleWithTransferCalls } from "../../logic/calls/eSIMWallet.calls.js";
 
 /**
  * Builds the calls a user's device wallet signs as one user operation. Nothing
@@ -23,5 +23,14 @@ export class AdminCallsSubPackage {
      */
     buyDataBundleWithTransfer(eSIMWalletAddress: Address, dataBundleDetails: DataBundleDetails, asset: Hex, maxAmountIn: bigint, paymentReference: Hex) {
         return _buyDataBundleWithTransferCalls(this.walletClient.extend(publicActions), eSIMWalletAddress, dataBundleDetails, asset, maxAmountIn, paymentReference);
+    }
+
+    /**
+     * The calls `kokio.eSIMWallet.acceptAndBindESIMWallet` sends, for the device
+     * wallet named in `requestTransferOwnership` to sign. Build them once the
+     * `OwnershipTransferRequested` event names that device wallet as `_newOwner`.
+     */
+    acceptAndBindESIMWallet(eSIMWalletAddress: Address, newDeviceWalletAddress: Address, options: { grantAccessToFunds?: boolean } = {}) {
+        return _acceptAndBindESIMWalletCalls(eSIMWalletAddress, newDeviceWalletAddress, options.grantAccessToFunds ?? false);
     }
 }

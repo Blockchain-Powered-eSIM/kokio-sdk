@@ -136,6 +136,16 @@ describe("KokioAdmin calls", () => {
     expect(client.writeContract).not.toHaveBeenCalled();
   });
 
+  it("builds acceptAndBindESIMWallet for the new device wallet, reading and sending nothing", () => {
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
+    const admin = new KokioAdmin(client);
+
+    expect(admin.calls.acceptAndBindESIMWallet(ESIM_A, DEVICE_B).map((c) => c.to)).toEqual([ESIM_A, DEVICE_B]);
+    expect(admin.calls.acceptAndBindESIMWallet(ESIM_A, DEVICE_B, { grantAccessToFunds: true })).toHaveLength(3);
+    expect(client.readContract).not.toHaveBeenCalled();
+    expect(client.writeContract).not.toHaveBeenCalled();
+  });
+
   it("builds through the new client after setWalletClient", async () => {
     const first = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA, reads });
     const second = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA, reads });
