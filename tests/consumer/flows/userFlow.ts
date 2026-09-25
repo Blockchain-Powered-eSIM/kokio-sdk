@@ -295,6 +295,30 @@ export const describeUserFlow = (
     expect(await record(fiat, testBytes32("coin"), testBytes32(`rx2-${Date.now()}`))).toBe("AssetNotAllowed");
   }, timeout);
 
+  it("a top-up the backend builds as calls and the app signs", async () => {
+    const ref = testBytes32(`fb1-${Date.now()}`);
+    // Some is already in the eSIM wallet, so the device wallet sends only the rest.
+    const held = quote / 2n;
+    await target.fund(token, db.eSIMWallet, held);
+    await target.fund(token, db.deviceWallet, quote - held);
+
+    // Backend: the "buy" endpoint returns these calls to the app.
+    const calls = await admin.calls.buyDataBundleWithTransfer(db.eSIMWallet, bundle, asset, quote, ref);
+    expect(calls.map((call) => call.to)).toEqual([token, db.eSIMWallet]);
+
+    // App: signs the calls as given, without knowing what they do.
+    const receipt = await sponsored("backend-built", () => session.deviceWallet!.sendUserOperation(calls));
+
+    // Backend: the purchase event is what its webhook receives.
+    const [event] = await target.publicClient.getContractEvents({
+      address: db.eSIMWallet, abi: ESIMWallet, eventName: "DataBundleBoughtWithToken",
+      args: { _paymentReference: ref }, fromBlock: receipt.receipt.blockNumber,
+    });
+    expect(event.args).toMatchObject({ _dataBundleID: bundle.id, _asset: asset, _token: token, _amountSpent: quote });
+    expect(await balanceOf(token, db.deviceWallet)).toBe(0n);
+    expect(await balanceOf(token, db.eSIMWallet)).toBe(0n);
+  }, timeout);
+
   const link = (hash: Hex) => (target.explorerTx ? `${target.explorerTx}${hash}` : hash);
   const log = (step: string, message: string) => console.log(`[step ${step}] ${message}`);
 
