@@ -6,6 +6,7 @@ import { ESIMWallet } from "kokio-sdk/abis";
 import { Settlement, type DataBundleDetails } from "kokio-sdk/types";
 
 import type { FlowTarget } from "./userFlow.js";
+import { asPasskey } from "../fixtures/passkeyAuthenticator.js";
 import { expectSponsored } from "../fixtures/sponsorship.js";
 import { createTestUser, type TestUser } from "../fixtures/user.js";
 import { testBytes32 } from "../fixtures/testLabels.js";
@@ -143,11 +144,7 @@ export const describeLazyWalletDeployFlow = (
 
   it(`each eSIM wallet holds exactly its own purchases, in order, ${TOTAL_PURCHASES} in all`, async () => {
     for (const [e, wallet] of eSIMWallets.entries()) {
-      for (const [n, expected] of history[e].entries()) {
-        expect(await readHistory(wallet, BigInt(n)), `eSIM ${e} entry ${n}`).toEqual(expected);
-      }
-      // Nothing past the end: the contract has no length getter, so this is how to count.
-      await expect(readHistory(wallet, BigInt(history[e].length))).rejects.toThrow();
+      expect(await readAllHistory(wallet), `eSIM ${e}`).toEqual(history[e]);
     }
   }, timeout);
 
@@ -160,27 +157,136 @@ export const describeLazyWalletDeployFlow = (
   }, timeout);
 
   it("the user's passkey buys a new bundle on the lazily deployed wallet", async () => {
-    const asset = stringToHex("USDC", { size: 32 });
-    const bundle = { id: testBytes32("lz-after"), priceUSDCents: target.priceUSDCents, settlement: Settlement.DeviceWallet };
-    const ref = testBytes32(`lza-${Date.now()}`);
+    const bundle = await buy(user, eSIMWallets[0], "lz-after");
 
-    user.kokio.setESIMWalletAddress(eSIMWallets[0]);
-    const { token } = await user.kokio.paymentAdapter!.resolveAsset(asset);
-    const quote = await user.kokio.paymentAdapter!.quote(asset, bundle.priceUSDCents);
-    await target.fund(token, user.deviceWallet, quote);
+    // Lands after the copied history, not in front of it.
+    expect(await readAllHistory(eSIMWallets[0])).toEqual([...history[0], bundle]);
+  }, timeout);
 
-    const receipt = await expectSponsored(user.client, target.publicClient,
-      () => user.kokio.eSIMWallet!.buyDataBundleWithTransfer(bundle, asset, quote, ref), { confirmations: target.confirmations });
+  const newESIMWallets: Address[] = [];
+
+  it("the device wallet buys 2 more eSIMs, each with a first bundle", async () => {
+    // Salts the lazy deploy never used: it took the device's own salt and the 19 after it.
+    for (const salt of [1n, 2n]) {
+      let eSIMWallet!: Address;
+      await sponsored(user, async () => {
+        const result = await user.kokio.deviceWallet!.deployAndBindESIMWallet(salt);
+        eSIMWallet = result.eSIMWalletAddress;
+        return result.userOpHash;
+      });
+      expect(eSIMWallets).not.toContain(eSIMWallet);
+
+      const bundle = await buy(user, eSIMWallet, `lz-new-${salt}`);
+      const eSIMId = `${user.uid}-n${salt}`;
+      await waitFor(await admin.registry.assignESIMIdentifier(eSIMWallet, eSIMId));
+
+      expect(await readESIMWallet(eSIMWallet, "eSIMUniqueIdentifier")).toBe(eSIMId);
+      expect(await admin.registry.isESIMWalletValid(eSIMWallet)).toBe(user.deviceWallet);
+      expect(await readAllHistory(eSIMWallet)).toEqual([bundle]);
+      newESIMWallets.push(eSIMWallet);
+    }
+  }, timeout);
+
+  let next: TestUser;
+
+  it("another device is set up to take eSIMs over", async () => {
+    next = await createTestUser(target, passkeyGet);
+    await sponsored(next, () => next.kokio.deviceWallet!.sendUserOperation([]));
+    await waitFor(await admin.deviceWalletFactory.postCreateAccount(next.deviceWallet, next.uid, next.signer.ownerKey, next.salt));
+
+    expect(await admin.registry.isDeviceWalletValid(next.deviceWallet)).toBe(true);
+  }, timeout);
+
+  // The lazy eSIM with the longest history, and one bought after the deploy.
+  const moving = () => [eSIMWallets[0], newESIMWallets[0]];
+
+  it("the lazy eSIM with history and a new eSIM move to the other device, history intact", async () => {
+    for (const wallet of moving()) {
+      const [historyBefore, eSIMId] = await Promise.all([readAllHistory(wallet), readESIMWallet(wallet, "eSIMUniqueIdentifier")]);
+
+      as(user).kokio.setESIMWalletAddress(wallet);
+      await sponsored(user, () => user.kokio.eSIMWallet!.requestTransferOwnership(next.deviceWallet));
+      expect(await admin.registry.isESIMWalletOnStandby(wallet)).toBe(true);
+
+      as(next).kokio.setESIMWalletAddress(wallet);
+      await sponsored(next, () => next.kokio.eSIMWallet!.acceptAndBindESIMWallet());
+
+      expect(await readESIMWallet(wallet, "owner")).toBe(next.deviceWallet);
+      expect(await admin.registry.isESIMWalletValid(wallet)).toBe(next.deviceWallet);
+      expect(await admin.registry.isESIMWalletOnStandby(wallet)).toBe(false);
+      expect(await next.kokio.deviceWallet!.isValidESIMWallet(wallet)).toBe(true);
+      expect(await next.kokio.deviceWallet!.canPullFunds(wallet)).toBe(false);
+      expect(await user.kokio.deviceWallet!.isValidESIMWallet(wallet)).toBe(false);
+      // The eSIM and everything it bought travel with the wallet.
+      expect(await readESIMWallet(wallet, "eSIMUniqueIdentifier")).toBe(eSIMId);
+      expect(await readAllHistory(wallet)).toEqual(historyBefore);
+    }
+
+    // Every other eSIM stays with the first device.
+    for (const wallet of [...eSIMWallets.slice(1), newESIMWallets[1]]) {
+      expect(await admin.registry.isESIMWalletValid(wallet)).toBe(user.deviceWallet);
+    }
+  }, timeout);
+
+  it("the new device buys on the moved eSIMs, and the old device no longer can", async () => {
+    for (const wallet of moving()) {
+      const historyBefore = await readAllHistory(wallet);
+      const bundle = await buy(next, wallet, "lz-moved");
+      expect(await readAllHistory(wallet)).toEqual([...historyBefore, bundle]);
+
+      as(user).kokio.setESIMWalletAddress(wallet);
+      const quote = await user.kokio.paymentAdapter!.quote(USDC, bundle.priceUSDCents);
+      const err = await user.kokio.eSIMWallet!.buyDataBundleWithToken(bundle, USDC, quote, nextRef()).then(() => undefined, (e: unknown) => e);
+      expect(err).toBeInstanceOf(ContractRevertError);
+      expect((err as ContractRevertError).decoded?.errorName).toBe("OnlyDeviceWalletOrESIMWalletAdmin");
+    }
+  }, timeout);
+
+  const USDC = stringToHex("USDC", { size: 32 });
+  // Payment references are spendable once per eSIM wallet, so each purchase gets its own.
+  const RUN = Date.now().toString(36);
+  let refs = 0;
+  const nextRef = () => testBytes32(`r${++refs}-${RUN}`);
+
+  // Points the mocked passkey at this user, as their own phone would sign.
+  const as = (who: TestUser) => {
+    passkeyGet.mockImplementation(asPasskey(who.signer));
+    return who;
+  };
+
+  const sponsored = (who: TestUser, send: () => Promise<Hex>) =>
+    expectSponsored(who.client, target.publicClient, send, { confirmations: target.confirmations });
+
+  // A purchase paid in USDC the device wallet sends over in the same operation.
+  const buy = async (buyer: TestUser, eSIMWallet: Address, bundleName: string): Promise<DataBundleDetails> => {
+    const bundle = { id: testBytes32(bundleName), priceUSDCents: target.priceUSDCents, settlement: Settlement.DeviceWallet };
+    const ref = nextRef();
+
+    as(buyer).kokio.setESIMWalletAddress(eSIMWallet);
+    const { token } = await buyer.kokio.paymentAdapter!.resolveAsset(USDC);
+    const quote = await buyer.kokio.paymentAdapter!.quote(USDC, bundle.priceUSDCents);
+    await target.fund(token, buyer.deviceWallet, quote);
+
+    const receipt = await sponsored(buyer, () => buyer.kokio.eSIMWallet!.buyDataBundleWithTransfer(bundle, USDC, quote, ref));
 
     const [event] = await target.publicClient.getContractEvents({
-      address: eSIMWallets[0], abi: ESIMWallet, eventName: "DataBundleBoughtWithToken",
+      address: eSIMWallet, abi: ESIMWallet, eventName: "DataBundleBoughtWithToken",
       args: { _paymentReference: ref }, fromBlock: receipt.receipt.blockNumber,
     });
     expect(event.args).toMatchObject({ _dataBundleID: bundle.id, _token: token, _amountSpent: quote });
-    // Lands after the copied history, not in front of it.
-    expect(await readHistory(eSIMWallets[0], BigInt(PURCHASES_PER_ESIM[0]))).toEqual(bundle);
-    expect(await target.publicClient.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [user.deviceWallet] })).toBe(0n);
-  }, timeout);
+    expect(await target.publicClient.readContract({ address: token, abi: erc20Abi, functionName: "balanceOf", args: [buyer.deviceWallet] })).toBe(0n);
+    return bundle;
+  };
+
+  // The contract has no length getter, so read upwards until an index reverts.
+  const readAllHistory = async (address: Address): Promise<DataBundleDetails[]> => {
+    const entries: DataBundleDetails[] = [];
+    for (;;) {
+      const entry = await readHistory(address, BigInt(entries.length)).catch(() => undefined);
+      if (!entry) return entries;
+      entries.push(entry);
+    }
+  };
 
   const waitFor = async (hash: Hex) => {
     const receipt = await target.publicClient.waitForTransactionReceipt({ hash, confirmations: target.confirmations });
