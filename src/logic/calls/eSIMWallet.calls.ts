@@ -1,6 +1,6 @@
 import { Address, Client, Hex, PublicActions, encodeFunctionData, erc20Abi } from "viem";
 import { Call, DataBundleDetails } from "../../types.js";
-import { ESIMWallet, PaymentAdapter, Registry } from "../../abis/index.js";
+import { DeviceWallet, ESIMWallet, PaymentAdapter, Registry } from "../../abis/index.js";
 import { _chainId, _getChainSpecificConstants } from "../constants.js";
 
 // Builds the calls a device wallet signs as one user operation, without sending
@@ -65,5 +65,35 @@ export const _buyDataBundleWithTransferCalls = async (
             data: encodeFunctionData({ abi: erc20Abi, functionName: "transfer", args: [eSIMWalletAddress, amountIn - held] })
         },
         buy
+    ];
+}
+
+/**
+ * The calls for the new device wallet to take over an eSIM wallet another
+ * device wallet asked to hand it: accept the transfer, then bind it, which also
+ * tells the registry and clears the standby flag.
+ *
+ * Accepting first is what lets the bind through: it makes this device wallet
+ * the owner and clears the pending transfer. Fund access cannot be granted at
+ * bind time, so `grantAccessToFunds` adds a `toggleAccessToFunds` after it.
+ */
+export const _acceptAndBindESIMWalletCalls = (
+    eSIMWalletAddress: Address,
+    deviceWalletAddress: Address,
+    grantAccessToFunds: boolean
+): Call[] => {
+
+    const self = (functionName: "addESIMWallet" | "toggleAccessToFunds", hasAccessToFunds: boolean) => ({
+        to: deviceWalletAddress,
+        data: encodeFunctionData({ abi: DeviceWallet, functionName, args: [eSIMWalletAddress, hasAccessToFunds] })
+    });
+
+    return [
+        {
+            to: eSIMWalletAddress,
+            data: encodeFunctionData({ abi: ESIMWallet, functionName: "acceptOwnershipTransfer", args: [] })
+        },
+        self("addESIMWallet", false),
+        ...(grantAccessToFunds ? [self("toggleAccessToFunds", true)] : [])
     ];
 }

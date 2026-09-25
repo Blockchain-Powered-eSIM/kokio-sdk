@@ -4,7 +4,7 @@ import { KokioSmartAccountClient } from "../types.js";
 import { MissingSmartWalletError } from "./errors.js";
 import { ESIMWallet } from "../abis/index.js";
 import { _defaultPriceCapUSDCents } from "./registry.js";
-import { _buyDataBundleWithTransferCalls } from "./calls/eSIMWallet.calls.js";
+import { _acceptAndBindESIMWalletCalls, _buyDataBundleWithTransferCalls } from "./calls/eSIMWallet.calls.js";
 
 // Not exposed on this surface:
 //   - populateHistory and setESIMUniqueIdentifier are `onlyRegistry` - callable
@@ -235,7 +235,23 @@ export const _acceptOwnershipTransfer = async (client: KokioSmartAccountClient, 
     });
 }
 
-export const _sendETHToDeviceWallet = async (client: KokioSmartAccountClient, address: Address, amount: bigint) => {
+/**
+ * Accept an eSIM wallet another device wallet asked to hand over, and bind it,
+ * in one user operation. `grantAccessToFunds` also lets it pull this device
+ * wallet's tokens.
+ */
+export const _acceptAndBindESIMWallet = async (client: KokioSmartAccountClient, address: Address, grantAccessToFunds: boolean) => {
+
+    if(!client.account) throw new MissingSmartWalletError()
+
+    // UserOp - the sender is the pending `newRequestedOwner`, and then the owner the bind needs.
+    return client.sendUserOperation({
+        account: client.account,
+        calls: _acceptAndBindESIMWalletCalls(address, client.account.address, grantAccessToFunds)
+    });
+}
+
+export const _sendETHToDeviceWallet =async (client: KokioSmartAccountClient, address: Address, amount: bigint) => {
 
     if(!client.account) throw new MissingSmartWalletError()
 

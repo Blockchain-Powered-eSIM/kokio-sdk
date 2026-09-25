@@ -3,10 +3,14 @@ import { encodeFunctionData, erc20Abi, type Address, type Hex } from "viem";
 
 import { makeMockSmartAccountClient, makeMockWalletClient } from "../../utils/mockClient.js";
 import { baseSepoliaFactoryAddresses } from "../../../src/logic/constants.js";
-import { ESIMWallet } from "../../../src/abis/index.js";
+import { DeviceWallet, ESIMWallet } from "../../../src/abis/index.js";
 import { Settlement, type DataBundleDetails } from "../../../src/types.js";
-import { _buyDataBundleWithTransferCalls, type CallBuilderClient } from "../../../src/logic/calls/eSIMWallet.calls.js";
-import { _buyDataBundleWithTransfer } from "../../../src/logic/eSIMWallet.js";
+import {
+  _acceptAndBindESIMWalletCalls,
+  _buyDataBundleWithTransferCalls,
+  type CallBuilderClient,
+} from "../../../src/logic/calls/eSIMWallet.calls.js";
+import { _acceptAndBindESIMWallet, _buyDataBundleWithTransfer } from "../../../src/logic/eSIMWallet.js";
 
 const ESIM = "0x00000000000000000000000000000000000e51a1" as Address;
 const ADAPTER = "0x00000000000000000000000000000000000ada91" as Address;
@@ -60,6 +64,37 @@ describe("_buyDataBundleWithTransferCalls", () => {
     expect(calls.find((c) => c.functionName === "resolveAsset")).toMatchObject({ address: ADAPTER, args: [ASSET] });
     expect(calls.find((c) => c.functionName === "quote")).toMatchObject({ address: ADAPTER, args: [ASSET, BUNDLE.priceUSDCents] });
     expect(calls.find((c) => c.functionName === "balanceOf")).toMatchObject({ address: TOKEN, args: [ESIM] });
+  });
+});
+
+const DEVICE = "0x000000000000000000000000000000000000acc7" as Address;
+const ACCEPT = { to: ESIM, data: encodeFunctionData({ abi: ESIMWallet, functionName: "acceptOwnershipTransfer", args: [] }) };
+const BIND = { to: DEVICE, data: encodeFunctionData({ abi: DeviceWallet, functionName: "addESIMWallet", args: [ESIM, false] }) };
+const GRANT = { to: DEVICE, data: encodeFunctionData({ abi: DeviceWallet, functionName: "toggleAccessToFunds", args: [ESIM, true] }) };
+
+describe("_acceptAndBindESIMWalletCalls", () => {
+  it("accepts the transfer before binding, since the bind needs this device wallet to own it", () => {
+    expect(_acceptAndBindESIMWalletCalls(ESIM, DEVICE, false)).toEqual([ACCEPT, BIND]);
+  });
+
+  it("grants fund access after the bind when asked", () => {
+    expect(_acceptAndBindESIMWalletCalls(ESIM, DEVICE, true)).toEqual([ACCEPT, BIND, GRANT]);
+  });
+});
+
+describe("eSIMWallet._acceptAndBindESIMWallet", () => {
+  // The mock smart account signs as DEVICE.
+  it("binds to the signing device wallet", async () => {
+    const client = makeMockSmartAccountClient();
+    await _acceptAndBindESIMWallet(client, ESIM, true);
+
+    const send = client.sendUserOperation as unknown as ReturnType<typeof vi.fn>;
+    expect(send.mock.calls[0][0]).toEqual({ account: client.account, calls: [ACCEPT, BIND, GRANT] });
+  });
+
+  it("throws MISSING_SMART_WALLET without an account", async () => {
+    const client = makeMockSmartAccountClient({ withAccount: false });
+    await expect(_acceptAndBindESIMWallet(client, ESIM, false)).rejects.toThrow(/smart wallet/i);
   });
 });
 
