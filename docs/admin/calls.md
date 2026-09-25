@@ -45,3 +45,25 @@ The shortfall is worked out from the eSIM wallet's balance and the quote when th
 The purchase emits `DataBundleBoughtWithToken` on the eSIM wallet, the same event as a plain `buyDataBundleWithToken`, so a webhook filtering on that event and `_paymentReference` needs no change.
 
 Returns: `Promise<Call[]>`, one or two `{ to, data }` entries.
+
+## acceptAndBindESIMWallet
+
+Builds the calls a new device wallet signs to take over an eSIM wallet: `acceptOwnershipTransfer` on the eSIM wallet, then `addESIMWallet` on the new device wallet, which also updates the registry and clears the standby flag. Pass `grantAccessToFunds: true` to add a `toggleAccessToFunds` after the bind. These are the same calls as `kokio.eSIMWallet.acceptAndBindESIMWallet`.
+
+Build them when the old device's `requestTransferOwnership` emits `OwnershipTransferRequested` on the eSIM wallet. Its `_newOwner` is the device wallet that has to sign, and the new device wallet must already be registered with `admin.deviceWalletFactory.postCreateAccount`.
+
+```ts
+// Backend, when the webhook delivers OwnershipTransferRequested(_currentOwner, _newOwner)
+const calls = admin.calls.acceptAndBindESIMWallet(
+  eSIMWalletAddress,
+  newDeviceWalletAddress, // _newOwner
+  { grantAccessToFunds: true },
+);
+
+// App, on the new device
+const userOpHash = await kokio.deviceWallet!.sendUserOperation(calls);
+```
+
+The operation reverts if any other device wallet signs it, or if the old device cancelled the transfer first.
+
+Returns: `Call[]`, two or three `{ to, data }` entries. Nothing is read, so this one is synchronous.

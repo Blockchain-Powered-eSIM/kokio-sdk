@@ -116,6 +116,19 @@ const hash = await kokio.eSIMWallet!.acceptOwnershipTransfer();
 
 Returns: `Promise<Hash>`.
 
+## acceptAndBindESIMWallet
+
+Accepts the transfer and adds the eSIM wallet to this device wallet's list, in one user operation and one passkey prompt. Use it instead of `acceptOwnershipTransfer` followed by `deviceWallet.addESIMWallet`. Pass `grantAccessToFunds: true` to also let the eSIM wallet pull tokens from this device wallet.
+
+```ts
+kokio.setESIMWalletAddress(eSIMWalletAddress);
+const hash = await kokio.eSIMWallet!.acceptAndBindESIMWallet({ grantAccessToFunds: true });
+```
+
+When the backend builds these calls with [`admin.calls.acceptAndBindESIMWallet`](../admin/calls.md), sign what it returns with `kokio.deviceWallet!.sendUserOperation(calls)` instead.
+
+Returns: `Promise<Hash>`, a user operation hash.
+
 ## sendETHToDeviceWallet
 
 Sends ETH held by this eSIM wallet back to its owning device wallet. Data
