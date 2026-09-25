@@ -57,6 +57,8 @@ The same purchase as `buyDataBundleWithToken`, for when the eSIM wallet has no a
 
 The device wallet must hold enough of the asset's token. It sends only the shortfall, so tokens already on the eSIM wallet are used first.
 
+When the backend builds these calls with [`admin.calls.buyDataBundleWithTransfer`](../admin/calls.md), sign what it returns with `kokio.deviceWallet!.sendUserOperation(calls)` instead.
+
 ```ts
 const hash = await kokio.eSIMWallet!.buyDataBundleWithTransfer(
   dataBundleDetails, asset, maxAmountIn, paymentReference,
