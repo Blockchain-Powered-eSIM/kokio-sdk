@@ -173,6 +173,9 @@ export const describeLazyWalletDeployFlow = (
   it("7. running the deploy and the copy again sends nothing", async () => {
     const deployAgain = await admin.lazyWalletRegistry.deployLazyWalletAndSetESIMIdentifier(user.signer.ownerKey, user.uid, user.salt, 0n);
     expect(deployAgain).toMatchObject({ deviceWallet: user.deviceWallet, alreadyComplete: true, batches: [] });
+    // Still lists all 20, so a backend retrying after a crash copies every eSIM.
+    expect(deployAgain.eSIMWallets).toEqual(eSIMWallets);
+    expect(deployAgain.eSIMIdentifiers).toEqual(eSIMIds);
 
     const copyAgain = await admin.lazyWalletRegistry.setHistoryForLazyWallet(eSIMIds[0]);
     expect(copyAgain).toMatchObject({ eSIMWallet: eSIMWallets[0], copied: 0n, alreadyComplete: true });
