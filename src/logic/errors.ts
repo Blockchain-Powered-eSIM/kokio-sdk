@@ -273,6 +273,24 @@ export class TransactionRevertedError extends KokioError {
     }
 }
 
+/**
+ * A receipt passed in is from a block the chain no longer has at that height,
+ * so it was reorged out. The payment may have landed again elsewhere.
+ */
+export class ReceiptNotCanonicalError extends KokioError {
+    readonly hash: Hex;
+    readonly blockHash: Hex;
+
+    constructor(hash: Hex, blockHash: Hex) {
+        super(
+            "RECEIPT_NOT_CANONICAL",
+            `The receipt for ${hash} is from block ${blockHash}, which is no longer on the chain. Check again by hash.`,
+        );
+        this.hash = hash;
+        this.blockHash = blockHash;
+    }
+}
+
 /** The address does not answer `decimals()` and `totalSupply()` like an ERC-20. */
 export class NotAnERC20TokenError extends KokioError {
     readonly token: string;

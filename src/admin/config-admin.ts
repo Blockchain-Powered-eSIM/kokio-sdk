@@ -34,6 +34,7 @@ export {
     NotAProtocolESIMWalletError,
     UnknownTransactionError,
     TransactionRevertedError,
+    ReceiptNotCanonicalError,
     NotAnERC20TokenError,
     UnmatchedPaymentEventsError,
     PriceOutOfRangeError,
