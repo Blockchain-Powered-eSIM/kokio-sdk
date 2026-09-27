@@ -15,7 +15,10 @@ export type {
     LazyDeploymentBatch,
     LazyDeployment,
     LazyHistoryBatch,
-    LazyHistoryCopy
+    LazyHistoryCopy,
+    ProtocolPayment,
+    ProtocolPaymentCheck,
+    ERC20TransferCheck
 } from './types.js';
 
 export type { KokioConstants } from './interface/constantsClass.js';

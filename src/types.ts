@@ -174,6 +174,33 @@ export type LazyHistoryCopy = {
     alreadyComplete: boolean;
 }
 
+/** One data bundle an eSIM wallet paid for through the protocol. */
+export type ProtocolPayment = {
+    /** The offchain order id the purchase spent. */
+    paymentReference: Hex;
+    dataBundleId: Hex;
+    /** 123456n is $1234.56. */
+    priceUSDCents: bigint;
+    /** What reached the vault, in the token's smallest unit. */
+    amountSpent: bigint;
+    vault: Address;
+}
+
+/** Every protocol purchase one eSIM wallet made in one transaction and currency. */
+export type ProtocolPaymentCheck = {
+    /** Total across `payments`, 0n if there were none. */
+    priceUSDCents: bigint;
+    payments: readonly ProtocolPayment[];
+}
+
+/** What one address sent another directly in one ERC-20, in one transaction. */
+export type ERC20TransferCheck = {
+    /** `amount` as cents, counting one token as one dollar and rounding down. */
+    priceUSDCents: bigint;
+    /** In the token's smallest unit, 0n if nothing was sent. */
+    amount: bigint;
+}
+
 export type SignedRequest = {
     body: string;
     stamp : {
