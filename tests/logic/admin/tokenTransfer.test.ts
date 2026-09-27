@@ -25,6 +25,7 @@ import {
   NotAProtocolESIMWalletError,
   NotAnERC20TokenError,
   PriceOutOfRangeError,
+  ReceiptNotCanonicalError,
   TokenNotAcceptedError,
   TransactionRevertedError,
   UnknownTransactionError,
@@ -68,7 +69,22 @@ const log = (address: Address, abi: Abi, eventName: string, args: Record<string,
   };
 };
 
-const receipt = (logs: unknown[], status = "success") => ({ status, transactionHash: HASH, logs }) as never;
+// Every receipt lands in block 100. The chain below has it finalized unless a test says otherwise.
+const BLOCK = 100n;
+const BLOCK_HASH = "0x00000000000000000000000000000000000000000000000000000000000b0c64" as Hex;
+const LANDED = { finality: "finalized", blockNumber: BLOCK, blockHash: BLOCK_HASH } as const;
+
+const receipt = (logs: unknown[], status = "success") =>
+  ({ status, transactionHash: HASH, blockNumber: BLOCK, blockHash: BLOCK_HASH, logs }) as never;
+
+type Chain = { safe: bigint; finalized: bigint; hashAt?: Hex };
+const chainReads = ({ safe, finalized, hashAt = BLOCK_HASH }: Chain) =>
+  ({ blockTag, blockNumber }: { blockTag?: string; blockNumber?: bigint }) => {
+    if (blockTag === "safe") return { number: safe };
+    if (blockTag === "finalized") return { number: finalized };
+    return { number: blockNumber, hash: hashAt };
+  };
+const FINAL_CHAIN: Chain = { safe: 190n, finalized: 150n };
 
 // One protocol purchase: the adapter settles, then the eSIM wallet records it.
 const purchase = (opts: { wallet?: Address; asset?: Hex; ref?: Hex; cents?: bigint; spent?: bigint } = {}) => {
@@ -86,16 +102,18 @@ const purchase = (opts: { wallet?: Address; asset?: Hex; ref?: Hex; cents?: bigi
 const transfer = (token: Address, from: Address, to: Address, value: bigint) =>
   log(token, erc20Abi, "Transfer", { from, to, value });
 
-const protocolClient = (reads: Record<string, unknown> = {}, getReceipt?: () => unknown) => makeMockWalletClient({
+const protocolClient = (reads: Record<string, unknown> = {}, getReceipt?: () => unknown, chain = FINAL_CHAIN) => makeMockWalletClient({
   chainId: CHAIN_ID,
   reads: { isESIMWalletValid: DEVICE, assets: [true, true, 6, TOKEN], ...reads },
   getReceipt,
+  getBlock: chainReads(chain),
 });
 
-const erc20Client = (reads: Record<string, unknown> = {}, getReceipt?: () => unknown) => makeMockWalletClient({
+const erc20Client = (reads: Record<string, unknown> = {}, getReceipt?: () => unknown, chain = FINAL_CHAIN) => makeMockWalletClient({
   chainId: CHAIN_ID,
   reads: { decimals: 6, totalSupply: 1_000_000n, ...reads },
   getReceipt,
+  getBlock: chainReads(chain),
 });
 
 // --- verifyProtocolPayment ---------------------------------------------------
@@ -106,6 +124,7 @@ describe("_verifyProtocolPayment", () => {
     expect(result).toEqual({
       priceUSDCents: 123_456n,
       payments: [{ paymentReference: REF_1, dataBundleId: BUNDLE, priceUSDCents: 123_456n, amountSpent: 1_234_560_000n, vault: VAULT }],
+      ...LANDED,
     });
   });
 
@@ -143,7 +162,7 @@ describe("_verifyProtocolPayment", () => {
 
   it("answers 0 cents and no payments when the wallet bought nothing", async () => {
     const result = await _verifyProtocolPayment(protocolClient(), receipt([transfer(TOKEN, ESIM, VAULT, 5n)]), SYMBOL, ESIM);
-    expect(result).toEqual({ priceUSDCents: 0n, payments: [] });
+    expect(result).toEqual({ priceUSDCents: 0n, payments: [], ...LANDED });
   });
 
   it("refuses events that do not pair up", async () => {
@@ -218,6 +237,49 @@ describe("_verifyProtocolPayment", () => {
   });
 });
 
+// --- Finality, for both checks -----------------------------------------------
+describe("how far the transaction's block has settled", () => {
+  const checks = [
+    // Each check is given a receipt, or a hash when one is passed.
+    ["_verifyProtocolPayment", (chain: Chain, hash?: Hex) =>
+      _verifyProtocolPayment(protocolClient({}, () => receipt(purchase()), chain), hash ?? receipt(purchase()), SYMBOL, ESIM)],
+    ["_verifyERC20Transfer", (chain: Chain, hash?: Hex) =>
+      _verifyERC20Transfer(erc20Client({}, () => receipt([]), chain), hash ?? receipt([]), TOKEN, SENDER, DESTINATION)],
+  ] as const;
+
+  describe.each(checks)("%s", (_, check) => {
+    it("reports latest, safe or finalized against the chain's own tags, inclusive", async () => {
+      expect(await check({ safe: 99n, finalized: 90n })).toMatchObject({ finality: "latest", blockNumber: BLOCK, blockHash: BLOCK_HASH });
+      expect((await check({ safe: 100n, finalized: 99n })).finality).toBe("safe");
+      expect((await check({ safe: 100n, finalized: 100n })).finality).toBe("finalized");
+    });
+
+    it("refuses a receipt passed in from a block since reorged out", async () => {
+      const reorged = { ...FINAL_CHAIN, hashAt: "0x00000000000000000000000000000000000000000000000000000000000000ff" as Hex };
+      await expect(check(reorged)).rejects.toBeInstanceOf(ReceiptNotCanonicalError);
+    });
+
+    it("trusts a receipt fetched by hash without reading its block again", async () => {
+      // A reorged block at that height would be caught if it were read, so passing proves it was not.
+      const reorged = { ...FINAL_CHAIN, hashAt: "0x00000000000000000000000000000000000000000000000000000000000000ff" as Hex };
+      expect((await check(reorged, HASH)).finality).toBe("finalized");
+    });
+  });
+
+  it("reads both tags before the receipt answers", async () => {
+    let answer!: (value: unknown) => void;
+    const client = erc20Client({}, () => new Promise((resolve) => { answer = resolve; }));
+    const pending = _verifyERC20Transfer(client, HASH, TOKEN, SENDER, DESTINATION);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(client.getBlock).toHaveBeenCalledWith({ blockTag: "safe" });
+    expect(client.getBlock).toHaveBeenCalledWith({ blockTag: "finalized" });
+    answer(receipt([]));
+
+    expect((await pending).finality).toBe("finalized");
+  });
+});
+
 // --- verifyERC20Transfer -----------------------------------------------------
 describe("_verifyERC20Transfer", () => {
   it("totals direct transfers from sender to destination and nothing else", async () => {
@@ -232,14 +294,14 @@ describe("_verifyERC20Transfer", () => {
     ];
     const result = await _verifyERC20Transfer(erc20Client(), receipt(logs), TOKEN, SENDER, DESTINATION);
 
-    expect(result).toEqual({ priceUSDCents: 150n, amount: 1_500_000n });
+    expect(result).toEqual({ priceUSDCents: 150n, amount: 1_500_000n, ...LANDED });
   });
 
   it("rounds cents down and scales any number of decimals", async () => {
     const one = (value: bigint) => receipt([transfer(TOKEN, SENDER, DESTINATION, value)]);
 
     expect(await _verifyERC20Transfer(erc20Client(), one(1_234_567n), TOKEN, SENDER, DESTINATION))
-      .toEqual({ priceUSDCents: 123n, amount: 1_234_567n });
+      .toMatchObject({ priceUSDCents: 123n, amount: 1_234_567n });
     expect((await _verifyERC20Transfer(erc20Client({ decimals: 18 }), one(12_345n * 10n ** 16n), TOKEN, SENDER, DESTINATION)).priceUSDCents)
       .toBe(12_345n);
     expect((await _verifyERC20Transfer(erc20Client({ decimals: 0 }), one(12n), TOKEN, SENDER, DESTINATION)).priceUSDCents)
@@ -248,7 +310,7 @@ describe("_verifyERC20Transfer", () => {
 
   it("answers 0 when nothing was sent", async () => {
     expect(await _verifyERC20Transfer(erc20Client(), receipt([]), TOKEN, SENDER, DESTINATION))
-      .toEqual({ priceUSDCents: 0n, amount: 0n });
+      .toEqual({ priceUSDCents: 0n, amount: 0n, ...LANDED });
   });
 
   it("refuses an address that does not answer like an ERC-20", async () => {

@@ -186,15 +186,28 @@ export type ProtocolPayment = {
     vault: Address;
 }
 
+/**
+ * How far a block has settled. `latest` can still be reorged out, `safe` only by
+ * an L1 reorg, and `finalized` not at all.
+ */
+export type Finality = "latest" | "safe" | "finalized";
+
+/** Where a checked transaction landed, to store and check again later. */
+export type TransactionFinality = {
+    finality: Finality;
+    blockNumber: bigint;
+    blockHash: Hex;
+}
+
 /** Every protocol purchase one eSIM wallet made in one transaction and currency. */
-export type ProtocolPaymentCheck = {
+export type ProtocolPaymentCheck = TransactionFinality & {
     /** Total across `payments`, 0n if there were none. */
     priceUSDCents: bigint;
     payments: readonly ProtocolPayment[];
 }
 
 /** What one address sent another directly in one ERC-20, in one transaction. */
-export type ERC20TransferCheck = {
+export type ERC20TransferCheck = TransactionFinality & {
     /** `amount` as cents, counting one token as one dollar and rounding down. */
     priceUSDCents: bigint;
     /** In the token's smallest unit, 0n if nothing was sent. */

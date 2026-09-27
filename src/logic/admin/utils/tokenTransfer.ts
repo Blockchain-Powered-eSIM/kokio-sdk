@@ -27,12 +27,13 @@ import {
     NotAProtocolESIMWalletError,
     NotAnERC20TokenError,
     PriceOutOfRangeError,
+    ReceiptNotCanonicalError,
     TokenNotAcceptedError,
     TransactionRevertedError,
     UnknownTransactionError,
     UnmatchedPaymentEventsError,
 } from "../../errors.js";
-import { ERC20TransferCheck, ProtocolPaymentCheck } from "../../../types.js";
+import { ERC20TransferCheck, Finality, ProtocolPaymentCheck } from "../../../types.js";
 
 // The contracts price everything in uint64 cents.
 const MAX_UINT64 = 2n ** 64n - 1n;
@@ -72,6 +73,31 @@ const _receipt = async (client: WalletClient, transaction: Hash | TransactionRec
     return receipt;
 }
 
+// The receipt plus how far its block has settled, read alongside it. A receipt passed in
+// is also checked against the chain's block at its height, since it may be from a block
+// since reorged out. One fetched by hash comes from the chain as it is now.
+const _receiptWithFinality = async (client: WalletClient, transaction: Hash | TransactionReceipt) => {
+    const publicClient = client.extend(publicActions);
+    const given = typeof transaction === "string" ? undefined : transaction;
+
+    const [receipt, safe, finalized, canonical] = await Promise.all([
+        _receipt(client, transaction),
+        publicClient.getBlock({ blockTag: "safe" }),
+        publicClient.getBlock({ blockTag: "finalized" }),
+        given && publicClient.getBlock({ blockNumber: given.blockNumber }),
+    ]);
+
+    if (canonical && canonical.hash !== receipt.blockHash) {
+        throw new ReceiptNotCanonicalError(receipt.transactionHash, receipt.blockHash);
+    }
+
+    const finality: Finality = receipt.blockNumber <= finalized.number ? "finalized"
+        : receipt.blockNumber <= safe.number ? "safe"
+        : "latest";
+
+    return { receipt, landed: { finality, blockNumber: receipt.blockNumber, blockHash: receipt.blockHash } };
+}
+
 /**
  * Every purchase `eSIMWallet` paid for in `symbol` within one transaction, read
  * from the payment adapter's `PaymentSettled` and the eSIM wallet's
@@ -97,7 +123,10 @@ export const _verifyProtocolPayment = async (
         return { adapter: F.PAYMENT_ADAPTER, deviceWallet, entry };
     };
 
-    const [receipt, { adapter, deviceWallet, entry: [, , decimals, token] }] = await Promise.all([_receipt(client, transaction), reads()]);
+    const [{ receipt, landed }, { adapter, deviceWallet, entry: [, , decimals, token] }] = await Promise.all([
+        _receiptWithFinality(client, transaction),
+        reads(),
+    ]);
 
     if (deviceWallet === zeroAddress) throw new NotAProtocolESIMWalletError(wallet);
     // A registered symbol always has non-zero decimals, even once withdrawn.
@@ -126,7 +155,7 @@ export const _verifyProtocolPayment = async (
         };
     });
 
-    return { priceUSDCents: payments.reduce((sum, p) => sum + p.priceUSDCents, 0n), payments };
+    return { priceUSDCents: payments.reduce((sum, p) => sum + p.priceUSDCents, 0n), payments, ...landed };
 }
 
 // A revert or an empty answer means the address is not an ERC-20. Anything else, like a
@@ -161,8 +190,8 @@ export const _verifyERC20Transfer = async (
     const publicClient = client.extend(publicActions);
 
     // decimals() is what an ERC-721 lacks, and an address with no code answers neither.
-    const [receipt, decimals] = await Promise.all([
-        _receipt(client, transaction),
+    const [{ receipt, landed }, decimals] = await Promise.all([
+        _receiptWithFinality(client, transaction),
         _erc20Read(publicClient.readContract({ address: tokenAddress, abi: erc20Abi, functionName: "decimals" }), tokenAddress),
         _erc20Read(publicClient.readContract({ address: tokenAddress, abi: erc20Abi, functionName: "totalSupply" }), tokenAddress),
     ]);
@@ -178,5 +207,5 @@ export const _verifyERC20Transfer = async (
         : amount * 10n ** BigInt(2 - decimals);
     if (priceUSDCents > MAX_UINT64) throw new PriceOutOfRangeError(priceUSDCents);
 
-    return { priceUSDCents, amount };
+    return { priceUSDCents, amount, ...landed };
 }

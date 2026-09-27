@@ -16,6 +16,8 @@ export type {
     LazyDeployment,
     LazyHistoryBatch,
     LazyHistoryCopy,
+    Finality,
+    TransactionFinality,
     ProtocolPayment,
     ProtocolPaymentCheck,
     ERC20TransferCheck
