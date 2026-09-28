@@ -1,12 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it, type Mock } from "vitest";
 import {
   createWalletClient, encodeAbiParameters, erc20Abi, http, keccak256, stringToHex,
-  type Address, type Hex, type PublicClient,
+  type Address, type Hex, type PublicClient, type TransactionReceipt,
 } from "viem";
 import { createBundlerClient } from "viem/account-abstraction";
 import { baseSepolia } from "viem/chains";
 import { ContractRevertError, Kokio } from "kokio-sdk";
-import type { KokioAdmin } from "kokio-sdk/admin";
+import {
+  NotAProtocolESIMWalletError, NotAnERC20TokenError, ReceiptNotCanonicalError, UnknownTransactionError, type KokioAdmin,
+} from "kokio-sdk/admin";
 import { ESIMWallet, ESIMWalletFactory, Registry } from "kokio-sdk/abis";
 import { Settlement, type KokioSmartAccountClient } from "kokio-sdk/types";
 
@@ -33,6 +35,10 @@ export interface FlowTarget {
   priceUSDCents: bigint;
   /** Blocks to wait after each write before reading its result. */
   confirmations: number;
+  /** Mines empty blocks, where the chain allows it. Left out on a live chain. */
+  mine?: (blocks: number) => Promise<void>;
+  /** Replaces the last `depth` blocks with empty ones. Left out on a live chain. */
+  reorg?: (depth: number) => Promise<void>;
   /** Block explorer transaction URL prefix, so logged hashes can be opened. */
   explorerTx?: string;
   stop?: () => Promise<void>;
@@ -190,6 +196,60 @@ export const describeUserFlow = (
       _token: token,
       _amountSpent: quote,
     });
+    purchaseTx = event.transactionHash;
+    purchaseBlockHash = event.blockHash;
+  }, timeout);
+
+  let purchaseTx: Hex;
+  let purchaseBlockHash: Hex;
+
+  it("the backend checks what the purchase paid from its transaction hash", async () => {
+    const paid = await admin.utils.verifyProtocolPayment(purchaseTx, primaryAsset, db.eSIMWallet);
+    log("7", `protocol payment ${paid.priceUSDCents} cents, reference ${paid.payments[0]?.paymentReference}, ${paid.finality}, no transaction`);
+
+    // Just landed, so not yet settled on L1: the backend waits before issuing the eSIM.
+    expect(paid).toEqual({
+      priceUSDCents: bundle.priceUSDCents,
+      payments: [{ paymentReference: REF_1, dataBundleId: bundle.id, priceUSDCents: bundle.priceUSDCents, amountSpent: quote, vault: await admin.registry.vault() }],
+      finality: "latest",
+      blockNumber: purchaseBlock,
+      blockHash: purchaseBlockHash,
+    });
+
+    // The same transaction as a plain ERC-20 transfer: the device wallet funding its eSIM wallet.
+    const sent = await admin.utils.verifyERC20Transfer(purchaseTx, token, db.deviceWallet, db.eSIMWallet);
+    expect(sent).toEqual({ priceUSDCents: bundle.priceUSDCents, amount: quote, finality: "latest", blockNumber: purchaseBlock, blockHash: purchaseBlockHash });
+
+    // The device wallet is not who pays the protocol, so asking with it is refused.
+    await expect(admin.utils.verifyProtocolPayment(purchaseTx, primaryAsset, db.deviceWallet))
+      .rejects.toBeInstanceOf(NotAProtocolESIMWalletError);
+  }, timeout);
+
+  it("once the purchase's block is finalized, the same check says so", async (ctx) => {
+    // Base Sepolia takes about half an hour to finalize, too long to wait for here.
+    if (!target.mine) return ctx.skip();
+    // anvil finalizes 64 blocks behind the latest.
+    await target.mine(64);
+
+    const paid = await admin.utils.verifyProtocolPayment(purchaseTx, primaryAsset, db.eSIMWallet);
+    log("7", `after 64 blocks the payment is ${paid.finality}, no transaction`);
+    expect(paid).toMatchObject({ finality: "finalized", blockNumber: purchaseBlock, blockHash: purchaseBlockHash });
+  }, timeout);
+
+  it("the backend's checks refuse a token or symbol the chain does not back", async () => {
+    const { factoryAddresses } = await admin.constants;
+
+    // A contract that is not a token, and an address with no code at all.
+    const noCode = testBytes32("no-code").slice(0, 42) as Address;
+    expect(await target.publicClient.getCode({ address: noCode })).toBeUndefined();
+    for (const notAToken of [factoryAddresses.REGISTRY as Address, noCode]) {
+      await expect(admin.utils.verifyERC20Transfer(purchaseTx, notAToken, db.deviceWallet, db.eSIMWallet))
+        .rejects.toBeInstanceOf(NotAnERC20TokenError);
+    }
+    await expect(admin.utils.verifyProtocolPayment(purchaseTx, "USD", db.eSIMWallet))
+      .rejects.toThrow(expect.objectContaining({ reason: "NOT_ONCHAIN" }));
+    await expect(admin.utils.verifyProtocolPayment(purchaseTx, primaryAsset.toLowerCase(), db.eSIMWallet))
+      .rejects.toThrow(expect.objectContaining({ reason: "NOT_REGISTERED" }));
   }, timeout);
 
   const E_SIM_ID = `${TEST_TAG}:esim-${Date.now()}`;
@@ -234,6 +294,13 @@ export const describeUserFlow = (
         args: { _paymentReference: ref }, fromBlock: receipt.receipt.blockNumber,
       });
       expect(event.args).toMatchObject({ _asset: other, _token: otherToken, _amountSpent: otherQuote });
+
+      // Looked up by this symbol, the purchase is there. By the first one, it is not.
+      const paid = await admin.utils.verifyProtocolPayment(receipt.receipt.transactionHash, symbol, db.eSIMWallet);
+      expect(paid.payments.map((p) => p.paymentReference)).toEqual([ref]);
+      expect(paid.priceUSDCents).toBe(bundle.priceUSDCents);
+      expect(await admin.utils.verifyProtocolPayment(receipt.receipt.transactionHash, primaryAsset, db.eSIMWallet))
+        .toMatchObject({ priceUSDCents: 0n, payments: [] });
     }, timeout);
   });
 
@@ -318,6 +385,26 @@ export const describeUserFlow = (
     expect(event.args).toMatchObject({ _dataBundleID: bundle.id, _asset: asset, _token: token, _amountSpent: quote });
     expect(await balanceOf(token, db.deviceWallet)).toBe(0n);
     expect(await balanceOf(token, db.eSIMWallet)).toBe(0n);
+
+    // The protocol was paid the full price, though the device wallet sent only the shortfall.
+    const hash = receipt.receipt.transactionHash;
+    expect((await admin.utils.verifyProtocolPayment(hash, primaryAsset, db.eSIMWallet)).priceUSDCents).toBe(bundle.priceUSDCents);
+    expect((await admin.utils.verifyERC20Transfer(hash, token, db.deviceWallet, db.eSIMWallet)).amount).toBe(quote - held);
+  }, timeout);
+
+  it("two purchases in one user operation are reported one by one", async () => {
+    const refs = [testBytes32(`fc1-${Date.now()}`), testBytes32(`fc2-${Date.now()}`)];
+    await target.fund(token, db.deviceWallet, quote * 2n);
+
+    // Each call set sends the full quote, since both are built while the eSIM wallet holds nothing.
+    const calls = (await Promise.all(refs.map((ref) => admin.calls.buyDataBundleWithTransfer(db.eSIMWallet, bundle, asset, quote, ref)))).flat();
+    const receipt = await sponsored("two in one", () => session.deviceWallet!.sendUserOperation(calls));
+
+    const paid = await admin.utils.verifyProtocolPayment(receipt.receipt, primaryAsset, db.eSIMWallet);
+    lastPurchase = receipt.receipt;
+    log("two in one", `${paid.payments.length} payments, ${paid.priceUSDCents} cents in all`);
+    expect(paid.payments.map((p) => p.paymentReference)).toEqual(refs);
+    expect(paid.priceUSDCents).toBe(bundle.priceUSDCents * 2n);
   }, timeout);
 
   it("the eSIM moves to a new device, which signs calls the backend built", async () => {
@@ -349,6 +436,23 @@ export const describeUserFlow = (
     expect(await next.kokio.deviceWallet!.isValidESIMWallet(db.eSIMWallet)).toBe(true);
     expect(await next.kokio.deviceWallet!.canPullFunds(db.eSIMWallet)).toBe(true);
     expect(await session.deviceWallet!.isValidESIMWallet(db.eSIMWallet)).toBe(false);
+  }, timeout);
+
+  let lastPurchase: TransactionReceipt;
+
+  // Last, since it rewrites the chain under everything above.
+  it("a receipt kept from before a reorg is refused once its block is gone", async (ctx) => {
+    if (!target.reorg) return ctx.skip();
+    const latest = await target.publicClient.getBlockNumber();
+    await target.reorg(Number(latest - lastPurchase.blockNumber + 1n));
+
+    await expect(admin.utils.verifyProtocolPayment(lastPurchase, primaryAsset, db.eSIMWallet))
+      .rejects.toBeInstanceOf(ReceiptNotCanonicalError);
+
+    // Looked up by hash, the payment is either gone or in a new block, never the old one.
+    const again = await admin.utils.verifyProtocolPayment(lastPurchase.transactionHash, primaryAsset, db.eSIMWallet).catch((e: unknown) => e);
+    if (again instanceof UnknownTransactionError) return;
+    expect((again as { blockHash: Hex }).blockHash).not.toBe(lastPurchase.blockHash);
   }, timeout);
 
   const link = (hash: Hex) => (target.explorerTx ? `${target.explorerTx}${hash}` : hash);

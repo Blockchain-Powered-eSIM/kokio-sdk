@@ -202,6 +202,128 @@ export class StalledBatchError extends KokioError {
     }
 }
 
+/** An address argument is malformed, zero, or the same as the other side of the transfer. */
+export class InvalidAddressError extends KokioError {
+    readonly value: string;
+
+    constructor(what: string, value: string, reason: string) {
+        super("INVALID_ADDRESS", `${what} ${value} ${reason}.`);
+        this.value = value;
+    }
+}
+
+/** A currency symbol is empty or does not fit the contracts' 32-byte symbol. */
+export class InvalidSymbolError extends KokioError {
+    readonly symbol: string;
+
+    constructor(symbol: string) {
+        super("INVALID_SYMBOL", `Symbol "${symbol}" must be 1 to 32 bytes long.`);
+        this.symbol = symbol;
+    }
+}
+
+/**
+ * The payment adapter cannot have taken this symbol as an onchain payment:
+ * `NOT_REGISTERED` if it was never added, `NOT_ONCHAIN` for fiat and non-EVM
+ * entries, which have no token address.
+ */
+export class TokenNotAcceptedError extends KokioError {
+    readonly symbol: string;
+    readonly reason: "NOT_REGISTERED" | "NOT_ONCHAIN";
+
+    constructor(symbol: string, reason: "NOT_REGISTERED" | "NOT_ONCHAIN") {
+        super(
+            "TOKEN_NOT_ACCEPTED",
+            reason === "NOT_REGISTERED"
+                ? `Symbol "${symbol}" is not registered on the payment adapter.`
+                : `Symbol "${symbol}" has no token address on the payment adapter, so it cannot be paid onchain.`,
+        );
+        this.symbol = symbol;
+        this.reason = reason;
+    }
+}
+
+/** The registry has no record of this address as an eSIM wallet. */
+export class NotAProtocolESIMWalletError extends KokioError {
+    readonly address: string;
+
+    constructor(address: string) {
+        super("NOT_A_PROTOCOL_ESIM_WALLET", `${address} is not an eSIM wallet the registry knows.`);
+        this.address = address;
+    }
+}
+
+/** No mined transaction with this hash on the client's chain. */
+export class UnknownTransactionError extends KokioError {
+    readonly hash: Hex;
+
+    constructor(hash: Hex) {
+        super("UNKNOWN_TRANSACTION", `No mined transaction ${hash} on this chain.`);
+        this.hash = hash;
+    }
+}
+
+/** The transaction was mined but reverted, so nothing in it moved. */
+export class TransactionRevertedError extends KokioError {
+    readonly hash: Hex;
+
+    constructor(hash: Hex) {
+        super("TRANSACTION_REVERTED", `Transaction ${hash} reverted.`);
+        this.hash = hash;
+    }
+}
+
+/**
+ * A receipt passed in is from a block the chain no longer has at that height,
+ * so it was reorged out. The payment may have landed again elsewhere.
+ */
+export class ReceiptNotCanonicalError extends KokioError {
+    readonly hash: Hex;
+    readonly blockHash: Hex;
+
+    constructor(hash: Hex, blockHash: Hex) {
+        super(
+            "RECEIPT_NOT_CANONICAL",
+            `The receipt for ${hash} is from block ${blockHash}, which is no longer on the chain. Check again by hash.`,
+        );
+        this.hash = hash;
+        this.blockHash = blockHash;
+    }
+}
+
+/** The address does not answer `decimals()` and `totalSupply()` like an ERC-20. */
+export class NotAnERC20TokenError extends KokioError {
+    readonly token: string;
+
+    constructor(token: string) {
+        super("NOT_AN_ERC20_TOKEN", `${token} is not an ERC-20 token on this chain.`);
+        this.token = token;
+    }
+}
+
+/**
+ * A purchase's adapter event and eSIM wallet event disagree or do not pair up.
+ * The current contracts always emit them together, so this means they changed.
+ */
+export class UnmatchedPaymentEventsError extends KokioError {
+    readonly hash: Hex;
+
+    constructor(hash: Hex) {
+        super("UNMATCHED_PAYMENT_EVENTS", `Transaction ${hash} has payment events that do not pair up.`);
+        this.hash = hash;
+    }
+}
+
+/** A cent figure too large for the uint64 the contracts price in. */
+export class PriceOutOfRangeError extends KokioError {
+    readonly priceUSDCents: bigint;
+
+    constructor(priceUSDCents: bigint) {
+        super("PRICE_OUT_OF_RANGE", `${priceUSDCents} cents does not fit the contracts' uint64 price.`);
+        this.priceUSDCents = priceUSDCents;
+    }
+}
+
 // Every ABI that can surface a custom error from an on-chain revert. viem's
 // `decodeErrorResult` walks each ABI's `error` fragments to match the 4-byte
 // selector in the revert data.

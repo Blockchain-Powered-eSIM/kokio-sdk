@@ -26,8 +26,12 @@ export const makeMockWalletClient = (opts: {
   simulate?: () => unknown;
   /** What `writeContract` does. Throw from here to exercise a revert path. */
   write?: () => unknown;
+  /** What `getTransactionReceipt` does, for logic that looks a mined transaction up by hash. */
+  getReceipt?: () => unknown;
+  /** What `getBlock` does, called with its args, for logic that reads a block tag or height. */
+  getBlock?: (args: { blockTag?: string; blockNumber?: bigint }) => unknown;
 }): WalletClient => {
-  const { chainId, url = "https://rpc.test.invalid", account, readResult = "0xreadresult", reads, receipts, simulate, write } = opts;
+  const { chainId, url = "https://rpc.test.invalid", account, readResult = "0xreadresult", reads, receipts, simulate, write, getReceipt, getBlock } = opts;
 
   // Each write gets its own hash so a test driving several batches can tell them
   // apart and check the order they were sent in.
@@ -60,6 +64,14 @@ export const makeMockWalletClient = (opts: {
       return receipt;
     }),
     simulateContract: vi.fn(async () => (simulate ? simulate() : { result: undefined })),
+    getTransactionReceipt: vi.fn(async () => {
+      if (!getReceipt) throw new Error("Mock client has no getTransactionReceipt result");
+      return getReceipt();
+    }),
+    getBlock: vi.fn(async (args: { blockTag?: string; blockNumber?: bigint }) => {
+      if (!getBlock) throw new Error("Mock client has no getBlock result");
+      return getBlock(args);
+    }),
   };
   client.extend = () => client;
 

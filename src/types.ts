@@ -174,6 +174,46 @@ export type LazyHistoryCopy = {
     alreadyComplete: boolean;
 }
 
+/** One data bundle an eSIM wallet paid for through the protocol. */
+export type ProtocolPayment = {
+    /** The offchain order id the purchase spent. */
+    paymentReference: Hex;
+    dataBundleId: Hex;
+    /** 123456n is $1234.56. */
+    priceUSDCents: bigint;
+    /** What reached the vault, in the token's smallest unit. */
+    amountSpent: bigint;
+    vault: Address;
+}
+
+/**
+ * How far a block has settled. `latest` can still be reorged out, `safe` only by
+ * an L1 reorg, and `finalized` not at all.
+ */
+export type Finality = "latest" | "safe" | "finalized";
+
+/** Where a checked transaction landed, to store and check again later. */
+export type TransactionFinality = {
+    finality: Finality;
+    blockNumber: bigint;
+    blockHash: Hex;
+}
+
+/** Every protocol purchase one eSIM wallet made in one transaction and currency. */
+export type ProtocolPaymentCheck = TransactionFinality & {
+    /** Total across `payments`, 0n if there were none. */
+    priceUSDCents: bigint;
+    payments: readonly ProtocolPayment[];
+}
+
+/** What one address sent another directly in one ERC-20, in one transaction. */
+export type ERC20TransferCheck = TransactionFinality & {
+    /** `amount` as cents, counting one token as one dollar and rounding down. */
+    priceUSDCents: bigint;
+    /** In the token's smallest unit, 0n if nothing was sent. */
+    amount: bigint;
+}
+
 export type SignedRequest = {
     body: string;
     stamp : {

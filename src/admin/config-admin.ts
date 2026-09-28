@@ -9,6 +9,7 @@ import { AdminDeviceWalletSubPackage } from "./interface/deviceWalletClass.js";
 import { AdminESIMWalletSubPackage } from "./interface/eSIMWalletClass.js";
 import { AdminPaymentAdapterSubPackage } from "./interface/paymentAdapterClass.js";
 import { AdminCallsSubPackage } from "./interface/callsClass.js";
+import { AdminUtilsSubPackage } from "./interface/utilsClass.js";
 
 // Re-export the typed error surface so backend consumers can `instanceof
 // KokioError` (or a subclass) and decode reverts without reaching into internal
@@ -27,6 +28,16 @@ export {
     ESIMWalletNotLazyDeployedError,
     MissingBatchEventError,
     StalledBatchError,
+    InvalidAddressError,
+    InvalidSymbolError,
+    TokenNotAcceptedError,
+    NotAProtocolESIMWalletError,
+    UnknownTransactionError,
+    TransactionRevertedError,
+    ReceiptNotCanonicalError,
+    NotAnERC20TokenError,
+    UnmatchedPaymentEventsError,
+    PriceOutOfRangeError,
     ContractRevertError,
     decodeContractRevert,
 } from "../logic/errors.js";
@@ -69,6 +80,8 @@ export class KokioAdmin {
     paymentAdapter: AdminPaymentAdapterSubPackage;
     /** Calls for the app to sign as a user operation, built here so the backend holds the purchase logic. */
     calls: AdminCallsSubPackage;
+    /** Checks what a mined transaction paid, before the backend acts on it. */
+    utils: AdminUtilsSubPackage;
 
     // Instance-scoped surfaces - undefined until their address is known.
     deviceWallet?: AdminDeviceWalletSubPackage;
@@ -88,6 +101,7 @@ export class KokioAdmin {
         this.protocolAdmin = new AdminProtocolAdminSubPackage(walletClient);
         this.paymentAdapter = new AdminPaymentAdapterSubPackage(walletClient);
         this.calls = new AdminCallsSubPackage(walletClient);
+        this.utils = new AdminUtilsSubPackage(walletClient);
 
         this.deviceWallet = deviceWalletAddress ? new AdminDeviceWalletSubPackage(walletClient, deviceWalletAddress) : undefined;
         this.eSIMWallet = eSIMWalletAddress ? new AdminESIMWalletSubPackage(walletClient, eSIMWalletAddress) : undefined;
@@ -146,6 +160,7 @@ export class KokioAdmin {
         this.protocolAdmin = new AdminProtocolAdminSubPackage(walletClient);
         this.paymentAdapter = new AdminPaymentAdapterSubPackage(walletClient);
         this.calls = new AdminCallsSubPackage(walletClient);
+        this.utils = new AdminUtilsSubPackage(walletClient);
 
         this.deviceWallet = this.deviceWalletAddress ? new AdminDeviceWalletSubPackage(walletClient, this.deviceWalletAddress) : undefined;
         this.eSIMWallet = this.eSIMWalletAddress ? new AdminESIMWalletSubPackage(walletClient, this.eSIMWalletAddress) : undefined;

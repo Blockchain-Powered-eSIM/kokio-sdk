@@ -51,6 +51,7 @@ ordinary transaction, no bundler or passkey involved.
   the currencies data bundle purchases can be paid in.
 - [Calls](admin/calls.md), `admin.calls`. Build the calls a device wallet
   signs as one user operation, for the app to sign.
+- [Utils](admin/utils.md), `admin.utils`. Check what a mined transaction paid, with its payment reference and price in cents.
 - [Protocol admin](admin/protocol-admin.md), `admin.protocolAdmin`. The
   timelock that owns the contracts above. Schedule, execute, and cancel
   delayed admin calls.

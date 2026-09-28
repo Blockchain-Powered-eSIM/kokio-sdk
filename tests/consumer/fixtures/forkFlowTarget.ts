@@ -36,6 +36,9 @@ export const startForkFlowTarget = async (): Promise<FlowTarget> => {
     fund: (token, to, amount) => setTokenBalance(stack.fork, token, to, amount),
     priceUSDCents: 500n,
     confirmations: 1,
+    mine: async (blocks) => { await stack.fork.testClient.mine({ blocks }); },
+    // anvil mines `depth` fresh blocks in place of the old ones, replaying none of their transactions.
+    reorg: async (depth) => { await stack.fork.testClient.request({ method: "anvil_reorg", params: [depth, []] } as never); },
     stop: stack.stop,
   };
 };
