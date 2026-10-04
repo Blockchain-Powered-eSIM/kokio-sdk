@@ -82,14 +82,41 @@ export class AdminRegistrySubPackage {
         return _acceptAdminUpdate(this.walletClient);
     }
 
+    /**
+     * Records a purchase paid for by card or an external wallet, or one line of
+     * a coupon purchase. One transaction.
+     */
     recordSettledPurchase(
         eSIMWalletAddress: Address,
         dataBundleDetail: DataBundleDetails,
         asset: Hex,
         tokenAmount: bigint,
         paymentReference: Hex
-    ) {
-        return _recordSettledPurchase(this.walletClient, eSIMWalletAddress, dataBundleDetail, asset, tokenAmount, paymentReference);
+    ): Promise<Hex>;
+    /**
+     * Records a purchase split between a coupon and a card or external wallet
+     * payment, as two lines. `dataBundleDetail` carries the full price and how
+     * the remainder was paid; `asset` and `tokenAmount` are what the user paid
+     * for the remainder. Lines already recorded are skipped. Returns the hash
+     * of the last transaction sent; any earlier one is already mined.
+     */
+    recordSettledPurchase(
+        eSIMWalletAddress: Address,
+        dataBundleDetail: DataBundleDetails,
+        asset: Hex,
+        tokenAmount: bigint,
+        paymentReferences: readonly [couponRef: Hex, remainderRef: Hex],
+        couponUSDCents: bigint
+    ): Promise<Hex>;
+    recordSettledPurchase(
+        eSIMWalletAddress: Address,
+        dataBundleDetail: DataBundleDetails,
+        asset: Hex,
+        tokenAmount: bigint,
+        paymentReference: Hex | readonly [Hex, Hex],
+        couponUSDCents?: bigint
+    ): Promise<Hex> {
+        return _recordSettledPurchase(this.walletClient, eSIMWalletAddress, dataBundleDetail, asset, tokenAmount, paymentReference, couponUSDCents);
     }
 
     assignESIMIdentifier(eSIMWalletAddress: Address, eSIMUniqueIdentifier: string) {

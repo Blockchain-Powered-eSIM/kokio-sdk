@@ -21,7 +21,7 @@ export const makeMockWalletClient = (opts: {
    * Receipts `waitForTransactionReceipt` hands back, one per call in order. Supply
    * this to exercise logic that reads a batch's outcome off its own event.
    */
-  receipts?: Array<{ logs: unknown[] }>;
+  receipts?: Array<{ logs: unknown[]; status?: "success" | "reverted" }>;
   /** What `simulateContract` does. Throw from here to exercise a revert path. */
   simulate?: () => unknown;
   /** What `writeContract` does. Throw from here to exercise a revert path. */
