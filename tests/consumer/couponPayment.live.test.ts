@@ -8,7 +8,7 @@ import { fundFromAdmin, startLiveStack } from "./fixtures/liveStack.js";
 
 // The same flow on Base Sepolia with the real Pimlico bundler and paymaster, and
 // the registry's real eSIM wallet admin as the backend. Sends real testnet
-// transactions: the admin pays gas for eight and sends 0.40 USDCt to the device
+// transactions: the admin pays gas for ten and sends 0.40 USDCt to the device
 // wallet. Run with `npm run test:consumer:live`.
 describeCouponPaymentFlow("coupon payments on Base Sepolia with Pimlico", async () => {
   const live = await startLiveStack();

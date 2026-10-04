@@ -85,24 +85,24 @@ export const describeCouponPaymentFlow = (
     const ref = admin.utils.tagPaymentReference(order, PaymentReferenceKind.Coupon);
     expect(ref.startsWith("0xfee0ff")).toBe(true);
 
-    // No money moved, so nothing was paid in the recorded currency.
-    const receipt = await record("coupon", ref, price, Settlement.Fiat, USD, 0n);
+    // The coupon's cents are its amount in USD, whose smallest unit is a cent.
+    const receipt = await record("coupon", ref, price, Settlement.Fiat, USD, price);
 
     const [event] = await settledEvents([ref], receipt.blockNumber);
-    expect(event.args).toMatchObject({ _priceUSDCents: price, _settlement: Settlement.Fiat, _tokenAmount: 0n });
+    expect(event.args).toMatchObject({ _priceUSDCents: price, _settlement: Settlement.Fiat, _asset: symbol(USD), _tokenAmount: price });
     expect(admin.utils.parsePaymentReference(event.args._paymentReference!)).toEqual({ kind: PaymentReferenceKind.Coupon, reference: order });
     await expectHistory([{ priceUSDCents: price, settlement: Settlement.Fiat }]);
   }, timeout);
 
-  // Paid outside the protocol: the backend confirms the user's share offchain, records it,
-  // then records the coupon's share.
+  // Paid outside the protocol: the backend confirms the user's share offchain, then records
+  // the whole order in one call. The SDK sends the user's share first, then the coupon's.
   const recordedSplits = [
     { label: "card", settlement: Settlement.Fiat, paidIn: USD },
     { label: "an external wallet", settlement: Settlement.ExternalWallet, paidIn: "USDC" },
   ];
 
   recordedSplits.forEach(({ label, settlement, paidIn }) => {
-    it(`an order split between a coupon and ${label} is recorded as two lines of one order`, async () => {
+    it(`an order split between a coupon and ${label} is recorded in one call as two lines of one order`, async () => {
       const order = newOrder();
       const couponRef = admin.utils.tagPaymentReference(order, PaymentReferenceKind.CouponPart);
       const remainderRef = admin.utils.tagPaymentReference(order, PaymentReferenceKind.Remainder);
@@ -110,25 +110,34 @@ export const describeCouponPaymentFlow = (
       expect(remainderRef.startsWith("0xfee0ffba1a5ce0")).toBe(true);
 
       const tokenAmount = await quote(paidIn, remainderCents);
-      const first = await record(`coupon + ${label}, user's share`, remainderRef, remainderCents, settlement, paidIn, tokenAmount);
-      await record(`coupon + ${label}, coupon's share`, couponRef, couponCents, Settlement.Fiat, USD, 0n);
+      const fromBlock = await target.publicClient.getBlockNumber();
+      await recordSplit(`coupon + ${label}`, order, settlement, paidIn, tokenAmount);
 
-      // The order id gives both references, so one query finds both lines.
-      const events = await settledEvents([couponRef, remainderRef], first.blockNumber);
-      expect(events.map((e) => admin.utils.parsePaymentReference(e.args._paymentReference!))).toEqual([
-        { kind: PaymentReferenceKind.Remainder, reference: order },
-        { kind: PaymentReferenceKind.CouponPart, reference: order },
-      ]);
-      expect(events[0].args).toMatchObject({ _priceUSDCents: remainderCents, _settlement: settlement, _asset: symbol(paidIn), _tokenAmount: tokenAmount });
-      expect(events[1].args).toMatchObject({ _priceUSDCents: couponCents, _settlement: Settlement.Fiat, _tokenAmount: 0n });
-      expect(events[0].args._priceUSDCents! + events[1].args._priceUSDCents!).toBe(price);
-
-      await expectHistory([
-        { priceUSDCents: remainderCents, settlement },
-        { priceUSDCents: couponCents, settlement: Settlement.Fiat },
-      ]);
+      await expectSplitRecorded(order, fromBlock, settlement, paidIn, tokenAmount);
     }, timeout);
   });
+
+  it("a split whose first line landed before a failure records only the coupon line on retry", async () => {
+    const order = newOrder();
+    const remainderRef = admin.utils.tagPaymentReference(order, PaymentReferenceKind.Remainder);
+    const tokenAmount = await quote(USD, remainderCents);
+    const fromBlock = await target.publicClient.getBlockNumber();
+
+    // The first try got as far as the user's share.
+    await record("retry, first try", remainderRef, remainderCents, Settlement.Fiat, USD, tokenAmount);
+    const sent = await target.publicClient.getTransactionCount({ address: adminAddress() });
+
+    await recordSplit("retry", order, Settlement.Fiat, USD, tokenAmount);
+
+    // One transaction, not two: the user's share was not sent again.
+    expect(await target.publicClient.getTransactionCount({ address: adminAddress() })).toBe(sent + 1);
+    await expectSplitRecorded(order, fromBlock, Settlement.Fiat, USD, tokenAmount);
+
+    // A third try finds both lines spent and is refused, which the backend reads as already done.
+    const again = await recordSplit("retry, both spent", order, Settlement.Fiat, USD, tokenAmount).catch((e: unknown) => e);
+    expect(again).toBeInstanceOf(ContractRevertError);
+    expect((again as ContractRevertError).decoded?.errorName).toBe("PaymentReferenceAlreadyUsed");
+  }, timeout);
 
   let spentCouponRef: Hex;
 
@@ -152,7 +161,8 @@ export const describeCouponPaymentFlow = (
     expect(paid.payments.map((p) => admin.utils.parsePaymentReference(p.paymentReference)))
       .toEqual([{ kind: PaymentReferenceKind.Remainder, reference: order }]);
 
-    await record("coupon + device wallet, coupon's share", couponRef, couponCents, Settlement.Fiat, USD, 0n);
+    // A single reference: the user's own transaction already recorded the other line.
+    await record("coupon + device wallet, coupon's share", couponRef, couponCents, Settlement.Fiat, USD, couponCents);
     spentCouponRef = couponRef;
 
     await expectHistory([
@@ -164,7 +174,7 @@ export const describeCouponPaymentFlow = (
   it("a retried write is refused, and a reference cannot be tagged twice", async () => {
     // Refused before sending, so this costs nothing even on a live chain.
     const again = await admin.registry
-      .recordSettledPurchase(eSIMWallet, { id: bundleId, priceUSDCents: couponCents, settlement: Settlement.Fiat }, symbol(USD), 0n, spentCouponRef)
+      .recordSettledPurchase(eSIMWallet, { id: bundleId, priceUSDCents: couponCents, settlement: Settlement.Fiat }, symbol(USD), couponCents, spentCouponRef)
       .catch((e: unknown) => e);
     expect(again).toBeInstanceOf(ContractRevertError);
     expect((again as ContractRevertError).decoded?.errorName).toBe("PaymentReferenceAlreadyUsed");
@@ -182,6 +192,38 @@ export const describeCouponPaymentFlow = (
   const record = async (step: string, ref: Hex, priceUSDCents: bigint, settlement: Settlement, paidIn: string, tokenAmount: bigint) =>
     waitFor(step, await admin.registry.recordSettledPurchase(
       eSIMWallet, { id: bundleId, priceUSDCents, settlement }, symbol(paidIn), tokenAmount, ref));
+
+  // The whole order: full price and how the user paid the rest, plus the coupon's cents.
+  const recordSplit = async (step: string, order: Hex, settlement: Settlement, paidIn: string, tokenAmount: bigint) =>
+    waitFor(step, await admin.registry.recordSettledPurchase(
+      eSIMWallet, { id: bundleId, priceUSDCents: price, settlement }, symbol(paidIn), tokenAmount,
+      [
+        admin.utils.tagPaymentReference(order, PaymentReferenceKind.CouponPart),
+        admin.utils.tagPaymentReference(order, PaymentReferenceKind.Remainder),
+      ],
+      couponCents));
+
+  // The order id gives both references, so one query finds both lines, user's share first.
+  const expectSplitRecorded = async (order: Hex, fromBlock: bigint, settlement: Settlement, paidIn: string, tokenAmount: bigint) => {
+    const couponRef = admin.utils.tagPaymentReference(order, PaymentReferenceKind.CouponPart);
+    const remainderRef = admin.utils.tagPaymentReference(order, PaymentReferenceKind.Remainder);
+    const events = await settledEvents([couponRef, remainderRef], fromBlock);
+
+    expect(events.map((e) => admin.utils.parsePaymentReference(e.args._paymentReference!))).toEqual([
+      { kind: PaymentReferenceKind.Remainder, reference: order },
+      { kind: PaymentReferenceKind.CouponPart, reference: order },
+    ]);
+    expect(events[0].args).toMatchObject({ _priceUSDCents: remainderCents, _settlement: settlement, _asset: symbol(paidIn), _tokenAmount: tokenAmount });
+    expect(events[1].args).toMatchObject({ _priceUSDCents: couponCents, _settlement: Settlement.Fiat, _asset: symbol(USD), _tokenAmount: couponCents });
+    expect(events[0].args._priceUSDCents! + events[1].args._priceUSDCents!).toBe(price);
+
+    await expectHistory([
+      { priceUSDCents: remainderCents, settlement },
+      { priceUSDCents: couponCents, settlement: Settlement.Fiat },
+    ]);
+  };
+
+  const adminAddress = () => admin.walletClient.account!.address;
 
   const settledEvents = (refs: Hex[], fromBlock: bigint) => target.publicClient.getContractEvents({
     address: registry, abi: Registry, eventName: "DataBundleSettled",
