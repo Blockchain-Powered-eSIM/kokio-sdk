@@ -337,6 +337,21 @@ export class InvalidPaymentReferenceError extends KokioError {
     }
 }
 
+/**
+ * A coupon that covers none or all of the price. Neither is a split: a coupon
+ * covering the whole price is a full-coupon order with a single reference.
+ */
+export class CouponSplitOutOfRangeError extends KokioError {
+    readonly couponUSDCents?: bigint;
+    readonly priceUSDCents: bigint;
+
+    constructor(couponUSDCents: bigint | undefined, priceUSDCents: bigint) {
+        super("COUPON_SPLIT_OUT_OF_RANGE", `A coupon of ${couponUSDCents} cents does not split a price of ${priceUSDCents} cents.`);
+        this.couponUSDCents = couponUSDCents;
+        this.priceUSDCents = priceUSDCents;
+    }
+}
+
 // Every ABI that can surface a custom error from an on-chain revert. viem's
 // `decodeErrorResult` walks each ABI's `error` fragments to match the 4-byte
 // selector in the revert data.

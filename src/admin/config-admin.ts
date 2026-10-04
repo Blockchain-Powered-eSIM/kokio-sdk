@@ -39,6 +39,7 @@ export {
     UnmatchedPaymentEventsError,
     PriceOutOfRangeError,
     InvalidPaymentReferenceError,
+    CouponSplitOutOfRangeError,
     ContractRevertError,
     decodeContractRevert,
 } from "../logic/errors.js";
