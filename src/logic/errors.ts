@@ -324,6 +324,19 @@ export class PriceOutOfRangeError extends KokioError {
     }
 }
 
+/**
+ * A payment reference that is not 32 bytes, has an empty order part, or
+ * carries a tag this SDK cannot write over or read back.
+ */
+export class InvalidPaymentReferenceError extends KokioError {
+    readonly reference: string;
+
+    constructor(reference: string, reason: string) {
+        super("INVALID_PAYMENT_REFERENCE", `Payment reference "${reference}" ${reason}.`);
+        this.reference = reference;
+    }
+}
+
 // Every ABI that can surface a custom error from an on-chain revert. viem's
 // `decodeErrorResult` walks each ABI's `error` fragments to match the 4-byte
 // selector in the revert data.
