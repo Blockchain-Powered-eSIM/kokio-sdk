@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, type Mock } from "vitest";
 import { encodeAbiParameters, keccak256, pad, stringToHex, type Address, type Hex } from "viem";
 
 import { makeMockWalletClient } from "../../utils/mockClient.js";
@@ -48,13 +48,16 @@ const clientWith = (spent: Hex[] = [], receiptStatus: "success" | "reverted" = "
   receipts: [{ logs: [], status: receiptStatus }],
 });
 
+// The mock client's methods are spies, which the WalletClient type does not show.
+const spies = (client: ReturnType<typeof clientWith>) =>
+  client as unknown as Record<"writeContract" | "readContract" | "waitForTransactionReceipt", Mock>;
+
 const writes = (client: ReturnType<typeof clientWith>) =>
-  (client.writeContract as unknown as { mock: { calls: Array<[{ address: Address; functionName: string; args: unknown[] }]> } })
-    .mock.calls.map(([call]) => {
-      expect(call.address).toBe(F.REGISTRY);
-      expect(call.functionName).toBe("recordSettledPurchase");
-      return call.args;
-    });
+  spies(client).writeContract.mock.calls.map(([call]: Array<{ address: Address; functionName: string; args: unknown[] }>) => {
+    expect(call.address).toBe(F.REGISTRY);
+    expect(call.functionName).toBe("recordSettledPurchase");
+    return call.args;
+  });
 
 describe("_recordSettledPurchase with a coupon split", () => {
   it("records the remainder line, waits for it, then records the coupon line", async () => {
@@ -63,7 +66,7 @@ describe("_recordSettledPurchase with a coupon split", () => {
     const hash = await _recordSettledPurchase(client, ESIM, BUNDLE, USDC, PAID, REFS, COUPON);
 
     expect(writes(client)).toEqual([REMAINDER_ARGS, COUPON_ARGS]);
-    expect(client.waitForTransactionReceipt).toHaveBeenCalledTimes(1);
+    expect(spies(client).waitForTransactionReceipt).toHaveBeenCalledTimes(1);
     // The second hash the mock hands out, the coupon line's.
     expect(hash).toBe(`0x${"2".padStart(64, "0")}`);
   });
@@ -74,7 +77,7 @@ describe("_recordSettledPurchase with a coupon split", () => {
     await _recordSettledPurchase(client, ESIM, BUNDLE, USDC, PAID, REFS, COUPON);
 
     expect(writes(client)).toEqual([COUPON_ARGS]);
-    expect(client.waitForTransactionReceipt).not.toHaveBeenCalled();
+    expect(spies(client).waitForTransactionReceipt).not.toHaveBeenCalled();
   });
 
   it("sends the remainder line again when both are recorded, for the contract to refuse", async () => {
@@ -105,7 +108,7 @@ describe("_recordSettledPurchase with a coupon split", () => {
       const client = clientWith();
       await expect(_recordSettledPurchase(client, ESIM, BUNDLE, USDC, PAID, refs, COUPON))
         .rejects.toBeInstanceOf(InvalidPaymentReferenceError);
-      expect(client.writeContract).not.toHaveBeenCalled();
+      expect(spies(client).writeContract).not.toHaveBeenCalled();
     }
   });
 
@@ -114,7 +117,7 @@ describe("_recordSettledPurchase with a coupon split", () => {
       const client = clientWith();
       await expect(_recordSettledPurchase(client, ESIM, BUNDLE, USDC, PAID, REFS, coupon))
         .rejects.toBeInstanceOf(CouponSplitOutOfRangeError);
-      expect(client.writeContract).not.toHaveBeenCalled();
+      expect(spies(client).writeContract).not.toHaveBeenCalled();
     }
   });
 });
@@ -127,6 +130,6 @@ describe("_recordSettledPurchase with a single reference", () => {
     await _recordSettledPurchase(client, ESIM, BUNDLE, USDC, PAID, untagged);
 
     expect(writes(client)).toEqual([[ESIM, BUNDLE, USDC, PAID, untagged]]);
-    expect(client.readContract).not.toHaveBeenCalled();
+    expect(spies(client).readContract).not.toHaveBeenCalled();
   });
 });
