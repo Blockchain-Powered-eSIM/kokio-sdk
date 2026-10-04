@@ -1,8 +1,15 @@
-import { Address, Hex, WalletClient } from "viem";
+import { Address, Hex, WalletClient, encodeAbiParameters, keccak256, publicActions, stringToHex } from "viem";
 import { _chainId, _getChainSpecificConstants } from "../constants.js";
-import { MissingEOAWalletError, writeContractOrThrow } from "../errors.js";
+import {
+    CouponSplitOutOfRangeError,
+    InvalidPaymentReferenceError,
+    MissingEOAWalletError,
+    TransactionRevertedError,
+    writeContractOrThrow,
+} from "../errors.js";
 import { Registry } from "../../abis/index.js";
-import type { DataBundleDetails, OwnerCall } from "../../types.js";
+import { Settlement, type DataBundleDetails, type OwnerCall } from "../../types.js";
+import { PaymentReferenceKind, _parsePaymentReference } from "./utils/paymentReference.js";
 
 // Admin-EOA logic for `Registry`. Most of this is `onlyOwner`, so the `client`
 // must carry the owner EOA. `_acceptAdminUpdate` is the nominee's own call and
@@ -242,6 +249,12 @@ export const _assignESIMIdentifier = async (
  * never sees a transfer to prove it), and `_tokenAmount` is recorded for
  * offchain matching but never checked against `_dataBundleDetail.priceUSDCents`.
  * `_paymentReference` is spendable once per eSIM wallet.
+ *
+ * Given `[couponRef, remainderRef]` and `couponUSDCents`, records a purchase
+ * split between a coupon and another payment as two lines, see
+ * {@link _couponSplitLines}. Lines already recorded are skipped, so a retry
+ * after a partial failure sends only what is missing. Returns the last hash
+ * sent; any earlier one is already mined.
  */
 export const _recordSettledPurchase = async (
     client: WalletClient,
@@ -249,23 +262,115 @@ export const _recordSettledPurchase = async (
     dataBundleDetail: DataBundleDetails,
     asset: Hex,
     tokenAmount: bigint,
-    paymentReference: Hex
-) => {
+    paymentReference: Hex | readonly [Hex, Hex],
+    couponUSDCents?: bigint
+): Promise<Hex> => {
 
     const chainID = await _chainId(client);
 	const rpcURL = client.transport.url;
 	const values = _getChainSpecificConstants(chainID, rpcURL);
 
     if (!client.account) throw new MissingEOAWalletError();
+    const account = client.account;
 
-    return writeContractOrThrow(client, {
+    const record = (line: SettledLine) => writeContractOrThrow(client, {
         address: values.factoryAddresses.REGISTRY,
         chain: values.chain,
-        account: client.account,
+        account,
         abi: Registry,
         functionName: 'recordSettledPurchase',
-        args: [eSIMWalletAddress, dataBundleDetail, asset, tokenAmount, paymentReference]
+        args: [eSIMWalletAddress, line.dataBundleDetail, line.asset, line.tokenAmount, line.paymentReference]
     });
+
+    if (typeof paymentReference === "string") {
+        return record({ dataBundleDetail, asset, tokenAmount, paymentReference });
+    }
+
+    const lines = _couponSplitLines(dataBundleDetail, asset, tokenAmount, paymentReference, couponUSDCents);
+    const publicClient = client.extend(publicActions);
+
+    const spent = await Promise.all(lines.map((line) => publicClient.readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "usedPaymentReferences",
+        args: [keccak256(encodeAbiParameters(
+            [{ type: "address" }, { type: "bytes32" }],
+            [eSIMWalletAddress, line.paymentReference]
+        ))]
+    })));
+    const missing = lines.filter((_, i) => !spent[i]);
+
+    // With both lines recorded, the remainder is sent anyway so the contract refuses it with
+    // `PaymentReferenceAlreadyUsed`, the same answer a retried single reference gets.
+    let hash: Hex | undefined;
+    for (const line of missing.length > 0 ? missing : [lines[0]]) {
+        if (hash) {
+            const receipt = await publicClient.waitForTransactionReceipt({ hash });
+            if (receipt.status !== "success") throw new TransactionRevertedError(hash);
+        }
+        hash = await record(line);
+    }
+
+    return hash!;
+}
+
+/** One `recordSettledPurchase` call's worth of arguments, past the eSIM wallet. */
+export interface SettledLine {
+    dataBundleDetail: DataBundleDetails;
+    asset: Hex;
+    tokenAmount: bigint;
+    paymentReference: Hex;
+}
+
+// Coupons are recorded as card payments in USD, whose smallest unit is a cent.
+const COUPON_ASSET = stringToHex("USD", { size: 32 });
+
+/**
+ * Splits one purchase into its remainder line and its coupon line, in that
+ * order. `dataBundleDetail` carries the full price and how the remainder was
+ * paid; `asset` and `tokenAmount` are what the user paid for the remainder.
+ * The coupon line is always `Fiat` in `USD`, with the coupon's cents as its
+ * token amount.
+ */
+export const _couponSplitLines = (
+    dataBundleDetail: DataBundleDetails,
+    asset: Hex,
+    tokenAmount: bigint,
+    [couponRef, remainderRef]: readonly [Hex, Hex],
+    couponUSDCents: bigint | undefined
+): [remainder: SettledLine, coupon: SettledLine] => {
+
+    const coupon = _parsePaymentReference(couponRef);
+    const remainder = _parsePaymentReference(remainderRef);
+    if (coupon.kind !== PaymentReferenceKind.CouponPart) {
+        throw new InvalidPaymentReferenceError(couponRef, "is not tagged as a coupon part");
+    }
+    if (remainder.kind !== PaymentReferenceKind.Remainder) {
+        throw new InvalidPaymentReferenceError(remainderRef, "is not tagged as a remainder");
+    }
+    if (coupon.reference !== remainder.reference) {
+        throw new InvalidPaymentReferenceError(remainderRef, `belongs to a different order than ${couponRef}`);
+    }
+
+    const price = dataBundleDetail.priceUSDCents;
+    if (couponUSDCents === undefined || couponUSDCents <= 0n || couponUSDCents >= price) {
+        throw new CouponSplitOutOfRangeError(couponUSDCents, price);
+    }
+
+    return [
+        {
+            dataBundleDetail: { ...dataBundleDetail, priceUSDCents: price - couponUSDCents },
+            asset,
+            tokenAmount,
+            paymentReference: remainderRef,
+        },
+        {
+            dataBundleDetail: { id: dataBundleDetail.id, priceUSDCents: couponUSDCents, settlement: Settlement.Fiat },
+            asset: COUPON_ASSET,
+            tokenAmount: couponUSDCents,
+            paymentReference: couponRef,
+        },
+    ];
 }
 
 /**
