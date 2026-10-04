@@ -38,6 +38,7 @@ export {
     NotAnERC20TokenError,
     UnmatchedPaymentEventsError,
     PriceOutOfRangeError,
+    InvalidPaymentReferenceError,
     ContractRevertError,
     decodeContractRevert,
 } from "../logic/errors.js";
@@ -46,6 +47,9 @@ export type { DecodedRevert } from "../logic/errors.js";
 // `getOperationState` answers with this, and comparing against it needs the enum
 // at runtime rather than only in the types.
 export { OperationState } from "../logic/admin/reads/protocolAdmin.reads.js";
+
+// Passed to `utils.tagPaymentReference` and returned by `utils.parsePaymentReference`.
+export { PaymentReferenceKind } from "../logic/admin/utils/paymentReference.js";
 
 /**
  * EOA-only entry point for the NodeJS backend.

@@ -42,6 +42,7 @@ describe("package entry points", () => {
   it("kokio-sdk/admin exports KokioAdmin, OperationState and the same error classes", () => {
     expect(typeof admin.KokioAdmin).toBe("function");
     expect(admin.OperationState).toBeDefined();
+    expect(admin.PaymentReferenceKind).toBeDefined();
     expect(typeof admin.decodeContractRevert).toBe("function");
     for (const name of ERROR_CLASSES) {
       expect(admin, name).toHaveProperty(name);
