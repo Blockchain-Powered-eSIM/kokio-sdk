@@ -44,6 +44,7 @@ describe("package entry points", () => {
     expect(admin.OperationState).toBeDefined();
     expect(admin.PaymentReferenceKind).toBeDefined();
     expect(new admin.InvalidPaymentReferenceError("0x", "is empty")).toBeInstanceOf(admin.KokioError);
+    expect(new admin.CouponSplitOutOfRangeError(0n, 1000n)).toBeInstanceOf(admin.KokioError);
     expect(typeof admin.decodeContractRevert).toBe("function");
     for (const name of ERROR_CLASSES) {
       expect(admin, name).toHaveProperty(name);
