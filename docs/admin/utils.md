@@ -2,7 +2,7 @@
 
 `admin.utils`
 
-Checks what a mined transaction paid and how far its block has settled. Nothing is signed or sent. Both methods accept a transaction hash or a receipt, and all reads are sent together, so each check is one round trip.
+Checks what a mined transaction paid and how far its block has settled, and builds and reads the tags that mark coupon purchases in a payment reference. Nothing is signed or sent. The two checks accept a transaction hash or a receipt, and all reads are sent together, so each check is one round trip. The two reference methods make no network call at all.
 
 A hash is the safer input when it comes from a user. A receipt is checked against the chain's block at its height, but its logs are used as given, so it is best taken from the backend's own node.
 
@@ -93,3 +93,67 @@ Returns: `Promise<ERC20TransferCheck>`, `{ priceUSDCents, amount, finality, bloc
 ## Fewer requests
 
 Each check sends five reads at once. For RPC providers with request limits, a client created with `http(rpcUrl, { batch: true })` sends them as one HTTP request.
+
+## Payment references
+
+The contracts know three ways a bundle was paid for: `DeviceWallet`, `ExternalWallet` and `Fiat`. A coupon is recorded as `Fiat` in `USD`, and its payment reference carries a tag that says so.
+
+The backend builds a reference from its 12-byte order id, left-padded to 32 bytes, which leaves the high 20 bytes zero. The tag goes there:
+
+| `PaymentReferenceKind` | Tag | Used for |
+|---|---|---|
+| `Standard` | none | Paid in full by card, external wallet or device wallet. |
+| `Coupon` | `0xfee0ff` | Paid in full by a coupon. |
+| `CouponPart` | `0xfee0ffc0de` | The coupon's share of an order split between a coupon and another payment. |
+| `Remainder` | `0xfee0ffba1a5ce0` | What the user paid on top of the coupon. |
+
+Every coupon tag starts with `0xfee0ff`, so a coupon purchase stands out on a block explorer. The two lines of a split keep the same order id in the low 12 bytes, so either one leads back to the order, and they still differ, which matters because the registry spends a reference only once per eSIM wallet. The contracts never read the tag.
+
+`PaymentReferenceKind` is exported from `kokio-sdk/admin`. To record a split order in one call, see [`registry.recordSettledPurchase`](registry.md#recordsettledpurchase).
+
+## tagPaymentReference
+
+Writes a kind's tag into a reference built from an order id. Tag both lines of a split from the same reference.
+
+```ts
+import { pad } from "viem";
+import { PaymentReferenceKind } from "kokio-sdk/admin";
+
+const orderRef = pad("0x65f1a2b3c4d5e6f708192a3b", { size: 32 }); // 12-byte order id, left-padded
+
+admin.utils.tagPaymentReference(orderRef, PaymentReferenceKind.CouponPart);
+// 0xfee0ffc0de00000000000000000000000000000065f1a2b3c4d5e6f708192a3b
+admin.utils.tagPaymentReference(orderRef, PaymentReferenceKind.Remainder);
+// 0xfee0ffba1a5ce00000000000000000000000000065f1a2b3c4d5e6f708192a3b
+```
+
+`Standard` returns the reference unchanged, so every order can go through this call whatever it paid with. The result is lowercase hex.
+
+Errors, all `InvalidPaymentReferenceError` with the reason in the message:
+
+- `is not 32 bytes of hex`.
+- `has an empty order part`: the low 12 bytes are zero. The contracts refuse a zero reference, and a tag would hide that.
+- `is already tagged`: the high 20 bytes are not zero. This also catches a reference not built from a 12-byte order id.
+
+Returns: `Hex`.
+
+## parsePaymentReference
+
+Reads the kind back from a reference, with the untagged reference it was built from. Use it on the `_paymentReference` of a `DataBundleSettled` or `DataBundleBoughtWithToken` event to find the order.
+
+```ts
+const { kind, reference } = admin.utils.parsePaymentReference(event.args._paymentReference);
+if (kind === PaymentReferenceKind.Remainder) {
+  // the user's share of a split order; `reference` is the order's untagged reference
+}
+```
+
+Uppercase hex is accepted, and `reference` comes back lowercase. A reference with zero high bytes reads as `Standard`, so references recorded before tags existed read back unchanged.
+
+Errors, all `InvalidPaymentReferenceError`:
+
+- `is not 32 bytes of hex`.
+- `has an empty order part`.
+- `has an unknown tag`: the high bytes hold something other than the four tags above, such as a reference not built from a 12-byte order id.
+
+Returns: `{ kind: PaymentReferenceKind; reference: Hex }`.
