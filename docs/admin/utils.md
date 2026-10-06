@@ -2,7 +2,9 @@
 
 `admin.utils`
 
-Checks what a mined transaction paid and how far its block has settled, and builds and reads the tags that mark coupon purchases in a payment reference. Nothing is signed or sent. The two checks accept a transaction hash or a receipt, and all reads are sent together, so each check is one round trip. The two reference methods make no network call at all.
+Helpers that no contract exposes directly. Each one does work the backend would otherwise have to build itself from raw contract calls and events, so it can ask one question and get one answer.
+
+Today that covers two jobs: checking what a mined transaction paid and how far its block has settled, and building and reading the tags that mark coupon purchases in a payment reference. Nothing is signed or sent. The two checks accept a transaction hash or a receipt, and all reads are sent together, so each check is one round trip. The two reference methods make no network call at all.
 
 A hash is the safer input when it comes from a user. A receipt is checked against the chain's block at its height, but its logs are used as given, so it is best taken from the backend's own node.
 
