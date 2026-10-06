@@ -41,9 +41,7 @@ ordinary transaction, no bundler or passkey involved.
   as the eSIM wallet admin.
 - [eSIM wallet factory](admin/esim-wallet-factory.md),
   `admin.eSIMWalletFactory`. Manage the eSIM wallet implementation.
-- [Registry](admin/registry.md), `admin.registry`. Protocol admin actions:
-  pause, price caps, admin handover, recording purchases paid for outside the
-  protocol, and every read.
+- [Registry](admin/registry.md), `admin.registry`. Protocol admin actions: pause, price caps, admin handover, recording purchases paid for outside the protocol (coupon splits included), and every read.
 - [Lazy wallet registry](admin/lazy-wallet-registry.md),
   `admin.lazyWalletRegistry`. Deploy wallets for users who bought eSIMs before
   they had one, and copy their purchase history in.
@@ -51,7 +49,7 @@ ordinary transaction, no bundler or passkey involved.
   the currencies data bundle purchases can be paid in.
 - [Calls](admin/calls.md), `admin.calls`. Build the calls a device wallet
   signs as one user operation, for the app to sign.
-- [Utils](admin/utils.md), `admin.utils`. Check what a mined transaction paid, with its payment reference and price in cents.
+- [Utils](admin/utils.md), `admin.utils`. Helpers that no contract exposes directly. They do the work the backend would otherwise build on top of raw contract calls, such as checking what a mined transaction paid and tagging or reading payment references.
 - [Protocol admin](admin/protocol-admin.md), `admin.protocolAdmin`. The
   timelock that owns the contracts above. Schedule, execute, and cancel
   delayed admin calls.
