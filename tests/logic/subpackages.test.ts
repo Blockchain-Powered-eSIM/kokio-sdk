@@ -143,6 +143,12 @@ const userOpCases: Array<{
     data: encodeFunctionData({ abi: ESIMWallet, functionName: "setPriceCapUSDCents", args: [50_000n] }),
   },
   {
+    label: "eSIMWallet._setAdminAllowanceUSDCents",
+    run: (c) => eSIMWallet._setAdminAllowanceUSDCents(c, ESIM, 2_500n),
+    target: ESIM,
+    data: encodeFunctionData({ abi: ESIMWallet, functionName: "setAdminAllowanceUSDCents", args: [2_500n] }),
+  },
+  {
     label: "eSIMWallet._sendETHToDeviceWallet",
     run: (c) => eSIMWallet._sendETHToDeviceWallet(c, ESIM, 3n),
     target: ESIM,
@@ -322,6 +328,13 @@ const readCases: Array<{
     args: [],
   },
   {
+    label: "eSIMWallet._adminAllowanceUSDCents",
+    run: (c) => eSIMWallet._adminAllowanceUSDCents(c, ESIM),
+    address: ESIM,
+    functionName: "adminAllowanceUSDCents",
+    args: [],
+  },
+  {
     label: "eSIMWallet._deviceWallet",
     run: (c) => eSIMWallet._deviceWallet(c, ESIM),
     address: ESIM,
@@ -391,6 +404,7 @@ const readCases: Array<{
   { label: "registry._isESIMIdentifierClaimed", run: (c) => registry._isESIMIdentifierClaimed(c, "eid-1"), address: F.REGISTRY, functionName: "isESIMIdentifierClaimed", args: ["eid-1"] },
   { label: "registry._eSIMWalletForIdentifier", run: (c) => registry._eSIMWalletForIdentifier(c, "eid-1"), address: F.REGISTRY, functionName: "eSIMWalletForIdentifier", args: ["eid-1"] },
   { label: "registry._defaultPriceCapUSDCents", run: (c) => registry._defaultPriceCapUSDCents(c), address: F.REGISTRY, functionName: "defaultPriceCapUSDCents", args: [] },
+  { label: "registry._defaultAdminAllowanceUSDCents", run: (c) => registry._defaultAdminAllowanceUSDCents(c), address: F.REGISTRY, functionName: "defaultAdminAllowanceUSDCents", args: [] },
   { label: "registry._requireDeviceIdentifierNotReserved", run: (c) => registry._requireDeviceIdentifierNotReserved(c, "Device_11"), address: F.REGISTRY, functionName: "requireDeviceIdentifierNotReserved", args: ["Device_11"] },
   { label: "registry._paymentAdapter", run: (c) => registry._paymentAdapter(c), address: F.REGISTRY, functionName: "paymentAdapter", args: [] },
   { label: "registry._usedPaymentReferences", run: (c) => registry._usedPaymentReferences(c, PAYMENT_REFERENCE), address: F.REGISTRY, functionName: "usedPaymentReferences", args: [PAYMENT_REFERENCE] },

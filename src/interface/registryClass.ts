@@ -12,6 +12,7 @@ import {
     _isESIMIdentifierClaimed,
     _eSIMWalletForIdentifier,
     _defaultPriceCapUSDCents,
+    _defaultAdminAllowanceUSDCents,
     _paymentAdapter,
     _usedPaymentReferences,
     _requireLazyHistoryCopied,
@@ -83,6 +84,10 @@ export class RegistrySubPackage {
 
     defaultPriceCapUSDCents () {
         return _defaultPriceCapUSDCents(this.client);
+    }
+
+    defaultAdminAllowanceUSDCents () {
+        return _defaultAdminAllowanceUSDCents(this.client);
     }
 
     paymentAdapter () {
