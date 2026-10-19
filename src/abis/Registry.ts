@@ -153,6 +153,19 @@ const Registry = [
     },
     {
         "type": "function",
+        "name": "defaultAdminAllowanceUSDCents",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint64",
+                "internalType": "uint64"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "defaultPriceCapUSDCents",
         "inputs": [],
         "outputs": [
@@ -392,6 +405,11 @@ const Registry = [
             },
             {
                 "name": "_defaultPriceCapUSDCents",
+                "type": "uint64",
+                "internalType": "uint64"
+            },
+            {
+                "name": "_defaultAdminAllowanceUSDCents",
                 "type": "uint64",
                 "internalType": "uint64"
             }
@@ -751,6 +769,19 @@ const Registry = [
     },
     {
         "type": "function",
+        "name": "setDefaultAdminAllowanceUSDCents",
+        "inputs": [
+            {
+                "name": "_allowance",
+                "type": "uint64",
+                "internalType": "uint64"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
         "name": "setDefaultPriceCapUSDCents",
         "inputs": [
             {
@@ -1090,6 +1121,19 @@ const Registry = [
                 "type": "bytes32",
                 "indexed": true,
                 "internalType": "bytes32"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
+        "name": "DefaultAdminAllowanceUSDCentsUpdated",
+        "inputs": [
+            {
+                "name": "_allowance",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
             }
         ],
         "anonymous": false
@@ -1716,6 +1760,17 @@ const Registry = [
                 "name": "ownerKeyHash",
                 "type": "bytes32",
                 "internalType": "bytes32"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "OwnerKeyNotHeldByWallet",
+        "inputs": [
+            {
+                "name": "deviceWallet",
+                "type": "address",
+                "internalType": "address"
             }
         ]
     },

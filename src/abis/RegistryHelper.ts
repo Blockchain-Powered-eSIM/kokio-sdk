@@ -497,6 +497,19 @@ const RegistryHelper = [
     },
     {
         "type": "event",
+        "name": "DefaultAdminAllowanceUSDCentsUpdated",
+        "inputs": [
+            {
+                "name": "_allowance",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
         "name": "DefaultPriceCapUSDCentsUpdated",
         "inputs": [
             {

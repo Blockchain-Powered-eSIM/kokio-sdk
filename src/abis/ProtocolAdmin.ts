@@ -584,6 +584,19 @@ const ProtocolAdmin = [
     },
     {
         "type": "function",
+        "name": "pauseInstantly",
+        "inputs": [
+            {
+                "name": "target",
+                "type": "address",
+                "internalType": "address"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
         "name": "renounceRole",
         "inputs": [
             {
@@ -961,6 +974,25 @@ const ProtocolAdmin = [
     },
     {
         "type": "event",
+        "name": "PauseRaised",
+        "inputs": [
+            {
+                "name": "target",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "guardian",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
         "name": "PauseReleased",
         "inputs": [
             {
@@ -1104,6 +1136,22 @@ const ProtocolAdmin = [
         "type": "error",
         "name": "NoProposers",
         "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "NomineeIsTheIncumbent",
+        "inputs": [
+            {
+                "name": "target",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "admin",
+                "type": "address",
+                "internalType": "address"
+            }
+        ]
     },
     {
         "type": "error",

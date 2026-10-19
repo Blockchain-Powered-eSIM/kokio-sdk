@@ -12,6 +12,19 @@ const ESIMWallet = [
     },
     {
         "type": "function",
+        "name": "adminAllowanceUSDCents",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint64",
+                "internalType": "uint64"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "buyDataBundleWithToken",
         "inputs": [
             {
@@ -288,6 +301,19 @@ const ESIMWallet = [
     },
     {
         "type": "function",
+        "name": "setAdminAllowanceUSDCents",
+        "inputs": [
+            {
+                "name": "_allowance",
+                "type": "uint64",
+                "internalType": "uint64"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
         "name": "setESIMUniqueIdentifier",
         "inputs": [
             {
@@ -353,6 +379,19 @@ const ESIMWallet = [
         ],
         "outputs": [],
         "stateMutability": "pure"
+    },
+    {
+        "type": "event",
+        "name": "AdminAllowanceUSDCentsUpdated",
+        "inputs": [
+            {
+                "name": "_allowance",
+                "type": "uint64",
+                "indexed": false,
+                "internalType": "uint64"
+            }
+        ],
+        "anonymous": false
     },
     {
         "type": "event",
@@ -622,6 +661,22 @@ const ESIMWallet = [
             }
         ],
         "anonymous": false
+    },
+    {
+        "type": "error",
+        "name": "AdminAllowanceExceeded",
+        "inputs": [
+            {
+                "name": "priceUSDCents",
+                "type": "uint64",
+                "internalType": "uint64"
+            },
+            {
+                "name": "remaining",
+                "type": "uint64",
+                "internalType": "uint64"
+            }
+        ]
     },
     {
         "type": "error",
