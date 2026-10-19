@@ -44,6 +44,31 @@ export const _setPriceCapUSDCents = async (client: KokioSmartAccountClient, addr
 }
 
 /**
+ * Set the total the admin key may charge this eSIM wallet, in USD cents. It
+ * replaces what is left rather than adding to it, and zero stops admin charges.
+ *
+ * `onlyDeviceWallet`, so only the user can raise what the admin may spend. A
+ * handover resets it to the registry default.
+ */
+export const _setAdminAllowanceUSDCents = async (client: KokioSmartAccountClient, address: Address, allowance: bigint) => {
+
+    if(!client.account) throw new MissingSmartWalletError()
+
+    // UserOp - `onlyDeviceWallet`.
+    return client.sendUserOperation({
+        account: client.account,
+        calls: [{
+            to: address,
+            data: encodeFunctionData({
+                abi: ESIMWallet,
+                functionName: "setAdminAllowanceUSDCents",
+                args: [allowance]
+            })
+        }]
+    });
+}
+
+/**
  * Buy a data bundle in `asset`, an ERC-20 the payment adapter accepts.
  *
  * `_maxAmountIn` is the most of `asset` the buyer will spend, in its smallest
@@ -164,6 +189,20 @@ export const _priceCapUSDCents = async (client: KokioSmartAccountClient, address
     const registryCap = await _defaultPriceCapUSDCents(client);
 
     return registryCap === 0n ? maxUint256 : registryCap;
+}
+
+/**
+ * What the admin key may still charge this eSIM wallet, in USD cents. Each admin
+ * purchase lowers it and nothing refills it, so the owner tops it up with
+ * `setAdminAllowanceUSDCents`. The owner's own purchases do not touch it.
+ */
+export const _adminAllowanceUSDCents = async (client: KokioSmartAccountClient, address: Address): Promise<bigint> => {
+    return client.readContract({
+        address,
+        abi: ESIMWallet,
+        functionName: "adminAllowanceUSDCents",
+        args: []
+    }) as Promise<bigint>;
 }
 
 /**

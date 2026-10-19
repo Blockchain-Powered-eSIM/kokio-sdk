@@ -2,6 +2,7 @@ import { Address, Hex } from "viem";
 import {
     _acceptAndBindESIMWallet,
     _acceptOwnershipTransfer,
+    _adminAllowanceUSDCents,
     _buyDataBundleWithToken,
     _buyDataBundleWithTransfer,
     _priceCapUSDCents,
@@ -10,6 +11,7 @@ import {
     _requestTransferOwnership,
     _sendETHToDeviceWallet,
     _sendTokenToDeviceWallet,
+    _setAdminAllowanceUSDCents,
     _setPriceCapUSDCents,
     _transactionHistory
 } from "../logic/eSIMWallet.js"
@@ -54,6 +56,14 @@ export class ESIMWalletSubPackage {
 
     priceCapUSDCents () {
         return _priceCapUSDCents(this.client, this.address);
+    }
+
+    adminAllowanceUSDCents () {
+        return _adminAllowanceUSDCents(this.client, this.address);
+    }
+
+    setAdminAllowanceUSDCents (allowance: bigint) {
+        return _setAdminAllowanceUSDCents(this.client, this.address, allowance);
     }
 
     deviceWallet () {

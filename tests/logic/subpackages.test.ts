@@ -32,7 +32,8 @@ const OWNER_KEY: [Hex, Hex] = [
   "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C291",
   "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F1",
 ];
-const MESSAGE_HASH = "0x00000000000000000000000000000000000000000000000000000000000000a1" as Hex;
+const ROTATION_PROOF = "0x00000000000000000000000000000000000000000000000000000000000000b2" as Hex;
+const MESSAGE_HASH ="0x00000000000000000000000000000000000000000000000000000000000000a1" as Hex;
 const BUNDLE: DataBundleDetails = {
   id: "0x0000000000000000000000000000000000000000000000000000000000000001" as Hex,
   priceUSDCents: 1000n,
@@ -84,9 +85,9 @@ const userOpCases: Array<{
   },
   {
     label: "deviceWallet._transferOwnership",
-    run: (c) => deviceWallet._transferOwnership(c, WALLET, OWNER_KEY),
+    run: (c) => deviceWallet._transferOwnership(c, WALLET, OWNER_KEY, ROTATION_PROOF),
     target: WALLET,
-    data: encodeFunctionData({ abi: DeviceWallet, functionName: "transferOwnership", args: [OWNER_KEY] }),
+    data: encodeFunctionData({ abi: DeviceWallet, functionName: "transferOwnership", args: [OWNER_KEY, ROTATION_PROOF] }),
   },
   {
     label: "deviceWallet._addDeposit",
@@ -140,6 +141,12 @@ const userOpCases: Array<{
     run: (c) => eSIMWallet._setPriceCapUSDCents(c, ESIM, 50_000n),
     target: ESIM,
     data: encodeFunctionData({ abi: ESIMWallet, functionName: "setPriceCapUSDCents", args: [50_000n] }),
+  },
+  {
+    label: "eSIMWallet._setAdminAllowanceUSDCents",
+    run: (c) => eSIMWallet._setAdminAllowanceUSDCents(c, ESIM, 2_500n),
+    target: ESIM,
+    data: encodeFunctionData({ abi: ESIMWallet, functionName: "setAdminAllowanceUSDCents", args: [2_500n] }),
   },
   {
     label: "eSIMWallet._sendETHToDeviceWallet",
@@ -279,6 +286,13 @@ const readCases: Array<{
     args: [],
   },
   {
+    label: "deviceWallet._rotationChallenge",
+    run: (c) => deviceWallet._rotationChallenge(c, WALLET, OWNER_KEY),
+    address: WALLET,
+    functionName: "rotationChallenge",
+    args: [OWNER_KEY],
+  },
+  {
     label: "deviceWallet._eSIMWalletFactory",
     run: (c) => deviceWallet._eSIMWalletFactory(c, WALLET),
     address: WALLET,
@@ -311,6 +325,13 @@ const readCases: Array<{
     run: (c) => eSIMWallet._priceCapUSDCents(c, ESIM),
     address: ESIM,
     functionName: "priceCapUSDCents",
+    args: [],
+  },
+  {
+    label: "eSIMWallet._adminAllowanceUSDCents",
+    run: (c) => eSIMWallet._adminAllowanceUSDCents(c, ESIM),
+    address: ESIM,
+    functionName: "adminAllowanceUSDCents",
     args: [],
   },
   {
@@ -383,6 +404,7 @@ const readCases: Array<{
   { label: "registry._isESIMIdentifierClaimed", run: (c) => registry._isESIMIdentifierClaimed(c, "eid-1"), address: F.REGISTRY, functionName: "isESIMIdentifierClaimed", args: ["eid-1"] },
   { label: "registry._eSIMWalletForIdentifier", run: (c) => registry._eSIMWalletForIdentifier(c, "eid-1"), address: F.REGISTRY, functionName: "eSIMWalletForIdentifier", args: ["eid-1"] },
   { label: "registry._defaultPriceCapUSDCents", run: (c) => registry._defaultPriceCapUSDCents(c), address: F.REGISTRY, functionName: "defaultPriceCapUSDCents", args: [] },
+  { label: "registry._defaultAdminAllowanceUSDCents", run: (c) => registry._defaultAdminAllowanceUSDCents(c), address: F.REGISTRY, functionName: "defaultAdminAllowanceUSDCents", args: [] },
   { label: "registry._requireDeviceIdentifierNotReserved", run: (c) => registry._requireDeviceIdentifierNotReserved(c, "Device_11"), address: F.REGISTRY, functionName: "requireDeviceIdentifierNotReserved", args: ["Device_11"] },
   { label: "registry._paymentAdapter", run: (c) => registry._paymentAdapter(c), address: F.REGISTRY, functionName: "paymentAdapter", args: [] },
   { label: "registry._usedPaymentReferences", run: (c) => registry._usedPaymentReferences(c, PAYMENT_REFERENCE), address: F.REGISTRY, functionName: "usedPaymentReferences", args: [PAYMENT_REFERENCE] },

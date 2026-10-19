@@ -64,7 +64,7 @@ describe("KokioAdmin setters", () => {
   });
 
   it("setESIMWalletAddress binds the address so eSIMWallet calls target it", async () => {
-    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA, reads: { adminAllowanceUSDCents: 1n } });
     const admin = new KokioAdmin(client);
 
     admin.setESIMWalletAddress(ESIM_A);

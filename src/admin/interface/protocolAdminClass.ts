@@ -11,6 +11,7 @@ import {
     _executeBatch,
     _executeRaw,
     _cancel,
+    _pauseInstantly,
     _unpauseInstantly,
     _revokeCancellersInstantly,
     _disableAdminInstantly,
@@ -24,6 +25,7 @@ import {
     _enableAdminCall,
     _unpauseCall,
     _setDefaultPriceCapUSDCentsCall,
+    _setDefaultAdminAllowanceUSDCentsCall,
     _setPaymentAdapterCall,
 } from "../../logic/admin/protocolAdmin.eoa.js";
 import {
@@ -117,6 +119,10 @@ export class ProtocolAdminGuardianSubPackage {
 
     constructor(walletClient: WalletClient) {
         this.walletClient = walletClient;
+    }
+
+    pauseInstantly(target: Address) {
+        return _pauseInstantly(this.walletClient, target);
     }
 
     unpauseInstantly(target: Address) {
@@ -215,6 +221,10 @@ export class AdminProtocolAdminSubPackage {
 
     setDefaultPriceCapUSDCentsCall(cap: bigint, target?: Address) {
         return _setDefaultPriceCapUSDCentsCall(this.walletClient, cap, target);
+    }
+
+    setDefaultAdminAllowanceUSDCentsCall(allowance: bigint, target?: Address) {
+        return _setDefaultAdminAllowanceUSDCentsCall(this.walletClient, allowance, target);
     }
 
     setPaymentAdapterCall(paymentAdapter: Address, target?: Address) {

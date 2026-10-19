@@ -261,6 +261,21 @@ export const _defaultPriceCapUSDCents = async (client: KokioSmartAccountClient):
     }) as Promise<bigint>;
 }
 
+/** What the admin key may charge a newly created eSIM wallet in total, in USD cents. */
+export const _defaultAdminAllowanceUSDCents = async (client: KokioSmartAccountClient): Promise<bigint> => {
+
+    const chainID = await _chainId(client);
+	const rpcURL = client.transport.url;
+	const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "defaultAdminAllowanceUSDCents",
+        args: []
+    }) as Promise<bigint>;
+}
+
 /** The payment adapter this registry currently points at. */
 export const _paymentAdapter = async (client: KokioSmartAccountClient): Promise<Address> => {
 

@@ -12,27 +12,46 @@ import {
   http,
   parseEther,
   type Address,
+  type Hex,
   type PublicClient,
   type TestClient,
   type WalletClient,
 } from "viem";
-import { baseSepolia } from "viem/chains";
+import { base, baseSepolia } from "viem/chains";
 
 import { DeviceWalletFactory, Registry } from "../../src/abis/index.js";
-import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
+import { baseMainnetFactoryAddresses, baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
+import type { KokioSmartAccountClient } from "../../src/types.js";
 
-// Local Base Sepolia fork harness for the opt-in scenario tier.
+// Local Base Sepolia or Base mainnet fork harness for the opt-in scenario tier.
 //
-// Instead of writing to live Base Sepolia with real funded keys + a Pimlico
+// Instead of writing to a live chain with real funded keys + a Pimlico
 // bundler, each session spins up a local `anvil` fork. A fork carries the real
-// deployed contracts and (via `--chain-id 84532`) reports the Base Sepolia chain
-// id, so the SDK resolves the real factory addresses and runs unmodified. No
+// deployed contracts and reports the forked chain's own id, so the SDK
+// resolves the real factory addresses and runs unmodified. No
 // secret keys are needed: `anvil` impersonates the real on-chain admin, and
 // UserOps are submitted by a funded anvil account calling `EntryPoint.handleOps`
 // directly (no external bundler).
 
-// The public Base Sepolia endpoint the fork pulls state from when no RPC is configured.
-const DEFAULT_FORK_RPC = "https://sepolia.base.org";
+export type ForkNetwork = "base-sepolia" | "base";
+
+// Base mainnet is pinned past its deployment block (52,814,249), so the fork
+// carries the current contracts. Base Sepolia stays on its older pin until its
+// upgrade lands.
+const NETWORKS = {
+  "base-sepolia": {
+    chain: baseSepolia,
+    addresses: baseSepoliaFactoryAddresses,
+    upstream: () => process.env.BASE_SEPOLIA_RPC_URL ?? "https://sepolia.base.org",
+    block: 46_990_000n,
+  },
+  base: {
+    chain: base,
+    addresses: baseMainnetFactoryAddresses,
+    upstream: () => process.env.BASE_MAINNET_RPC_URL ?? "https://mainnet.base.org",
+    block: 52_817_000n,
+  },
+} as const;
 
 // HTTP request timeout for the fork clients. A fork fetches upstream state lazily,
 // so a single write that touches many contracts or storage slots can spend well
@@ -77,8 +96,8 @@ export const forkAvailable = (): boolean => {
   return true;
 };
 
-/** Block every fork starts from, so each run sees the same contract state. */
-export const FORK_BLOCK = 46_990_000n;
+/** Block every Base Sepolia fork starts from, so each run sees the same contract state. */
+export const FORK_BLOCK = NETWORKS["base-sepolia"].block;
 
 /** A port nothing is listening on, so suites never collide. */
 export const freePort = (): Promise<number> =>
@@ -92,11 +111,15 @@ export const freePort = (): Promise<number> =>
   });
 
 /** The upstream RPC the fork pulls state from (public endpoint unless overridden). */
-export const getForkUpstreamRpc = (): string => process.env.BASE_SEPOLIA_RPC_URL ?? DEFAULT_FORK_RPC;
+export const getForkUpstreamRpc = (network: ForkNetwork = "base-sepolia"): string => NETWORKS[network].upstream();
 
 export interface Fork {
   /** Local JSON-RPC URL of the anvil fork. */
   rpcUrl: string;
+  /** The chain the fork reports, so the SDK resolves that chain's addresses. */
+  chain: typeof base | typeof baseSepolia;
+  /** The SDK's address book for that chain. */
+  addresses: Record<string, Address>;
   /** Reads against the fork. */
   publicClient: PublicClient;
   /** anvil-mode client for impersonation / balance / mining cheatcodes. */
@@ -110,15 +133,20 @@ export interface Fork {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Spawn an anvil fork of Base Sepolia and wait until its RPC answers. The chain
- * id is pinned to 84532 so the SDK treats it as Base Sepolia while serving the
- * forked state.
+ * Spawn an anvil fork of `network` and wait until its RPC answers. The chain id
+ * is pinned to the network's own so the SDK resolves its real addresses.
  */
-export const startFork = async (port?: number, blockNumber: bigint = FORK_BLOCK): Promise<Fork> => {
+export const startFork = async (
+  port?: number,
+  blockNumber?: bigint,
+  network: ForkNetwork = "base-sepolia",
+): Promise<Fork> => {
   port ??= await freePort();
-  const upstream = getForkUpstreamRpc();
+  const { chain, addresses } = NETWORKS[network];
+  blockNumber ??= NETWORKS[network].block;
+  const upstream = getForkUpstreamRpc(network);
   const rpcUrl = `http://127.0.0.1:${port}`;
-  const publicClient = createPublicClient({ chain: baseSepolia, transport: forkTransport(rpcUrl) });
+  const publicClient = createPublicClient({ chain, transport: forkTransport(rpcUrl) });
 
   // anvil reads upstream state to build its genesis, so a rate-limited or
   // briefly unhealthy endpoint makes it exit before it ever serves a request.
@@ -131,7 +159,7 @@ export const startFork = async (port?: number, blockNumber: bigint = FORK_BLOCK)
         "--fork-url", upstream,
         "--fork-block-number", String(blockNumber),
         "--port", String(port),
-        "--chain-id", "84532",
+        "--chain-id", String(chain.id),
         "--hardfork", FORK_HARDFORK,
         "--silent",
       ],
@@ -144,7 +172,7 @@ export const startFork = async (port?: number, blockNumber: bigint = FORK_BLOCK)
     const deadline = Date.now() + 30_000;
     for (;;) {
       try {
-        if ((await publicClient.getChainId()) === baseSepolia.id) return proc;
+        if ((await publicClient.getChainId()) === chain.id) return proc;
       } catch {
         // not up yet
       }
@@ -165,7 +193,7 @@ export const startFork = async (port?: number, blockNumber: bigint = FORK_BLOCK)
   }
   if (!proc) throw new Error(`anvil fork did not become ready within 30s (upstream: ${upstream})`);
 
-  const testClient = createTestClient({ chain: baseSepolia, mode: "anvil", transport: forkTransport(rpcUrl) });
+  const testClient = createTestClient({ chain, mode: "anvil", transport: forkTransport(rpcUrl) });
 
   // The pinned block is older than the wall clock, while signatures carry a
   // wall-clock expiry as they do on a phone. Bring the chain up to now.
@@ -177,7 +205,7 @@ export const startFork = async (port?: number, blockNumber: bigint = FORK_BLOCK)
   const { privateKeyToAccount } = await import("viem/accounts");
   const funded = createWalletClient({
     account: privateKeyToAccount(FUNDED_PK),
-    chain: baseSepolia,
+    chain,
     transport: forkTransport(rpcUrl),
   });
 
@@ -187,7 +215,7 @@ export const startFork = async (port?: number, blockNumber: bigint = FORK_BLOCK)
     await sleep(200);
   };
 
-  return { rpcUrl, publicClient, testClient, funded, stop };
+  return { rpcUrl, chain, addresses, publicClient, testClient, funded, stop };
 };
 
 /**
@@ -202,16 +230,43 @@ export const impersonate = async (fork: Fork, address: Address): Promise<WalletC
 
   return createWalletClient({
     account: address,
-    chain: baseSepolia,
+    chain: fork.chain,
     transport: forkTransport(fork.rpcUrl),
   });
+};
+
+/**
+ * A stand-in smart account client that runs each call of a "user operation" as
+ * a plain transaction from the impersonated device wallet. At the target that is
+ * what `execute` produces (`msg.sender` is the wallet), so SDK user-operation
+ * helpers can be driven on a fork without a bundler or a passkey.
+ */
+export const impersonatedSmartAccount = async (fork: Fork, wallet: Address): Promise<KokioSmartAccountClient> => {
+  const sender = await impersonate(fork, wallet);
+
+  return {
+    account: { address: wallet },
+    chain: fork.chain,
+    transport: { url: fork.rpcUrl },
+    getChainId: () => fork.publicClient.getChainId(),
+    readContract: (args: Parameters<PublicClient["readContract"]>[0]) => fork.publicClient.readContract(args),
+    sendUserOperation: async ({ calls }: { calls: readonly { to: Address; data?: Hex; value?: bigint }[] }) => {
+      let hash: Hex = "0x";
+      for (const call of calls) {
+        hash = await sender.sendTransaction({ account: wallet, chain: fork.chain, to: call.to, data: call.data, value: call.value });
+        const receipt = await fork.publicClient.waitForTransactionReceipt({ hash });
+        if (receipt.status !== "success") throw new Error(`call to ${call.to} reverted in ${hash}`);
+      }
+      return hash;
+    },
+  } as unknown as KokioSmartAccountClient;
 };
 
 /** Impersonate the factory's real on-chain `eSIMWalletAdmin`. */
 export const impersonateAdmin = async (fork: Fork): Promise<{ admin: Address; client: WalletClient }> => {
   const factory = getContract({
     abi: DeviceWalletFactory,
-    address: baseSepoliaFactoryAddresses.DEVICE_WALLET_FACTORY,
+    address: fork.addresses.DEVICE_WALLET_FACTORY,
     client: fork.publicClient,
   });
 
@@ -228,7 +283,7 @@ export const impersonateAdmin = async (fork: Fork): Promise<{ admin: Address; cl
 export const impersonateRegistryOwner = async (fork: Fork): Promise<{ owner: Address; client: WalletClient }> => {
   const registry = getContract({
     abi: Registry,
-    address: baseSepoliaFactoryAddresses.REGISTRY,
+    address: fork.addresses.REGISTRY,
     client: fork.publicClient,
   });
 

@@ -325,6 +325,25 @@ export class PriceOutOfRangeError extends KokioError {
 }
 
 /**
+ * An admin purchase priced above what the eSIM wallet's owner still allows the
+ * admin key to charge. Thrown before sending, since the contract would revert
+ * with `AdminAllowanceExceeded`. The owner raises it with `setAdminAllowanceUSDCents`.
+ */
+export class AdminAllowanceExceededError extends KokioError {
+    readonly priceUSDCents: bigint;
+    readonly remainingUSDCents: bigint;
+
+    constructor(priceUSDCents: bigint, remainingUSDCents: bigint) {
+        super(
+            "ADMIN_ALLOWANCE_EXCEEDED",
+            `${priceUSDCents} cents is more than the ${remainingUSDCents} cents the owner still allows the admin to charge.`,
+        );
+        this.priceUSDCents = priceUSDCents;
+        this.remainingUSDCents = remainingUSDCents;
+    }
+}
+
+/**
  * A payment reference that is not 32 bytes, has an empty order part, or
  * carries a tag this SDK cannot write over or read back.
  */

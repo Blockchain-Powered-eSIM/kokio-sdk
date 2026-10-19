@@ -45,6 +45,20 @@ export const _priceCapUSDCents = async (client: WalletClient, eSIMWalletAddress:
     }) as Promise<bigint>;
 }
 
+/**
+ * What the admin key may still charge this eSIM wallet, in USD cents. Only the
+ * owner can raise it, so a purchase above it needs the user first.
+ */
+export const _adminAllowanceUSDCents = async (client: WalletClient, eSIMWalletAddress: Address): Promise<bigint> => {
+
+    return client.extend(publicActions).readContract({
+        address: eSIMWalletAddress,
+        abi: ESIMWallet,
+        functionName: "adminAllowanceUSDCents",
+        args: []
+    }) as Promise<bigint>;
+}
+
 /** The pending owner proposed via `requestTransferOwnership` (zero if none). */
 export const _newRequestedOwner = async (client: WalletClient, eSIMWalletAddress: Address): Promise<Address> => {
 

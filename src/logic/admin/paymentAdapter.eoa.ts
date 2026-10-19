@@ -72,6 +72,25 @@ export const _registerAssetCall = async (client: WalletClient, symbol: Hex, asse
     };
 }
 
+/**
+ * Send back `amount` of `token` someone sent to the adapter by mistake. Pass the
+ * result to `schedule`. Purchases never leave tokens in the adapter, so anything
+ * it holds arrived by mistake.
+ */
+export const _recoverTokensCall = async (client: WalletClient, token: Address, to: Address, amount: bigint): Promise<OwnerCall> => {
+
+    const chainID = await _chainId(client);
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return {
+        address: values.factoryAddresses.PAYMENT_ADAPTER,
+        abi: PaymentAdapter,
+        functionName: 'recoverTokens',
+        args: [token, to, amount],
+    };
+}
+
 /** Change a currency already in the table, scheduled through the timelock. Pass the result to `schedule`. */
 export const _updateAssetCall = async (client: WalletClient, symbol: Hex, asset: Asset): Promise<OwnerCall> => {
 

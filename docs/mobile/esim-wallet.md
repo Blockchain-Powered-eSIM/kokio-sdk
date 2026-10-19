@@ -93,6 +93,18 @@ const hash = await kokio.eSIMWallet!.setPriceCapUSDCents(50_000n); // $500.00
 
 Returns: `Promise<Hash>`.
 
+## setAdminAllowanceUSDCents
+
+Sets the total the Kokio backend (the admin key) may charge this eSIM wallet, in USD cents. Each admin purchase lowers it and nothing refills it, so this is how the user lets the backend keep buying for them. Purchases the user signs themselves never touch it.
+
+The new figure replaces what is left rather than adding to it. `0n` stops admin purchases entirely. A new eSIM wallet starts at the registry default, and so does a wallet that moves to another device wallet.
+
+```ts
+const hash = await kokio.eSIMWallet!.setAdminAllowanceUSDCents(5_000n); // USD 50
+```
+
+Returns: `Promise<Hash>`.
+
 ## requestTransferOwnership
 
 Starts moving this eSIM wallet to a new device wallet. Use it when a user is
@@ -154,6 +166,16 @@ missing cap never reads as "no purchases allowed."
 
 ```ts
 const cap = await kokio.eSIMWallet!.priceCapUSDCents();
+```
+
+Returns: `Promise<bigint>`.
+
+## adminAllowanceUSDCents
+
+Reads what the admin key may still charge this eSIM wallet, in USD cents. When an admin purchase is refused with `AdminAllowanceExceeded`, show this figure and ask the user to raise it with `setAdminAllowanceUSDCents`.
+
+```ts
+const remaining = await kokio.eSIMWallet!.adminAllowanceUSDCents();
 ```
 
 Returns: `Promise<bigint>`.

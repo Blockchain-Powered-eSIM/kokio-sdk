@@ -1,15 +1,26 @@
 import { describe, it, expect, vi } from "vitest";
-import { baseSepolia } from "viem/chains";
+import { getAddress } from "viem";
+import { base, baseSepolia } from "viem/chains";
 import {
   _chainId,
   _getChainSpecificConstants,
   CHAIN_ID,
+  baseMainnetFactoryAddresses,
   baseSepoliaFactoryAddresses,
 } from "../../src/logic/constants.js";
 
 const RPC = "https://rpc.test.invalid";
 
-describe("_getChainSpecificConstants - configured testnets", () => {
+describe("_getChainSpecificConstants - configured chains", () => {
+  it("maps base mainnet to its factory addresses + chain", () => {
+    const v = _getChainSpecificConstants(CHAIN_ID.BASE_MAINNET, RPC);
+    expect(v.factoryAddresses).toBe(baseMainnetFactoryAddresses);
+    expect(v.chain).toBe(base);
+    for (const address of Object.values(v.factoryAddresses)) {
+      expect(getAddress(address)).toBe(address);
+    }
+  });
+
   it("maps base-sepolia to its factory addresses + chain", () => {
     const v = _getChainSpecificConstants(CHAIN_ID.BASE_SEPOLIA, RPC);
     expect(v.factoryAddresses).toBe(baseSepoliaFactoryAddresses);
@@ -26,15 +37,7 @@ describe("_getChainSpecificConstants - configured testnets", () => {
   });
 });
 
-describe("_getChainSpecificConstants - unconfigured chains (P1 guard)", () => {
-  // The guard throws for a chain whose factory addresses are still '0x'
-  // placeholders, instead of silently leaking '0x' into viem calls.
-  it("throws for base mainnet (not deployed yet)", () => {
-    expect(() => _getChainSpecificConstants(CHAIN_ID.BASE_MAINNET, RPC)).toThrow(
-      /not yet configured/,
-    );
-  });
-
+describe("_getChainSpecificConstants - unsupported chains", () => {
   it("throws for an unknown chain id (no config)", () => {
     expect(() => _getChainSpecificConstants(999999 as CHAIN_ID, RPC)).toThrow(
       /Unsupported chain id/,

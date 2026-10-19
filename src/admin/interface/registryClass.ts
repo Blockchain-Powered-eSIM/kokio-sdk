@@ -33,6 +33,7 @@ import {
     _isESIMWalletOnStandby,
     _paused,
     _defaultPriceCapUSDCents,
+    _defaultAdminAllowanceUSDCents,
     _paymentAdapter,
     _usedPaymentReferences,
     _isDeviceIdentifierAlreadyUsed,
@@ -213,6 +214,10 @@ export class AdminRegistrySubPackage {
 
     defaultPriceCapUSDCents() {
         return _defaultPriceCapUSDCents(this.walletClient);
+    }
+
+    defaultAdminAllowanceUSDCents() {
+        return _defaultAdminAllowanceUSDCents(this.walletClient);
     }
 
     paymentAdapter() {

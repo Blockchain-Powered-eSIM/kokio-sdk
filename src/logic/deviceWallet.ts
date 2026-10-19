@@ -156,12 +156,17 @@ export const _removeESIMWallet = async (client: KokioSmartAccountClient, address
  * Rotate the P256 key that owns this wallet. The registry is told in the same
  * call, so its record of the owner cannot drift from the wallet's.
  *
- * A key that cannot produce a verifiable signature bricks the wallet: this is
- * reachable only through a signed userOp, so there is no rotating back and no
- * reaching the balance afterwards. The contract rejects a key it can tell is
- * unusable, but check the new key can sign before calling.
+ * `newOwnerSignature` is the new passkey's WebAuthn assertion over
+ * `rotationChallenge(newOwner)`, ABI-encoded as a `WebAuthnSignature` with no
+ * version or validUntil header. Without it the contract reverts with
+ * `NewOwnerKeyCannotSign`, so a wallet can only move to a key that can sign.
  */
-export const _transferOwnership = async (client: KokioSmartAccountClient, address: Address, newOwner: P256Key) => {
+export const _transferOwnership = async (
+    client: KokioSmartAccountClient,
+    address: Address,
+    newOwner: P256Key,
+    newOwnerSignature: Hex
+) => {
 
     if(!client.account) throw new MissingSmartWalletError();
 
@@ -173,7 +178,7 @@ export const _transferOwnership = async (client: KokioSmartAccountClient, addres
             data: encodeFunctionData({
                 abi: DeviceWallet,
                 functionName: "transferOwnership",
-                args: [newOwner]
+                args: [newOwner, newOwnerSignature]
             })
         }]
     });
@@ -290,6 +295,20 @@ export const _isValidSignature = async (client: KokioSmartAccountClient, address
         abi: DeviceWallet,
         functionName: "isValidSignature",
         args: [messageHash, signature]
+    }) as Promise<Hex>;
+}
+
+/**
+ * The bytes the new passkey must sign before `transferOwnership` accepts it.
+ * Bound to this wallet, this chain and `newOwner`, so it cannot be reused for
+ * another rotation.
+ */
+export const _rotationChallenge = async (client: KokioSmartAccountClient, address: Address, newOwner: P256Key): Promise<Hex> => {
+    return client.readContract({
+        address,
+        abi: DeviceWallet,
+        functionName: "rotationChallenge",
+        args: [newOwner]
     }) as Promise<Hex>;
 }
 

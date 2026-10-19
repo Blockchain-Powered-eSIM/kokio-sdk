@@ -49,7 +49,8 @@ const payloadCases: Array<{
   // paymentAdapter.eoa (target = PAYMENT_ADAPTER)
   { label: "paymentAdapter._transferOwnershipCall", run: (c) => paymentAdapter._transferOwnershipCall(c, NEW_OWNER), address: F.PAYMENT_ADAPTER, functionName: "transferOwnership", args: [NEW_OWNER] },
   { label: "paymentAdapter._upgradeCall", run: (c) => paymentAdapter._upgradeCall(c, IMPL, INIT_DATA), address: F.PAYMENT_ADAPTER, functionName: "upgradeToAndCall", args: [IMPL, INIT_DATA] },
-  { label: "paymentAdapter._registerAssetCall", run: (c) => paymentAdapter._registerAssetCall(c, ASSET, ASSET_ENTRY), address: F.PAYMENT_ADAPTER, functionName: "registerAsset", args: [ASSET, ASSET_ENTRY] },
+  { label: "paymentAdapter._recoverTokensCall", run: (c) => paymentAdapter._recoverTokensCall(c, TOKEN, NEW_OWNER, 5n), address: F.PAYMENT_ADAPTER, functionName: "recoverTokens", args: [TOKEN, NEW_OWNER, 5n] },
+  { label: "paymentAdapter._registerAssetCall",run: (c) => paymentAdapter._registerAssetCall(c, ASSET, ASSET_ENTRY), address: F.PAYMENT_ADAPTER, functionName: "registerAsset", args: [ASSET, ASSET_ENTRY] },
   { label: "paymentAdapter._updateAssetCall", run: (c) => paymentAdapter._updateAssetCall(c, ASSET, ASSET_ENTRY), address: F.PAYMENT_ADAPTER, functionName: "updateAsset", args: [ASSET, ASSET_ENTRY] },
 ];
 

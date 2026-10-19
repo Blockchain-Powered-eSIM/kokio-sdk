@@ -249,10 +249,14 @@ const { factoryAddresses, chain, rpcURL } = await kokio.constants;
 ```
 
 The SDK resolves these from the wallet client's connected chain id, so you do not
-pass addresses yourself. Base Sepolia (chain id `84532`) is the only chain with a
-live deployment today. Ethereum, Optimism, and Arbitrum (mainnet and their
-testnets) are wired into the chain-resolution logic but not yet deployed;
-connecting to one of them throws `UnconfiguredChainError` until it is.
+pass addresses yourself.
+
+| Chain | Chain id | EntryPoint |
+|---|---|---|
+| Base mainnet | `8453` | v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108` |
+| Base Sepolia | `84532` | v0.8, `0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108` |
+
+Any other chain id throws `UnsupportedChainError`. The contract addresses for each chain are in `src/logic/constants.ts`, taken from the deployment records in `smart-contract-suite/deployments/`.
 
 ## Testing
 

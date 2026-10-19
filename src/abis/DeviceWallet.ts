@@ -455,6 +455,25 @@ const DeviceWallet = [
     },
     {
         "type": "function",
+        "name": "rotationChallenge",
+        "inputs": [
+            {
+                "name": "newOwner",
+                "type": "bytes32[2]",
+                "internalType": "bytes32[2]"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "",
+                "type": "bytes",
+                "internalType": "bytes"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "supportsInterface",
         "inputs": [
             {
@@ -498,6 +517,11 @@ const DeviceWallet = [
                 "name": "newOwner",
                 "type": "bytes32[2]",
                 "internalType": "bytes32[2]"
+            },
+            {
+                "name": "newOwnerSignature",
+                "type": "bytes",
+                "internalType": "bytes"
             }
         ],
         "outputs": [
@@ -836,6 +860,11 @@ const DeviceWallet = [
     {
         "type": "error",
         "name": "InvalidInitialization",
+        "inputs": []
+    },
+    {
+        "type": "error",
+        "name": "NewOwnerKeyCannotSign",
         "inputs": []
     },
     {

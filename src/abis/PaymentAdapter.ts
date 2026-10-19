@@ -154,6 +154,29 @@ const PaymentAdapter = [
     },
     {
         "type": "function",
+        "name": "recoverTokens",
+        "inputs": [
+            {
+                "name": "_token",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "_to",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "_amount",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
         "name": "registerAsset",
         "inputs": [
             {
@@ -573,6 +596,31 @@ const PaymentAdapter = [
     },
     {
         "type": "event",
+        "name": "TokensRecovered",
+        "inputs": [
+            {
+                "name": "_token",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_to",
+                "type": "address",
+                "indexed": true,
+                "internalType": "address"
+            },
+            {
+                "name": "_amount",
+                "type": "uint256",
+                "indexed": false,
+                "internalType": "uint256"
+            }
+        ],
+        "anonymous": false
+    },
+    {
+        "type": "event",
         "name": "Upgraded",
         "inputs": [
             {
@@ -851,6 +899,11 @@ const PaymentAdapter = [
                 "internalType": "string"
             }
         ]
+    },
+    {
+        "type": "error",
+        "name": "ZeroAmount",
+        "inputs": []
     },
     {
         "type": "error",

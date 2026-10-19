@@ -14,6 +14,7 @@ import {
     _isValidSignature,
     _registry,
     _removeESIMWallet,
+    _rotationChallenge,
     _sendUserOperation,
     _toggleAccessToFunds,
     _transferOwnership,
@@ -68,8 +69,8 @@ export class DeviceWalletSubPackage {
         return _toggleAccessToFunds(this.smartAccountClient, this.address, eSIMWalletAddress, hasAccessToFunds);
     }
 
-    transferOwnership (newOwner: P256Key) {
-        return _transferOwnership(this.smartAccountClient, this.address, newOwner);
+    transferOwnership (newOwner: P256Key, newOwnerSignature: Hex) {
+        return _transferOwnership(this.smartAccountClient, this.address, newOwner, newOwnerSignature);
     }
 
     withdrawDepositTo (withdrawAddress: Address, amount: bigint) {
@@ -112,6 +113,10 @@ export class DeviceWalletSubPackage {
 
     registry () {
         return _registry(this.smartAccountClient, this.address);
+    }
+
+    rotationChallenge (newOwner: P256Key) {
+        return _rotationChallenge(this.smartAccountClient, this.address, newOwner);
     }
 
     verifier () {

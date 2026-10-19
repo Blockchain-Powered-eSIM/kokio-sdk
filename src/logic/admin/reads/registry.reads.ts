@@ -100,6 +100,21 @@ export const _defaultPriceCapUSDCents = async (client: WalletClient): Promise<bi
     }) as Promise<bigint>;
 }
 
+/** What the admin key may charge a newly created eSIM wallet in total, in USD cents. */
+export const _defaultAdminAllowanceUSDCents = async (client: WalletClient): Promise<bigint> => {
+
+    const chainID = await _chainId(client);
+    const rpcURL = client.transport.url;
+    const values = _getChainSpecificConstants(chainID, rpcURL);
+
+    return client.extend(publicActions).readContract({
+        address: values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: "defaultAdminAllowanceUSDCents",
+        args: []
+    }) as Promise<bigint>;
+}
+
 /** The vault EOA recorded in the registry. */
 export const _vault = async (client: WalletClient): Promise<Address> => {
 

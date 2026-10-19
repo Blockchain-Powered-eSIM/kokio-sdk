@@ -2,6 +2,7 @@ import { Address, Hex, WalletClient } from "viem";
 import { DataBundleDetails } from "../../types.js";
 import { _buyDataBundleWithToken } from "../../logic/admin/eSIMWallet.eoa.js";
 import {
+    _adminAllowanceUSDCents,
     _eSIMWalletFactory,
     _eSIMUniqueIdentifier,
     _newRequestedOwner,
@@ -50,6 +51,10 @@ export class AdminESIMWalletSubPackage {
 
     priceCapUSDCents() {
         return _priceCapUSDCents(this.walletClient, this.eSIMWalletAddress);
+    }
+
+    adminAllowanceUSDCents() {
+        return _adminAllowanceUSDCents(this.walletClient, this.eSIMWalletAddress);
     }
 
     deviceWallet() {

@@ -370,6 +370,28 @@ export const _cancel = async (client: WalletClient, id: Hex) => {
 // ---------------------------------------------------------------------------
 
 /**
+ * Pause a protocol contract straight away. `GUARDIAN_ROLE`.
+ *
+ * Only stops the contract, which the admin key could already do, and a guardian
+ * can release it at once with `_unpauseInstantly`.
+ */
+export const _pauseInstantly = async (client: WalletClient, target: Address) => {
+
+    const values = await _resolve(client);
+
+    if (!client.account) throw new MissingEOAWalletError();
+
+    return writeContractOrThrow(client, {
+        address: values.factoryAddresses.PROTOCOL_ADMIN,
+        chain: values.chain,
+        account: client.account,
+        abi: ProtocolAdmin,
+        functionName: 'pauseInstantly',
+        args: [target]
+    });
+}
+
+/**
  * Release a pause on a protocol contract straight away. `GUARDIAN_ROLE`.
  *
  * The selector is fixed in the contract, so this cannot be pointed at anything
@@ -604,6 +626,24 @@ export const _setDefaultPriceCapUSDCentsCall = async (client: WalletClient, cap:
         abi: Registry,
         functionName: 'setDefaultPriceCapUSDCents',
         args: [cap],
+    };
+}
+
+/**
+ * Set what the admin key may charge each newly created eSIM wallet, in USD
+ * cents. Pass the result to `schedule`. Existing wallets keep their own figure.
+ *
+ * `target` defaults to the registry.
+ */
+export const _setDefaultAdminAllowanceUSDCentsCall = async (client: WalletClient, allowance: bigint, target?: Address): Promise<OwnerCall> => {
+
+    const values = await _resolve(client);
+
+    return {
+        address: target ?? values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: 'setDefaultAdminAllowanceUSDCents',
+        args: [allowance],
     };
 }
 

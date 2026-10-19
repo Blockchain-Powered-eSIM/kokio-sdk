@@ -38,6 +38,7 @@ export {
     NotAnERC20TokenError,
     UnmatchedPaymentEventsError,
     PriceOutOfRangeError,
+    AdminAllowanceExceededError,
     InvalidPaymentReferenceError,
     CouponSplitOutOfRangeError,
     ContractRevertError,

@@ -51,18 +51,17 @@ export interface chainSpecifcConstants {
     customErrors: typeof customErrors;
 }
 
-// Not yet deployed. Kept as a placeholder so mainnet has a documented shape to
-// fill in once the protocol ships there, following Base Sepolia's soak.
+// From smart-contract-suite `deployments/base-8453-entrypoint-v8.json`.
 export const baseMainnetFactoryAddresses: Record<string, Address> = {
-    DEVICE_WALLET_FACTORY: '0x',
-    ESIM_WALLET_FACTORY: '0x',
-    LAZY_WALLET_REGISTRY: '0x',
-    REGISTRY: '0x',
-    ENTRY_POINT: '0x',
-    SENDER_CREATOR: '0x',
-    P256VERIFIER: '0x',
-    PROTOCOL_ADMIN: '0x',
-    PAYMENT_ADAPTER: '0x'
+    DEVICE_WALLET_FACTORY: '0xAC6B6A9F905e2593d587D244cEee6a0886952a6D',
+    ESIM_WALLET_FACTORY: '0xC88723826B9070ea89d9040387DE4C22A490EdB6',
+    LAZY_WALLET_REGISTRY: '0x2046aE906FB940Ad99147f233711Bb6711A2Ab0C',
+    REGISTRY: '0x76fB7F8C97457A5a6dF19a7041a66a7f1b3c910c',
+    ENTRY_POINT: '0x4337084D9E255Ff0702461CF8895CE9E3b5Ff108',
+    SENDER_CREATOR: '0x449ED7C3e6Fee6a97311d4b55475DF59C44AdD33',
+    P256VERIFIER: '0x4E2C5B9B88184464162d581D6BF36615f0040fE6',
+    PROTOCOL_ADMIN: '0x0E664e956aAD2599D17dE2381cc22687a066778B',
+    PAYMENT_ADAPTER: '0xbb80B10BECB997b02a4BA4068C145Ef18129943d'
 }
 
 export const baseSepoliaFactoryAddresses: Record<string, Address> = {
@@ -106,9 +105,7 @@ export const _extractChainID = async (client: WalletClient) => {
     return _chainId(client);
 }
 
-// Maps each supported chain id to its factory-address book + viem chain. Base
-// Mainnet is listed with '0x' placeholders so the guard below rejects it with a
-// clear message rather than leaking '0x' into viem calls.
+// Maps each supported chain id to its factory-address book + viem chain.
 const CHAIN_CONFIG: Record<number, { factoryAddresses: Record<string, Address>; chain: chainSpecifcConstants["chain"] }> = {
     [CHAIN_ID.BASE_MAINNET]: { factoryAddresses: baseMainnetFactoryAddresses, chain: base },
     [CHAIN_ID.BASE_SEPOLIA]: { factoryAddresses: baseSepoliaFactoryAddresses, chain: baseSepolia },
