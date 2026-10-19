@@ -10,10 +10,10 @@ vi.mock("react-native-passkey", () => ({ Passkey: {} }));
 
 import { ContractRevertError, KokioAdmin } from "../../src/admin/config-admin.js";
 import { DeviceWalletFactory } from "../../src/abis/index.js";
-import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import type { P256Key } from "../../src/types.js";
 import {
   forkAvailable,
+  forkProfile,
   impersonateAdmin,
   impersonateRegistryOwner,
   startFork,
@@ -38,15 +38,15 @@ const freshOwnerKey = (): P256Key => {
 const readCounterfactual = (fork: Fork, uid: string, ownerKey: P256Key, salt: bigint) =>
   getContract({
     abi: DeviceWalletFactory,
-    address: baseSepoliaFactoryAddresses.DEVICE_WALLET_FACTORY,
+    address: fork.addresses.DEVICE_WALLET_FACTORY,
     client: fork.publicClient,
   }).read.getCounterFactualAddress([ownerKey, uid, salt]) as Promise<Address>;
 
-// EOA-admin write scenarios against a local Base Sepolia fork. The real on-chain
+// EOA-admin write scenarios against a local fork. The real on-chain
 // `eSIMWalletAdmin` is impersonated (no private key), so `KokioAdmin`'s
 // access-controlled writes actually land on the forked deployment. Skips cleanly
 // unless INTEGRATION=1 and Foundry (`anvil`) is installed.
-describe.skipIf(!forkAvailable())("KokioAdmin - EOA writes on a Base Sepolia fork", () => {
+describe.skipIf(!forkAvailable())(`KokioAdmin - EOA writes on a ${forkProfile().label} fork`, () => {
   let fork: Fork;
   let admin: Address;
   let owner: Address;

@@ -8,18 +8,16 @@ vi.mock("react-native-passkey", () => ({ Passkey: {} }));
 
 import { ContractRevertError, KokioAdmin } from "../../src/admin/config-admin.js";
 import { Registry } from "../../src/abis/index.js";
-import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import { OperationState } from "../../src/logic/admin/reads/protocolAdmin.reads.js";
-import { forkAvailable, impersonate, startFork, type Fork } from "../utils/forkChain.js";
+import { forkAvailable, forkProfile, impersonate, startFork, type Fork } from "../utils/forkChain.js";
 
-const F = baseSepoliaFactoryAddresses;
+const F = forkProfile().addresses;
 
-// Role holders on the live Base Sepolia deployment, each confirmed with
-// `cast call <ProtocolAdmin> "hasRole(bytes32,address)"`. The suite re-checks
-// both against the fork before using them, so a redeployment fails loudly here
-// rather than somewhere further in.
-const PROPOSER = "0x97a2103118064820180fb3acbCBedDe6E4D9fCb9" as Address;
-const GUARDIAN = "0xA71daa87b7C653843b177Ef296B8a7aB90DebE1A" as Address;
+// Role holders on the forked deployment. The suite re-checks both against the
+// fork before using them, so a redeployment fails loudly here rather than
+// somewhere further in.
+const PROPOSER: Address = forkProfile().proposer;
+const GUARDIAN: Address = forkProfile().guardian;
 
 // Checksummed, since the registry hands the address back in that form.
 const NEW_VAULT = "0x000000000000000000000000000000000000aDA1" as Address;
@@ -41,11 +39,11 @@ const expectRefused = async (send: Promise<unknown>, errorName: string) => {
   expect((err as ContractRevertError).decoded?.errorName).toBe(errorName);
 };
 
-// The timelock path against a local Base Sepolia fork: schedule an owner call as
+// The timelock path against a local fork: schedule an owner call as
 // the real proposer, move the clock past the delay, and execute from an account
 // holding no role at all. Skips cleanly unless INTEGRATION=1 and Foundry is
 // installed.
-describe.skipIf(!forkAvailable())("ProtocolAdmin - timelock on a Base Sepolia fork", () => {
+describe.skipIf(!forkAvailable())(`ProtocolAdmin - timelock on a ${forkProfile().label} fork`, () => {
   let fork: Fork;
   let proposerSdk: KokioAdmin;
   let guardianSdk: KokioAdmin;

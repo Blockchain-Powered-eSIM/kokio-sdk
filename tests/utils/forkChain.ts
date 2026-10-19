@@ -38,20 +38,45 @@ export type ForkNetwork = "base-sepolia" | "base";
 // Base mainnet is pinned past its deployment block (52,814,249), so the fork
 // carries the current contracts. Base Sepolia stays on its older pin until its
 // upgrade lands.
+//
+// `assets` are the symbols the payment adapter accepts as tokens, settlement
+// token first. The proposer and guardian are the timelock role holders, from
+// each chain's record in smart-contract-suite `deployments/`.
 const NETWORKS = {
   "base-sepolia": {
+    label: "Base Sepolia",
     chain: baseSepolia,
     addresses: baseSepoliaFactoryAddresses,
     upstream: () => process.env.BASE_SEPOLIA_RPC_URL ?? "https://sepolia.base.org",
     block: 46_990_000n,
+    assets: ["USDC", "USDCt"],
+    proposer: "0x97a2103118064820180fb3acbCBedDe6E4D9fCb9",
+    guardian: "0xA71daa87b7C653843b177Ef296B8a7aB90DebE1A",
   },
   base: {
+    label: "Base mainnet",
     chain: base,
     addresses: baseMainnetFactoryAddresses,
     upstream: () => process.env.BASE_MAINNET_RPC_URL ?? "https://mainnet.base.org",
     block: 52_817_000n,
+    assets: ["USDC", "USDT", "DAI"],
+    proposer: "0xB77aE88f714a4F851ace7D2bc3cDA4AD53d12C3a",
+    guardian: "0x70fa7cA91e0Bd7781368115BD9bB6b79BDa4837d",
   },
 } as const;
+
+/**
+ * The network fork suites run against unless they name one, set with
+ * `FORK_NETWORK=base` or `FORK_NETWORK=base-sepolia` (the default).
+ */
+export const FORK_NETWORK: ForkNetwork = (() => {
+  const value = process.env.FORK_NETWORK ?? "base-sepolia";
+  if (!(value in NETWORKS)) throw new Error(`FORK_NETWORK must be "base" or "base-sepolia", got "${value}"`);
+  return value as ForkNetwork;
+})();
+
+/** Test data for the network a fork suite runs against. */
+export const forkProfile = (network: ForkNetwork = FORK_NETWORK) => NETWORKS[network];
 
 // HTTP request timeout for the fork clients. A fork fetches upstream state lazily,
 // so a single write that touches many contracts or storage slots can spend well
@@ -111,7 +136,7 @@ export const freePort = (): Promise<number> =>
   });
 
 /** The upstream RPC the fork pulls state from (public endpoint unless overridden). */
-export const getForkUpstreamRpc = (network: ForkNetwork = "base-sepolia"): string => NETWORKS[network].upstream();
+export const getForkUpstreamRpc = (network: ForkNetwork = FORK_NETWORK): string => NETWORKS[network].upstream();
 
 export interface Fork {
   /** Local JSON-RPC URL of the anvil fork. */
@@ -139,7 +164,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export const startFork = async (
   port?: number,
   blockNumber?: bigint,
-  network: ForkNetwork = "base-sepolia",
+  network: ForkNetwork = FORK_NETWORK,
 ): Promise<Fork> => {
   port ??= await freePort();
   const { chain, addresses } = NETWORKS[network];

@@ -21,12 +21,12 @@ vi.mock("react-native-passkey", () => ({
 }));
 
 import { DeviceWallet, DeviceWalletFactory } from "../../src/abis/index.js";
-import { baseSepoliaFactoryAddresses, CHAIN_ID, SIGNATURE_VALIDITY_SECONDS } from "../../src/logic/constants.js";
+import { SIGNATURE_VALIDITY_SECONDS } from "../../src/logic/constants.js";
 import {
   _encodeSignature,
   _signMessage,
 } from "../../src/logic/account-kit/createSmartAccount.js";
-import { forkAvailable, startFork, type Fork } from "../utils/forkChain.js";
+import { forkAvailable, forkProfile, startFork, type Fork } from "../utils/forkChain.js";
 import { createSoftSigner, type SoftSigner } from "../utils/softP256Signer.js";
 
 const MAGIC_VALUE = "0x1626ba7e";
@@ -47,11 +47,11 @@ const asPasskey = (signer: SoftSigner) => async (options: { challenge: string })
 };
 
 
-// ERC-1271 message signing against a real device wallet on a local Base Sepolia
+// ERC-1271 message signing against a real device wallet on a local
 // fork. The unit tests pin the challenge the SDK builds; this proves the wallet
 // rebuilds the same one, which is the only check that fails if either side
 // moves. Skips cleanly unless INTEGRATION=1 and Foundry is installed.
-describe.skipIf(!forkAvailable())("ERC-1271 message signing on a Base Sepolia fork", () => {
+describe.skipIf(!forkAvailable())(`ERC-1271 message signing on a ${forkProfile().label} fork`, () => {
   let fork: Fork;
   let signer: SoftSigner;
   let wallet: Address;
@@ -64,7 +64,7 @@ describe.skipIf(!forkAvailable())("ERC-1271 message signing on a Base Sepolia fo
 
     const factory = getContract({
       abi: DeviceWalletFactory,
-      address: baseSepoliaFactoryAddresses.DEVICE_WALLET_FACTORY,
+      address: fork.addresses.DEVICE_WALLET_FACTORY,
       client: { public: fork.publicClient, wallet: fork.funded },
     });
 
@@ -108,20 +108,20 @@ describe.skipIf(!forkAvailable())("ERC-1271 message signing on a Base Sepolia fo
     // a second wallet at another salt, so the address has to be in the challenge.
     const message = "gm from kokio";
     const other = "0x000000000000000000000000000000000000beef" as Address;
-    const signature = await _signMessage(message, "cred-id", "kokio.test", CHAIN_ID.BASE_SEPOLIA, other);
+    const signature = await _signMessage(message, "cred-id", "kokio.test", fork.chain.id, other);
 
     expect(await check(hashMessage(message), signature)).toBe(REFUSED);
   }, 60_000);
 
   it("a signature for one message does not verify against another", async () => {
-    const signature = await _signMessage("gm from kokio", "cred-id", "kokio.test", CHAIN_ID.BASE_SEPOLIA, wallet);
+    const signature = await _signMessage("gm from kokio", "cred-id", "kokio.test", fork.chain.id, wallet);
 
     expect(await check(hashMessage("gn from kokio"), signature)).toBe(REFUSED);
   }, 60_000);
 
   it("rewriting validUntil in the envelope invalidates the signature", async () => {
     const message = "gm from kokio";
-    const signature = await _signMessage(message, "cred-id", "kokio.test", CHAIN_ID.BASE_SEPOLIA, wallet);
+    const signature = await _signMessage(message, "cred-id", "kokio.test", fork.chain.id, wallet);
 
     // Six bytes anyone can edit in transit. They are inside the challenge, so
     // extending the expiry breaks the assertion rather than reviving it.
@@ -136,7 +136,7 @@ describe.skipIf(!forkAvailable())("ERC-1271 message signing on a Base Sepolia fo
 
   it("an expired signature is refused", async () => {
     const message = "gm from kokio";
-    const signature = await _signMessage(message, "cred-id", "kokio.test", CHAIN_ID.BASE_SEPOLIA, wallet);
+    const signature = await _signMessage(message, "cred-id", "kokio.test", fork.chain.id, wallet);
     expect(await check(hashMessage(message), signature)).toBe(MAGIC_VALUE);
 
     await fork.testClient.increaseTime({ seconds: SIGNATURE_VALIDITY_SECONDS + 60 });

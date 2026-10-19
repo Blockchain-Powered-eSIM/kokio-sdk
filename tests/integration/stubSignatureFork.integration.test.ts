@@ -86,7 +86,7 @@ describe.skipIf(!forkAvailable())("Stub signature validation cost", () => {
 
       const factory = getContract({
         abi: DeviceWalletFactory,
-        address: baseSepoliaFactoryAddresses.DEVICE_WALLET_FACTORY,
+        address: fork.addresses.DEVICE_WALLET_FACTORY,
         client: { public: fork.publicClient, wallet: fork.funded },
       });
       const entryPoint = getContract({
