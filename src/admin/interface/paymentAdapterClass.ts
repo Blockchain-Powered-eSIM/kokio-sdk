@@ -14,6 +14,7 @@ import {
     _updateAsset,
     _registerAssetCall,
     _updateAssetCall,
+    _recoverTokensCall,
     _transferOwnershipCall,
     _upgradeCall,
     _acceptOwnership
@@ -75,6 +76,10 @@ export class AdminPaymentAdapterSubPackage {
 
     registerAssetCall(symbol: Hex, asset: Asset) {
         return _registerAssetCall(this.walletClient, symbol, asset);
+    }
+
+    recoverTokensCall(token: Address, to: Address, amount: bigint) {
+        return _recoverTokensCall(this.walletClient, token, to, amount);
     }
 
     updateAssetCall(symbol: Hex, asset: Asset) {

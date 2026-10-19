@@ -263,6 +263,12 @@ const directCases: Array<{
         args: [OP_ID],
     },
     {
+        label: "_pauseInstantly",
+        run: (c) => protocolAdmin._pauseInstantly(c, F.REGISTRY),
+        functionName: "pauseInstantly",
+        args: [F.REGISTRY],
+    },
+    {
         label: "_unpauseInstantly",
         run: (c) => protocolAdmin._unpauseInstantly(c, F.REGISTRY),
         functionName: "unpauseInstantly",

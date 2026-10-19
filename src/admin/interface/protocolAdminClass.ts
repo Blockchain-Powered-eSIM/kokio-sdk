@@ -11,6 +11,7 @@ import {
     _executeBatch,
     _executeRaw,
     _cancel,
+    _pauseInstantly,
     _unpauseInstantly,
     _revokeCancellersInstantly,
     _disableAdminInstantly,
@@ -118,6 +119,10 @@ export class ProtocolAdminGuardianSubPackage {
 
     constructor(walletClient: WalletClient) {
         this.walletClient = walletClient;
+    }
+
+    pauseInstantly(target: Address) {
+        return _pauseInstantly(this.walletClient, target);
     }
 
     unpauseInstantly(target: Address) {
