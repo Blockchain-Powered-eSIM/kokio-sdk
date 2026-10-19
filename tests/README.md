@@ -35,6 +35,7 @@ The [consumer/](consumer/) folder uses the SDK the way an app or backend would: 
 
 ```sh
 npm run test:consumer:fork
+FORK_NETWORK=base npm run test:consumer:fork   # the fork suites on Base mainnet, buying with USDC, USDT and DAI
 npm run test:consumer:live
 ```
 

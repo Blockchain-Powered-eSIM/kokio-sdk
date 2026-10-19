@@ -48,10 +48,12 @@ private keys and no bundler** are required:
 
 ```sh
 npm run test:integration:fork
+FORK_NETWORK=base npm run test:integration:fork   # same suites on a Base mainnet fork
 ```
 
-The fork pulls upstream state from `BASE_SEPOLIA_RPC_URL` if set, otherwise the
-public `https://sepolia.base.org`. Set `ANVIL_BIN` to point at a specific `anvil`
+`FORK_NETWORK` picks the chain every suite forks: `base-sepolia` (the default) or `base`. The rotation, admin allowance and guardian pause suites always fork Base mainnet, since only that deployment has those features today.
+
+The fork pulls upstream state from `BASE_SEPOLIA_RPC_URL` (or `BASE_MAINNET_RPC_URL` for Base mainnet) if set, otherwise the public endpoint. Set `ANVIL_BIN` to point at a specific `anvil`
 binary when a newer Foundry lives outside `PATH` (e.g. `~/.foundry/bin/anvil`).
 
 The tier runs with `--no-file-parallelism` so the forks don't fetch upstream
