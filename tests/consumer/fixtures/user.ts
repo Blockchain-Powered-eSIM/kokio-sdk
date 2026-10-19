@@ -1,5 +1,5 @@
 import type { Mock } from "vitest";
-import { createWalletClient, http, type Address } from "viem";
+import { createWalletClient, http, type Address, type Chain } from "viem";
 import { baseSepolia } from "viem/chains";
 import { Kokio } from "kokio-sdk";
 import type { KokioSmartAccount, KokioSmartAccountClient } from "kokio-sdk/types";
@@ -23,6 +23,8 @@ export interface TestUser {
 /** Where a test user's wallet lives: a fork with local stand-ins, or Base Sepolia with Pimlico. */
 export interface UserTarget {
   rpcUrl: string;
+  /** Base Sepolia unless set. */
+  chain?: Chain;
   /** Left out to use Pimlico, as an app does. */
   bundlerUrl?: string;
   pimlicoAPIKey: string;
@@ -31,6 +33,7 @@ export interface UserTarget {
 
 export const forkTarget = (stack: ForkStack): UserTarget => ({
   rpcUrl: stack.fork.rpcUrl,
+  chain: stack.fork.chain,
   bundlerUrl: stack.bundlerUrl,
   pimlicoAPIKey: "unused-on-fork",
   policyId: FORK_POLICY_ID,
@@ -46,7 +49,7 @@ export const createTestUser = async (target: UserTarget, passkeyGet: Mock): Prom
   const signer = createSoftSigner(RP_ID);
   passkeyGet.mockImplementation(asPasskey(signer));
 
-  const walletClient = createWalletClient({ chain: baseSepolia, transport: http(target.rpcUrl) });
+  const walletClient = createWalletClient({ chain: target.chain ?? baseSepolia, transport: http(target.rpcUrl) });
 
   const setup = new Kokio(walletClient, CREDENTIAL_ID, RP_ID, target.pimlicoAPIKey, target.policyId);
   const account = await setup.smartAccount.getSmartWallet(uid, signer.ownerKey, salt);

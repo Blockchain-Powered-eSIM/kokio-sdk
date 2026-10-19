@@ -39,8 +39,8 @@ export type ForkNetwork = "base-sepolia" | "base";
 // carries the current contracts. Base Sepolia stays on its older pin until its
 // upgrade lands.
 //
-// `assets` are the symbols the payment adapter accepts as tokens, settlement
-// token first. The proposer and guardian are the timelock role holders, from
+// `assets` are the token symbols the payment adapter accepts, USDC first. The
+// proposer and guardian are the timelock role holders, from
 // each chain's record in smart-contract-suite `deployments/`.
 const NETWORKS = {
   "base-sepolia": {

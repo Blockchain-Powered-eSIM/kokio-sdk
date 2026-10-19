@@ -7,7 +7,7 @@ import { paymaster } from "@pimlico/mock-paymaster";
 
 import { freePort, startFork, type Fork } from "../../utils/forkChain.js";
 
-// A local stand-in for Pimlico: an anvil fork of Base Sepolia, an Alto bundler on
+// A local stand-in for Pimlico: an anvil fork of FORK_NETWORK, an Alto bundler on
 // it, and the mock paymaster in front of Alto. The mock paymaster answers the
 // ERC-7677 methods and forwards every bundler method to Alto, so one URL serves
 // both roles, as api.pimlico.io does.

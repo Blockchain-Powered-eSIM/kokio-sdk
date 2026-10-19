@@ -24,7 +24,8 @@ export const describeLazyWalletDeployFlow = (
   name: string,
   setup: () => Promise<FlowTarget>,
   passkeyGet: Mock,
-  { timeout }: { timeout: number },
+  // `asset` is the token symbol purchases pay in.
+  { timeout, asset: ASSET_SYMBOL }: { timeout: number; asset: string },
 ) => describe(name, () => {
   let target: FlowTarget;
   let admin: KokioAdmin;
@@ -281,8 +282,6 @@ export const describeLazyWalletDeployFlow = (
     }
   }, timeout);
 
-  // The settlement token on Base Sepolia, and the one the test admin holds plenty of.
-  const ASSET_SYMBOL = "USDCt";
   const ASSET = stringToHex(ASSET_SYMBOL, { size: 32 });
   // Payment references are spendable once per eSIM wallet, so each purchase gets its own.
   const RUN = Date.now().toString(36);
