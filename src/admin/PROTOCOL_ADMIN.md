@@ -6,7 +6,7 @@ beacons sit under the two factories, so owning the factories reaches every
 device wallet and every eSIM wallet.
 
 Every owner change goes one way. A proposer schedules it, the delay runs out, and
-anyone executes it. Guardians are the exception: three powers, no wait, and each
+anyone executes it. Guardians are the exception: four powers, no wait, and each
 one takes something away rather than handing it out.
 
 Read this if you hold `PROPOSER_ROLE` or `GUARDIAN_ROLE`. Backend operators who
@@ -16,6 +16,7 @@ only drive the eSIM wallet admin want [README.md](README.md) instead.
 
 | Chain | ProtocolAdmin | Min delay | Floor |
 |---|---|---|---|
+| Base mainnet (8453) | `0x0E664e956aAD2599D17dE2381cc22687a066778B` | 2 days | 1 day |
 | Base Sepolia (84532) | `0xdDeCC2C1345BC966337B5f4Fe57EC2D5bfad751A` | 2 days | 1 hour |
 
 No other chain is configured. Constructing `KokioAdmin` against one and calling
@@ -224,23 +225,20 @@ aimed at the registry, not at the timelock:
 | `enableAdminCall(target?)` | Lift a suspension. Defaults to the registry. |
 | `unpauseCall(target?)` | Release the protocol pause. Defaults to the registry. |
 | `setDefaultPriceCapUSDCentsCall(cap, target?)` | Set the fallback price ceiling in USD cents. Zero reverts. |
+| `setDefaultAdminAllowanceUSDCentsCall(allowance, target?)` | Set what the admin key may charge each new eSIM wallet, in USD cents. Defaults to the registry. |
 | `setPaymentAdapterCall(paymentAdapter, target?)` | Point the registry at a new payment adapter. Defaults to the registry. |
 
-There is no `pauseCall`. Tripping the pause is `onlyESIMWalletAdmin`, so the
-timelock cannot do it at all: that is the backend key's own lever, and the split
-is what stops one hot key both freezing funds and releasing them. `unpauseCall`
-is the scheduled release, and a guardian holding `unpauseInstantly` is the one
-that does not wait.
+There is no `pauseCall`, because a pause that waits two days is no use. The backend key pauses directly, and a guardian pauses through `guardian.pauseInstantly`. Releasing is the other way round: the backend key cannot do it, so one hot key cannot both freeze funds and release them. `unpauseCall` is the scheduled release, and a guardian holding `unpauseInstantly` is the one that does not wait.
 
 `setDefaultPriceCapUSDCentsCall` rejecting zero is checked on execution, not on
 scheduling, so a zero costs the whole delay before it fails.
 
 The payment adapter's own owner functions (`registerAsset`, `updateAsset`,
-`transferOwnership`, `upgradeToAndCall`) have their own builders on
+`recoverTokens`, `transferOwnership`, `upgradeToAndCall`) have their own builders on
 `admin.paymentAdapter`, mirroring the pattern the other four owned singletons
 already follow, rather than living here.
 
-All nine go the same route:
+All ten go the same route:
 
 ```ts
 const op = await timelock.proposer.schedule(await timelock.disableAdminCall());
@@ -260,13 +258,16 @@ tuple directly.
 
 ## Guardian
 
-Three functions. No fourth is expressible, whatever else the key holds.
+Four functions. No fifth is expressible, whatever else the key holds.
 
 ```ts
+await timelock.guardian.pauseInstantly(target);
 await timelock.guardian.unpauseInstantly(target);
 await timelock.guardian.revokeCancellersInstantly([account]);
 await timelock.guardian.disableAdminInstantly();  // defaults to the registry
 ```
+
+**`pauseInstantly(target)`** raises a pause and emits `PauseRaised(target, guardian)`. It only stops the protocol, which the backend key could already do, and it can be released at once. The Base Sepolia ProtocolAdmin listed above predates it, so there it reverts until that deployment moves to a new ProtocolAdmin.
 
 **`unpauseInstantly(target)`** releases a pause. The selector is fixed in the
 contract, so it cannot be pointed at anything else on the target. An upgrade that
@@ -293,8 +294,8 @@ restoring waits out the full delay, however the key is held. Reverse that and a
 compromised key could undo its own suspension. The side taking power away has to
 win the race against the side handing it back.
 
-The same asymmetry runs through all three powers. None of them grants anything, so
-none of them reaches user funds. Releasing a pause cannot move ETH, stripping a
+The same asymmetry runs through all four powers. None of them grants anything, so
+none of them reaches user funds. Raising or releasing a pause cannot move ETH, stripping a
 canceller cannot, and a suspended admin is an admin that has stopped being able to
 spend rather than one the guardian chose. The worst a guardian can do is stop the
 backend, and the owner ends that.
@@ -360,7 +361,7 @@ that does not wait. Every other grant or revoke is a scheduled operation.
 | What you see | Why |
 |---|---|
 | `MissingEOAWalletError` | The wallet client has no account. Reads are fine; writes are not. |
-| `UnconfiguredChainError` | The chain has address placeholders. Only Base Sepolia is deployed. |
+| `UnconfiguredChainError` | The chain's address book still has placeholders. Neither Base chain does. |
 | `UnsupportedChainError` | The chain id is not in the SDK's list at all. |
 | `AccessControlUnauthorizedAccount` | Wrong key for the function. The SDK groups by role but does not check it. |
 | `TimelockUnauthorizedCaller` | A self-call-only function was called directly. Schedule it instead. |

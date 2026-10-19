@@ -116,6 +116,16 @@ const hash = await admin.protocolAdmin.canceller.cancel(operationId);
 
 Returns: `Promise<Hash>`.
 
+## guardian.pauseInstantly
+
+Pauses a protocol contract immediately, with no delay. Needs `GUARDIAN_ROLE`. It can only stop the contract, which the admin key could already do, and `guardian.unpauseInstantly` releases it. The contract emits `PauseRaised(target, guardian)`.
+
+```ts
+const hash = await admin.protocolAdmin.guardian.pauseInstantly(registryAddress);
+```
+
+Returns: `Promise<Hash>`.
+
 ## guardian.unpauseInstantly
 
 Releases a pause on a protocol contract immediately, with no delay. Needs
@@ -294,6 +304,19 @@ scheduled, so a mistake here costs the whole delay before it is caught.
 
 ```ts
 const call = await admin.protocolAdmin.setDefaultPriceCapUSDCentsCall(cap);
+const scheduled = await admin.protocolAdmin.proposer.schedule(call);
+```
+
+Returns: `Promise<OwnerCall>`.
+
+## setDefaultAdminAllowanceUSDCentsCall
+
+Builds the call payload to set what the admin key may charge each newly created eSIM wallet, in USD cents. Wallets that already exist keep their own figure.
+
+`target` defaults to the registry.
+
+```ts
+const call = await admin.protocolAdmin.setDefaultAdminAllowanceUSDCentsCall(allowance);
 const scheduled = await admin.protocolAdmin.proposer.schedule(call);
 ```
 

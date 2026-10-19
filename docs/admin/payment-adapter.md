@@ -63,6 +63,17 @@ const scheduled = await admin.protocolAdmin.proposer.schedule(call);
 
 Returns: `Promise<OwnerCall>`.
 
+## recoverTokensCall
+
+Builds the call payload to send back tokens someone sent to the adapter by mistake. Purchases never leave tokens in the adapter, so anything it holds arrived that way. The contract emits `TokensRecovered(token, to, amount)` and rejects a zero token, recipient or amount.
+
+```ts
+const call = await admin.paymentAdapter.recoverTokensCall(token, recipient, amount);
+const scheduled = await admin.protocolAdmin.proposer.schedule(call);
+```
+
+Returns: `Promise<OwnerCall>`.
+
 ## updateAssetCall
 
 Builds the call payload to change a currency already in the table.

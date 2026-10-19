@@ -432,6 +432,16 @@ const cap = await admin.registry.defaultPriceCapUSDCents();
 
 Returns: `Promise<bigint>`.
 
+## defaultAdminAllowanceUSDCents
+
+Reads what the admin key may charge a newly created eSIM wallet in total, in USD cents. Changing it is an owner action: see `protocolAdmin.setDefaultAdminAllowanceUSDCentsCall`.
+
+```ts
+const allowance = await admin.registry.defaultAdminAllowanceUSDCents();
+```
+
+Returns: `Promise<bigint>`.
+
 ## paymentAdapter
 
 Reads the payment adapter this registry currently points at.
