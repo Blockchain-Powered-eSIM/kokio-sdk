@@ -24,6 +24,7 @@ import {
     _enableAdminCall,
     _unpauseCall,
     _setDefaultPriceCapUSDCentsCall,
+    _setDefaultAdminAllowanceUSDCentsCall,
     _setPaymentAdapterCall,
 } from "../../logic/admin/protocolAdmin.eoa.js";
 import {
@@ -215,6 +216,10 @@ export class AdminProtocolAdminSubPackage {
 
     setDefaultPriceCapUSDCentsCall(cap: bigint, target?: Address) {
         return _setDefaultPriceCapUSDCentsCall(this.walletClient, cap, target);
+    }
+
+    setDefaultAdminAllowanceUSDCentsCall(allowance: bigint, target?: Address) {
+        return _setDefaultAdminAllowanceUSDCentsCall(this.walletClient, allowance, target);
     }
 
     setPaymentAdapterCall(paymentAdapter: Address, target?: Address) {

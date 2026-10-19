@@ -443,6 +443,19 @@ describe("protocolAdmin registry payloads", () => {
         expect(call.address).toBe(OTHER);
     });
 
+    it("setDefaultAdminAllowanceUSDCentsCall carries the allowance and defaults to the registry", async () => {
+        const call = await protocolAdmin._setDefaultAdminAllowanceUSDCentsCall(client(), 2_500n);
+
+        expect(call.address).toBe(F.REGISTRY);
+        expect(call.functionName).toBe("setDefaultAdminAllowanceUSDCents");
+        expect(call.args).toEqual([2_500n]);
+    });
+
+    it("setDefaultAdminAllowanceUSDCentsCall aims at an explicit target when given one", async () => {
+        const call = await protocolAdmin._setDefaultAdminAllowanceUSDCentsCall(client(), 1n, OTHER);
+        expect(call.address).toBe(OTHER);
+    });
+
     it("setPaymentAdapterCall carries the adapter and defaults to the registry", async () => {
         const call = await protocolAdmin._setPaymentAdapterCall(client(), NEW_PAYMENT_ADAPTER);
 

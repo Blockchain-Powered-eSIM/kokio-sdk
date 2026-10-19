@@ -608,6 +608,24 @@ export const _setDefaultPriceCapUSDCentsCall = async (client: WalletClient, cap:
 }
 
 /**
+ * Set what the admin key may charge each newly created eSIM wallet, in USD
+ * cents. Pass the result to `schedule`. Existing wallets keep their own figure.
+ *
+ * `target` defaults to the registry.
+ */
+export const _setDefaultAdminAllowanceUSDCentsCall = async (client: WalletClient, allowance: bigint, target?: Address): Promise<OwnerCall> => {
+
+    const values = await _resolve(client);
+
+    return {
+        address: target ?? values.factoryAddresses.REGISTRY,
+        abi: Registry,
+        functionName: 'setDefaultAdminAllowanceUSDCents',
+        args: [allowance],
+    };
+}
+
+/**
  * Point the registry at a new payment adapter. Pass the result to `schedule`.
  *
  * Owner only, deliberately not the admin: the adapter holds the spent payment

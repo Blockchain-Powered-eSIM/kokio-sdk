@@ -80,6 +80,7 @@ const readCases: Array<{
   { label: "registry._isESIMWalletOnStandby", run: (c) => registry._isESIMWalletOnStandby(c, ESIM), address: F.REGISTRY, functionName: "isESIMWalletOnStandby", args: [ESIM] },
   { label: "registry._paused", run: (c) => registry._paused(c), address: F.REGISTRY, functionName: "paused", args: [] },
   { label: "registry._defaultPriceCapUSDCents", run: (c) => registry._defaultPriceCapUSDCents(c), address: F.REGISTRY, functionName: "defaultPriceCapUSDCents", args: [] },
+  { label: "registry._defaultAdminAllowanceUSDCents", run: (c) => registry._defaultAdminAllowanceUSDCents(c), address: F.REGISTRY, functionName: "defaultAdminAllowanceUSDCents", args: [] },
   { label: "registry._isDeviceIdentifierAlreadyUsed", run: (c) => registry._isDeviceIdentifierAlreadyUsed(c, "Device_11"), address: F.REGISTRY, functionName: "isDeviceIdentifierAlreadyUsed", args: ["Device_11"] },
   { label: "registry._isESIMIdentifierClaimed", run: (c) => registry._isESIMIdentifierClaimed(c, "eSIM_11"), address: F.REGISTRY, functionName: "isESIMIdentifierClaimed", args: ["eSIM_11"] },
   { label: "registry._eSIMWalletForIdentifier", run: (c) => registry._eSIMWalletForIdentifier(c, "eSIM_11"), address: F.REGISTRY, functionName: "eSIMWalletForIdentifier", args: ["eSIM_11"] },
@@ -129,6 +130,7 @@ const readCases: Array<{
   { label: "eSIMWallet._newRequestedOwner", run: (c) => eSIMWallet._newRequestedOwner(c, ESIM), address: ESIM, functionName: "newRequestedOwner", args: [] },
   { label: "eSIMWallet._owner", run: (c) => eSIMWallet._owner(c, ESIM), address: ESIM, functionName: "owner", args: [] },
   { label: "eSIMWallet._priceCapUSDCents", run: (c) => eSIMWallet._priceCapUSDCents(c, ESIM), address: ESIM, functionName: "priceCapUSDCents", args: [] },
+  { label: "eSIMWallet._adminAllowanceUSDCents", run: (c) => eSIMWallet._adminAllowanceUSDCents(c, ESIM), address: ESIM, functionName: "adminAllowanceUSDCents", args: [] },
   { label: "eSIMWallet._deviceWallet", run: (c) => eSIMWallet._deviceWallet(c, ESIM), address: ESIM, functionName: "deviceWallet", args: [] },
   { label: "eSIMWallet._transactionHistory", run: (c) => eSIMWallet._transactionHistory(c, ESIM, 2n), address: ESIM, functionName: "transactionHistory", args: [2n] },
 

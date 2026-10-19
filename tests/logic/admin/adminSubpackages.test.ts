@@ -3,7 +3,7 @@ import { BaseError, ContractFunctionRevertedError, encodeErrorResult, type Addre
 
 import { makeMockWalletClient } from "../../utils/mockClient.js";
 import { baseSepoliaFactoryAddresses } from "../../../src/logic/constants.js";
-import { ContractRevertError } from "../../../src/logic/errors.js";
+import { AdminAllowanceExceededError, ContractRevertError } from "../../../src/logic/errors.js";
 import { Registry } from "../../../src/abis/index.js";
 import { Settlement, type Asset, type DataBundleDetails } from "../../../src/types.js";
 
@@ -298,7 +298,7 @@ const eoaCases: Array<{
 
 describe("admin-EOA writeContract calls", () => {
   it.each(eoaCases)("$label writes the expected address + calldata", async ({ run, address, functionName, args, value }) => {
-    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA });
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA, reads: { adminAllowanceUSDCents: BUNDLE.priceUSDCents } });
     await run(client);
 
     const write = client.writeContract as ReturnType<typeof vi.fn>;
@@ -317,6 +317,19 @@ describe("admin-EOA writeContract calls", () => {
   it.each(eoaCases)("$label throws MISSING_EOA_WALLET without an account", async ({ run }) => {
     const client = makeMockWalletClient({ chainId: CHAIN_ID });
     await expect(run(client)).rejects.toThrow(/EOA/i);
+  });
+
+  it("eSIMWallet._buyDataBundleWithToken refuses a price above the admin allowance without sending", async () => {
+    const remaining = BUNDLE.priceUSDCents - 1n;
+    const client = makeMockWalletClient({ chainId: CHAIN_ID, account: EOA, reads: { adminAllowanceUSDCents: remaining } });
+
+    const err = await eSIMWallet._buyDataBundleWithToken(client, ESIM, BUNDLE, ASSET, 5_000_000n, PAYMENT_REFERENCE).catch((e) => e);
+
+    expect(err).toBeInstanceOf(AdminAllowanceExceededError);
+    expect(err.priceUSDCents).toBe(BUNDLE.priceUSDCents);
+    expect(err.remainingUSDCents).toBe(remaining);
+    expect(client.writeContract).not.toHaveBeenCalled();
+    expect(client.readContract).toHaveBeenCalledWith(expect.objectContaining({ address: ESIM, functionName: "adminAllowanceUSDCents" }));
   });
 
   // The exact call the README documents: `admin.registry.requestAdminUpdate`
