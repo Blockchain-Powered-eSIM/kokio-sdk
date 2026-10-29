@@ -17,10 +17,10 @@ only drive the eSIM wallet admin want [README.md](README.md) instead.
 | Chain | ProtocolAdmin | Min delay | Floor |
 |---|---|---|---|
 | Base mainnet (8453) | `0x0E664e956aAD2599D17dE2381cc22687a066778B` | 2 days | 1 day |
-| Base Sepolia (84532) | `0xdDeCC2C1345BC966337B5f4Fe57EC2D5bfad751A` | 2 days | 1 hour |
+| Base Sepolia (84532) | `0xdBC411D2fEc7758B32885DbF0B4AE957c3b918Fe` | 2 days | 1 day |
 
 No other chain is configured. Constructing `KokioAdmin` against one and calling
-anything throws `UnconfiguredChainError` before a transaction is built.
+anything throws `UnsupportedChainError` before a transaction is built.
 
 The floor is immutable. `updateDelay` can write any value, including zero, but
 `getMinDelay` clamps to the floor and `schedule` measures against `getMinDelay`.

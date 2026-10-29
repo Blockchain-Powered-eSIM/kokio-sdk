@@ -9,15 +9,12 @@ vi.mock("react-native-passkey", () => ({ Passkey: {} }));
 
 import { KokioAdmin } from "../../src/admin/config-admin.js";
 import { LazyWalletRegistry } from "../../src/abis/index.js";
-import { baseSepoliaFactoryAddresses } from "../../src/logic/constants.js";
 import {
   MAX_ESIM_WALLETS_PER_CALL,
   MAX_HISTORY_ENTRIES_PER_CALL,
 } from "../../src/logic/admin/lazyWalletRegistry.eoa.js";
 import { Settlement, type DataBundleDetails, type P256Key } from "../../src/types.js";
-import { forkAvailable, impersonateAdmin, startFork, type Fork } from "../utils/forkChain.js";
-
-const F = baseSepoliaFactoryAddresses;
+import { forkAvailable, forkProfile, impersonateAdmin, startFork, type Fork } from "../utils/forkChain.js";
 
 // A fresh P256 public key per device. The factory registers each key's hash and
 // refuses reuse against a different counterfactual address.
@@ -37,15 +34,15 @@ const bundles = (count: number): DataBundleDetails[] =>
 
 const readLazy = (fork: Fork) => getContract({
   abi: LazyWalletRegistry,
-  address: F.LAZY_WALLET_REGISTRY,
+  address: fork.addresses.LAZY_WALLET_REGISTRY,
   client: fork.publicClient,
 });
 
-// The paginated lazy flows against a local Base Sepolia fork. The mocked unit
+// The paginated lazy flows against a local fork. The mocked unit
 // tests prove the loop's shape; this proves the loop reads the real events off
 // the real contracts, which is the part a mock cannot check. Skips cleanly
 // unless INTEGRATION=1 and Foundry is installed.
-describe.skipIf(!forkAvailable())("Lazy deployment - pagination on a Base Sepolia fork", () => {
+describe.skipIf(!forkAvailable())(`Lazy deployment - pagination on a ${forkProfile().label} fork`, () => {
   let fork: Fork;
   let sdk: KokioAdmin;
 

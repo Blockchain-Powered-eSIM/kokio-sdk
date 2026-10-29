@@ -4,6 +4,7 @@ import { hashMessage, type TypedDataDefinition } from "viem";
 const passkeyGet = vi.hoisted(() => vi.fn());
 vi.mock("react-native-passkey", () => ({ Passkey: { get: passkeyGet } }));
 
+import { forkProfile } from "../utils/forkChain.js";
 import { asPasskey } from "./fixtures/passkeyAuthenticator.js";
 import { expectSponsored } from "./fixtures/sponsorship.js";
 import { startForkStack, type ForkStack } from "./fixtures/forkStack.js";
@@ -13,7 +14,7 @@ import { createTestUser, forkTarget } from "./fixtures/user.js";
 const ERC1271_MAGIC = "0x1626ba7e";
 const MESSAGE = `${TEST_TAG}: sign in`;
 const TYPED_DATA: TypedDataDefinition = {
-  domain: { name: TEST_TAG, version: "1", chainId: 84532 },
+  domain: { name: TEST_TAG, version: "1", chainId: forkProfile().chain.id },
   types: { Login: [{ name: "user", type: "string" }] },
   primaryType: "Login",
   message: { user: TEST_TAG },
@@ -21,7 +22,7 @@ const TYPED_DATA: TypedDataDefinition = {
 
 // Smart account behaviour an app relies on beyond the purchase flow: what real
 // authenticators hand back, and signatures for sign-in style flows.
-describe("smart account on a Base Sepolia fork", () => {
+describe(`smart account on a ${forkProfile().label} fork`, () => {
   let stack: ForkStack;
 
   beforeAll(async () => {

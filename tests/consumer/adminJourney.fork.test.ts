@@ -1,22 +1,19 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createWalletClient, http, parseEther, type Address, type WalletClient } from "viem";
+import { createWalletClient, http, parseEther, type WalletClient } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { baseSepolia } from "viem/chains";
 
 import { KokioAdmin } from "kokio-sdk/admin";
 import { DeviceWalletFactory } from "kokio-sdk/abis";
 
-import { impersonateRegistryOwner, startFork, type Fork } from "../utils/forkChain.js";
+import { forkProfile, impersonateRegistryOwner, startFork, type Fork } from "../utils/forkChain.js";
 import { createSoftSigner } from "../utils/softP256Signer.js";
 import { testDeviceId } from "./fixtures/testLabels.js";
-
-const DEVICE_WALLET_FACTORY: Address = "0x0BB3BA8D9233514a4aA6D72c243a2473f9cFf0bb";
 
 // A backend holds its admin key locally and talks to a hosted RPC that has no
 // accounts of its own, so every admin write has to be signed in process. The
 // key here is fresh, so anvil cannot sign for it either, which is what makes a
 // write sent as a bare address fail the way it would against a hosted RPC.
-describe("backend admin with a local private key on a Base Sepolia fork", () => {
+describe(`backend admin with a local private key on a ${forkProfile().label} fork`, () => {
   let fork: Fork;
   let backend: WalletClient;
   let admin: KokioAdmin;
@@ -26,7 +23,7 @@ describe("backend admin with a local private key on a Base Sepolia fork", () => 
 
     const account = privateKeyToAccount(generatePrivateKey());
     await fork.testClient.setBalance({ address: account.address, value: parseEther("1") });
-    backend = createWalletClient({ account, chain: baseSepolia, transport: http(fork.rpcUrl) });
+    backend = createWalletClient({ account, chain: fork.chain, transport: http(fork.rpcUrl) });
     admin = new KokioAdmin(backend);
 
     // The registry's owner (the timelock on the live deployment) nominates the backend.
@@ -52,8 +49,8 @@ describe("backend admin with a local private key on a Base Sepolia fork", () => 
     const salt = 7n;
 
     const deploy = await fork.funded.writeContract({
-      address: DEVICE_WALLET_FACTORY, abi: DeviceWalletFactory, functionName: "createAccount",
-      args: [uid, ownerKey, salt], chain: baseSepolia, account: fork.funded.account!,
+      address: fork.addresses.DEVICE_WALLET_FACTORY, abi: DeviceWalletFactory, functionName: "createAccount",
+      args: [uid, ownerKey, salt], chain: fork.chain, account: fork.funded.account!,
     });
     await fork.publicClient.waitForTransactionReceipt({ hash: deploy });
     const deviceWallet = await admin.deviceWalletFactory.getCounterFactualAddress(ownerKey, uid, salt);

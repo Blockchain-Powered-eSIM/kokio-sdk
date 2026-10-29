@@ -13,7 +13,7 @@ import { KokioAdmin } from "kokio-sdk/admin";
 import { Registry } from "kokio-sdk/abis";
 import { Settlement, type KokioSmartAccountClient } from "kokio-sdk/types";
 
-import { impersonateAdmin } from "../utils/forkChain.js";
+import { forkProfile, impersonateAdmin } from "../utils/forkChain.js";
 import type { SoftSigner } from "../utils/softP256Signer.js";
 import { expectSponsored } from "./fixtures/sponsorship.js";
 import { startForkStack, type ForkStack } from "./fixtures/forkStack.js";
@@ -21,12 +21,15 @@ import { setTokenBalance } from "./fixtures/tokens.js";
 import { FORK_POLICY_ID, testBytes32 } from "./fixtures/testLabels.js";
 import { createTestUser, forkTarget } from "./fixtures/user.js";
 
-const REGISTRY: Address = "0x916b6b554119c789EF3026EDeB0E1Ba741b42A49";
+const REGISTRY: Address = forkProfile().addresses.REGISTRY;
+// The second token the adapter accepts on the forked chain, after the settlement token.
+const SECOND_SYMBOL = forkProfile().assets[1];
+const SECOND_ASSET = stringToHex(SECOND_SYMBOL, { size: 32 });
 
 // The four things a user does with the app, in order, each as a sponsored user
 // operation through the public SDK. Later steps build on the state earlier ones
 // leave, so the steps share one fork and run in sequence.
-describe("user journey on a Base Sepolia fork", () => {
+describe(`user journey on a ${forkProfile().label} fork`, () => {
   let stack: ForkStack;
   let signer: SoftSigner;
   let kokio: Kokio;
@@ -174,16 +177,16 @@ describe("user journey on a Base Sepolia fork", () => {
     expect((await kokio.eSIMWallet!.transactionHistory(1n)).id).toBe(BUNDLE.id);
   }, 120_000);
 
-  it("buys with the USDCt test token, the second asset the adapter accepts", async () => {
-    const { token } = await kokio.paymentAdapter!.resolveAsset(USDCT);
+  it(`buys with ${SECOND_SYMBOL}, the second asset the adapter accepts`, async () => {
+    const { token } = await kokio.paymentAdapter!.resolveAsset(SECOND_ASSET);
     expect(token).not.toBe(usdc);
-    const quote = await kokio.paymentAdapter!.quote(USDCT, BUNDLE.priceUSDCents);
+    const quote = await kokio.paymentAdapter!.quote(SECOND_ASSET, BUNDLE.priceUSDCents);
     await setTokenBalance(stack.fork, token, deviceWallet, quote);
     const vault = await readRegistry("vault", []) as Address;
     const vaultBefore = await balanceOf(token, vault);
 
     await expectSponsored(client, stack.fork.publicClient, () =>
-      kokio.eSIMWallet!.buyDataBundleWithTransfer(BUNDLE, USDCT, quote, REF_3));
+      kokio.eSIMWallet!.buyDataBundleWithTransfer(BUNDLE, SECOND_ASSET, quote, REF_3));
 
     expect(await balanceOf(token, deviceWallet)).toBe(0n);
     expect(await balanceOf(token, vault)).toBe(vaultBefore + quote);
@@ -215,9 +218,7 @@ describe("user journey on a Base Sepolia fork", () => {
 });
 
 const ESIM_SALT = 1n;
-// Circle's test USDC, and the team's own test token.
 const USDC = stringToHex("USDC", { size: 32 });
-const USDCT = stringToHex("USDCt", { size: 32 });
 const BUNDLE = { id: testBytes32("bundle-1"), priceUSDCents: 500n, settlement: Settlement.DeviceWallet };
 const REF_1 = testBytes32("order-1");
 const REF_2 = testBytes32("order-2");

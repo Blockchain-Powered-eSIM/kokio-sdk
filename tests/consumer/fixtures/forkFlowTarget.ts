@@ -1,6 +1,5 @@
 import { createWalletClient, http, parseEther, type Hex } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { baseSepolia } from "viem/chains";
 import { KokioAdmin } from "kokio-sdk/admin";
 
 import { impersonateRegistryOwner } from "../../utils/forkChain.js";
@@ -9,7 +8,7 @@ import { startForkStack } from "./forkStack.js";
 import { setTokenBalance } from "./tokens.js";
 import { FORK_POLICY_ID } from "./testLabels.js";
 
-// A Base Sepolia fork with a local bundler and paymaster, and a backend that
+// A fork of FORK_NETWORK with a local bundler and paymaster, and a backend that
 // signs with its own private key as the registry's eSIM wallet admin.
 export const startForkFlowTarget = async (): Promise<FlowTarget> => {
   const stack = await startForkStack();
@@ -19,7 +18,7 @@ export const startForkFlowTarget = async (): Promise<FlowTarget> => {
   // The registry owner hands it the admin role first.
   const account = privateKeyToAccount(generatePrivateKey());
   await stack.fork.testClient.setBalance({ address: account.address, value: parseEther("1") });
-  const admin = new KokioAdmin(createWalletClient({ account, chain: baseSepolia, transport: http(stack.fork.rpcUrl) }));
+  const admin = new KokioAdmin(createWalletClient({ account, chain: stack.fork.chain, transport: http(stack.fork.rpcUrl) }));
 
   const { client: owner } = await impersonateRegistryOwner(stack.fork);
   await waitFor(await new KokioAdmin(owner).registry.requestAdminUpdate(account.address));
@@ -27,6 +26,7 @@ export const startForkFlowTarget = async (): Promise<FlowTarget> => {
 
   return {
     rpcUrl: stack.fork.rpcUrl,
+    chain: stack.fork.chain,
     publicClient: stack.fork.publicClient,
     pimlicoAPIKey: "unused-on-fork",
     policyId: FORK_POLICY_ID,

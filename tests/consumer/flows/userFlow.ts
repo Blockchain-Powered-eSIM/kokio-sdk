@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, type Mock } from "vitest";
 import {
   createWalletClient, encodeAbiParameters, erc20Abi, http, keccak256, stringToHex,
-  type Address, type Hex, type PublicClient, type TransactionReceipt,
+  type Address, type Chain, type Hex, type PublicClient, type TransactionReceipt,
 } from "viem";
 import { createBundlerClient } from "viem/account-abstraction";
 import { baseSepolia } from "viem/chains";
@@ -21,6 +21,8 @@ import { CREDENTIAL_ID, RP_ID, TEST_TAG, testBytes32, testDeviceId } from "../fi
 /** Where the flow runs, and the few things that differ between a fork and Base Sepolia. */
 export interface FlowTarget {
   rpcUrl: string;
+  /** Base Sepolia unless set. */
+  chain?: Chain;
   publicClient: PublicClient;
   pimlicoAPIKey: string;
   policyId: string;
@@ -96,7 +98,7 @@ export const describeUserFlow = (
   }, timeout);
 
   it("1. the app resolves the same smart account from the passkey", async () => {
-    const walletClient = createWalletClient({ chain: baseSepolia, transport: http(target.rpcUrl) });
+    const walletClient = createWalletClient({ chain: target.chain ?? baseSepolia, transport: http(target.rpcUrl) });
     const kokio = new Kokio(walletClient, CREDENTIAL_ID, RP_ID, target.pimlicoAPIKey, target.policyId);
 
     const account = await kokio.smartAccount.getSmartWallet(db.uid, db.ownerKey, db.salt);
